@@ -29,9 +29,39 @@ public class MenuItemController {
     }
 
     @PostMapping("/add")
-    public MenuItem addMenuItem(@RequestBody MenuItem menuItem) {
-        return menuItemService.addMenuItem(menuItem);
+    public ResponseEntity<String> addMenuItemWithImage(
+            @RequestParam("name") String name,
+            @RequestParam("description") String description,
+            @RequestParam("price") Double price,
+            @RequestParam("quantity") Integer quantity,
+            @RequestParam(value = "allergens", required = false) List<String> allergens, // Lista de alergeni
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        try {
+            String imageUrl = null;
+            if (file != null && !file.isEmpty()) {
+                String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+                File destinationFile = new File(uploadDir + fileName);
+                file.transferTo(destinationFile);
+                imageUrl = "/images/" + fileName;
+            }
+
+            MenuItem menuItem = new MenuItem();
+            menuItem.setName(name);
+            menuItem.setDescription(description);
+            menuItem.setPrice(price);
+            menuItem.setQuantity(quantity);
+            menuItem.setImageUrl(imageUrl);
+            menuItem.setAllergens(allergens); // Setăm lista de alergeni
+
+            menuItemService.addMenuItem(menuItem);
+
+            return ResponseEntity.ok("Menu item added successfully!");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file");
+        }
     }
+
+
 
     @GetMapping("/all")
     public List<MenuItem> getAllMenuItems() {
@@ -66,9 +96,51 @@ public class MenuItemController {
         }
     }
 
+    @PostMapping("/{menuItemId}/purchase")
+    public ResponseEntity<String> purchaseMenuItem(
+            @RequestParam Long userId, // ID-ul utilizatorului
+            @PathVariable Long menuItemId, // ID-ul produsului
+            @RequestParam int quantity) {
+        try {
+            menuItemService.purchaseMenuItem(userId, menuItemId, quantity);
+            return ResponseEntity.ok("Purchase successful!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+
+    @GetMapping("/{userId}/history/{month}/{year}")
+    public ResponseEntity<List<OrderHistory>> getUserOrderHistory(@PathVariable Long userId, @PathVariable int month, @PathVariable int year) {
+        return ResponseEntity.ok(menuItemService.getOrderHistoryForUser(userId, month, year));
+    }
+
+    @GetMapping("/{userId}/invoice/{month}/{year}")
+    public ResponseEntity<String> generateUserInvoice(@PathVariable Long userId, @PathVariable int month, @PathVariable int year) {
+        return ResponseEntity.ok(menuItemService.generateInvoiceForUser(userId, month, year));
+    }
+
+    @GetMapping("/{userId}/invoice/{month}/{year}/download")
+    public ResponseEntity<byte[]> downloadInvoicePdf(
+            @PathVariable Long userId,
+            @PathVariable int month,
+            @PathVariable int year) {
+        String invoiceContent = menuItemService.generateInvoiceForUser(userId, month, year);
+        byte[] pdfBytes = menuItemService.generateInvoicePdf(invoiceContent);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=invoice_" + userId + "_" + month + "_" + year + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {
+            if (file.getSize() > 10 * 1024 * 1024) { // 10 MB
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File size exceeds the maximum limit of 10MB");
+            }
+
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             File destinationFile = new File(uploadDir + fileName);
             file.transferTo(destinationFile);
@@ -80,35 +152,5 @@ public class MenuItemController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file");
         }
-    }
-
-    @PostMapping("/{id}/purchase")
-    public ResponseEntity<String> purchaseMenuItem(@PathVariable Long id, @RequestParam int quantity) {
-        try {
-            menuItemService.purchaseMenuItem(id, quantity);
-            return ResponseEntity.ok("Purchase successful!");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    @GetMapping("/invoice/{month}/{year}")
-    public ResponseEntity<String> generateInvoice(@PathVariable int month, @PathVariable int year) {
-        List<OrderHistory> orders = menuItemService.getOrderHistoryForMonth(month, year);
-        double total = menuItemService.calculateTotalForMonth(month, year);
-
-        StringBuilder invoice = new StringBuilder();
-        invoice.append("Invoice for ").append(month).append("/").append(year).append("\n");
-        invoice.append("====================================\n");
-        for (OrderHistory order : orders) {
-            invoice.append(order.getMenuItemName())
-                    .append(" x ").append(order.getQuantity())
-                    .append(" = $").append(order.getPrice())
-                    .append("\n");
-        }
-        invoice.append("====================================\n");
-        invoice.append("Total: $").append(total).append("\n");
-
-        return ResponseEntity.ok(invoice.toString());
     }
 }
