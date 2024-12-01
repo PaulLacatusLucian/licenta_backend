@@ -14,6 +14,7 @@ import com.itextpdf.layout.element.Paragraph;
 import java.io.ByteArrayOutputStream;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,13 +112,16 @@ public class MenuItemService {
         List<OrderHistory> orders = getOrderHistoryForUser(userId, month, year);
         double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
 
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+
         StringBuilder invoice = new StringBuilder();
-        invoice.append("Invoice for User ID ").append(userId).append(" - ").append(month).append("/").append(year).append("\n");
+        invoice.append("Invoice for ").append(month).append("/").append(year).append("\n");
         invoice.append("====================================\n");
         for (OrderHistory order : orders) {
             invoice.append(order.getMenuItemName())
                     .append(" x ").append(order.getQuantity())
                     .append(" = $").append(order.getPrice())
+                    .append(" | Date: ").append(order.getOrderTime().format(dateTimeFormatter)) // Adaugă data și ora
                     .append("\n");
         }
         invoice.append("====================================\n");
