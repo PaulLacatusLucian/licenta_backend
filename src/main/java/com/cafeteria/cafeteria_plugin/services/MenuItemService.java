@@ -2,9 +2,16 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.MenuItem;
 import com.cafeteria.cafeteria_plugin.models.OrderHistory;
+import com.cafeteria.cafeteria_plugin.models.User;
 import com.cafeteria.cafeteria_plugin.repositories.MenuItemRepository;
 import com.cafeteria.cafeteria_plugin.repositories.OrderHistoryRepository;
+import com.cafeteria.cafeteria_plugin.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+
+import java.io.ByteArrayOutputStream;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,11 +22,16 @@ public class MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
     private final OrderHistoryRepository orderHistoryRepository;
+    private final UserRepository userRepository;
 
-    public MenuItemService(MenuItemRepository menuItemRepository, OrderHistoryRepository orderHistoryRepository) {
+    public MenuItemService(MenuItemRepository menuItemRepository,
+                           OrderHistoryRepository orderHistoryRepository,
+                           UserRepository userRepository) {
         this.menuItemRepository = menuItemRepository;
         this.orderHistoryRepository = orderHistoryRepository;
+        this.userRepository = userRepository;
     }
+
 
     public MenuItem addMenuItem(MenuItem menuItem) {
         return menuItemRepository.save(menuItem);
@@ -58,33 +70,78 @@ public class MenuItemService {
         });
     }
 
-    public MenuItem purchaseMenuItem(Long id, int quantity) {
-        MenuItem menuItem = menuItemRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
+    public MenuItem purchaseMenuItem(Long userId, Long menuItemId, int quantity) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        MenuItem menuItem = menuItemRepository.findById(menuItemId)
+                .orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
+
         if (menuItem.getQuantity() < quantity) {
             throw new IllegalArgumentException("Not enough stock available");
         }
 
+        // Scade cantitatea din stoc
         menuItem.setQuantity(menuItem.getQuantity() - quantity);
         menuItemRepository.save(menuItem);
 
+        // Creează o comandă și leag-o de utilizator
         OrderHistory order = new OrderHistory();
         order.setMenuItemName(menuItem.getName());
         order.setPrice(menuItem.getPrice() * quantity);
         order.setQuantity(quantity);
         order.setOrderTime(LocalDateTime.now());
+        order.setUser(user); // Asociază comanda utilizatorului
         orderHistoryRepository.save(order);
 
         return menuItem;
     }
 
-    public List<OrderHistory> getOrderHistoryForMonth(int month, int year) {
+
+    public List<OrderHistory> getOrderHistoryForUser(Long userId, int month, int year) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
-        return orderHistoryRepository.findAllByOrderTimeBetween(start, end);
+        return orderHistoryRepository.findAllByUserAndOrderTimeBetween(user, start, end);
     }
 
-    public double calculateTotalForMonth(int month, int year) {
-        List<OrderHistory> orders = getOrderHistoryForMonth(month, year);
-        return orders.stream().mapToDouble(OrderHistory::getPrice).sum();
+
+    public String generateInvoiceForUser(Long userId, int month, int year) {
+        List<OrderHistory> orders = getOrderHistoryForUser(userId, month, year);
+        double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
+
+        StringBuilder invoice = new StringBuilder();
+        invoice.append("Invoice for User ID ").append(userId).append(" - ").append(month).append("/").append(year).append("\n");
+        invoice.append("====================================\n");
+        for (OrderHistory order : orders) {
+            invoice.append(order.getMenuItemName())
+                    .append(" x ").append(order.getQuantity())
+                    .append(" = $").append(order.getPrice())
+                    .append("\n");
+        }
+        invoice.append("====================================\n");
+        invoice.append("Total: $").append(total).append("\n");
+
+        return invoice.toString();
     }
+
+    public byte[] generateInvoicePdf(String invoiceContent) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            PdfWriter writer = new PdfWriter(out);
+            com.itextpdf.kernel.pdf.PdfDocument pdfDocument = new com.itextpdf.kernel.pdf.PdfDocument(writer);
+            Document document = new Document(pdfDocument);
+
+            // Adaugă conținutul facturii în PDF
+            document.add(new Paragraph(invoiceContent));
+
+            document.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return out.toByteArray();
+    }
+
+
 }
