@@ -7,9 +7,6 @@ import com.cafeteria.cafeteria_plugin.repositories.MenuItemRepository;
 import com.cafeteria.cafeteria_plugin.repositories.OrderHistoryRepository;
 import com.cafeteria.cafeteria_plugin.repositories.UserRepository;
 import org.springframework.stereotype.Service;
-import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.layout.Document;
-import com.itextpdf.layout.element.Paragraph;
 
 import java.io.ByteArrayOutputStream;
 
@@ -129,23 +126,5 @@ public class MenuItemService {
 
         return invoice.toString();
     }
-
-    public byte[] generateInvoicePdf(String invoiceContent) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            PdfWriter writer = new PdfWriter(out);
-            com.itextpdf.kernel.pdf.PdfDocument pdfDocument = new com.itextpdf.kernel.pdf.PdfDocument(writer);
-            Document document = new Document(pdfDocument);
-
-            // Adaugă conținutul facturii în PDF
-            document.add(new Paragraph(invoiceContent));
-
-            document.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return out.toByteArray();
-    }
-
 
 }
