@@ -14,11 +14,31 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true) // Numele de utilizator trebuie să fie unic
+    @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false) // Parola nu poate fi null
+    @Column(nullable = false)
     private String password;
 
     private boolean isEmployee;
+
+    private String name;
+    private String email;
+    private String phoneNumber;
+    private String subject;
+
+    @Column(nullable = false) // Ensures this field cannot be null
+    private String userType;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "student_id")
+    private Student student;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "parent_id")
+    private Parent parent;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
 }

@@ -86,13 +86,14 @@ public class MenuItemController {
         }
     }
 
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteMenuItem(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         boolean isDeleted = menuItemService.deleteMenuItem(id);
         if (isDeleted) {
-            return ResponseEntity.ok("MenuItem deleted successfully");
+            return ResponseEntity.noContent().build(); // 204 No Content response
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("MenuItem not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found response if the item isn't found
         }
     }
 
@@ -120,19 +121,19 @@ public class MenuItemController {
         return ResponseEntity.ok(menuItemService.generateInvoiceForUser(userId, month, year));
     }
 
-    @GetMapping("/{userId}/invoice/{month}/{year}/download")
-    public ResponseEntity<byte[]> downloadInvoicePdf(
-            @PathVariable Long userId,
-            @PathVariable int month,
-            @PathVariable int year) {
-        String invoiceContent = menuItemService.generateInvoiceForUser(userId, month, year);
-        byte[] pdfBytes = menuItemService.generateInvoicePdf(invoiceContent);
-
-        return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=invoice_" + userId + "_" + month + "_" + year + ".pdf")
-                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
-                .body(pdfBytes);
-    }
+//    @GetMapping("/{userId}/invoice/{month}/{year}/download")
+//    public ResponseEntity<byte[]> downloadInvoicePdf(
+//            @PathVariable Long userId,
+//            @PathVariable int month,
+//            @PathVariable int year) {
+//        String invoiceContent = menuItemService.generateInvoiceForUser(userId, month, year);
+//        byte[] pdfBytes = menuItemService.generateInvoicePdf(invoiceContent);
+//
+//        return ResponseEntity.ok()
+//                .header("Content-Disposition", "attachment; filename=invoice_" + userId + "_" + month + "_" + year + ".pdf")
+//                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+//                .body(pdfBytes);
+//    }
 
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {

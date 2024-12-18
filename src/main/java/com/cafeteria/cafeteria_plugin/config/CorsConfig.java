@@ -14,7 +14,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Permite toate rutele
-                        .allowedOrigins("http://localhost:3000") // Permite frontend-ul React
+                        .allowedOrigins("http://localhost:5173") // Permite frontend-ul React
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*");
             }
