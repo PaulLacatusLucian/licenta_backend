@@ -46,4 +46,11 @@ public class ScheduleController {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/class/{classId}")
+    public ResponseEntity<List<Schedule>> getSchedulesByClassId(@PathVariable Long classId) {
+        List<Schedule> schedules = scheduleService.getSchedulesByClassId(classId);
+        return ResponseEntity.ok(schedules);
+    }
+
 }
