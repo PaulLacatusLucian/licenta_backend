@@ -1,4 +1,5 @@
 package com.cafeteria.cafeteria_plugin.controllers;
+
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.services.ParentService;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +16,6 @@ public class ParentController {
 
     public ParentController(ParentService parentService) {
         this.parentService = parentService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Parent> addParent(@RequestBody Parent parent) {
-        return ResponseEntity.ok(parentService.addParent(parent));
     }
 
     @GetMapping

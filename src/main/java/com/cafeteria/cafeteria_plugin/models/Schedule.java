@@ -1,4 +1,5 @@
 package com.cafeteria.cafeteria_plugin.models;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,9 +15,10 @@ public class Schedule {
 
     @ManyToOne
     @JoinColumn(name = "class_id")
+    @JsonBackReference // Evită bucla de serializare
     private Class studentClass;
 
-    private String day; // Ziua săptămânii (ex: Luni, Marți, etc.)
+    private String scheduleDay; // Ziua săptămânii (ex: Luni, Marți, etc.)
     private String startTime; // Ora de început
     private String endTime; // Ora de sfârșit
 
