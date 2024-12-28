@@ -1,7 +1,10 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -18,11 +21,11 @@ public class Student {
 
     @ManyToOne
     @JoinColumn(name = "class_id", nullable = false)
-    private Class studentClass; // Referința către clasa în care este înscris studentul
+    private Class studentClass;
 
-    @OneToMany(mappedBy = "student")
-    private List<Parent> parents;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "parent_id", referencedColumnName = "id")
+    private Parent parent;
 
-    @OneToMany(mappedBy = "student")
-    private List<Grade> grades;
 }
+

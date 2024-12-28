@@ -11,11 +11,11 @@ public class Parent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String phoneNumber; // Număr de telefon al părintelui
-    private String email; // Email-ul părintelui
+    private String motherName;
+    private String motherEmail;
+    private String motherPhoneNumber;
 
-    @ManyToOne
-    @JoinColumn(name = "student_id")
-    private Student student; // Părintele este asociat unui student
+    private String fatherName;
+    private String fatherEmail;
+    private String fatherPhoneNumber;
 }

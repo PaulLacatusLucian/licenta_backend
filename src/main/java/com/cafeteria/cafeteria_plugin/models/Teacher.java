@@ -15,8 +15,5 @@ public class Teacher {
 
     private String name; // Numele profesorului
     private String subject; // Materia predată
-
-    @OneToMany(mappedBy = "teacher")
-    private List<Schedule> schedules; // Orarul predat de profesor (legat de Schedule)
 }
 

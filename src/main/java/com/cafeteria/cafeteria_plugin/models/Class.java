@@ -1,17 +1,23 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
-@Entity
-public class Class {
+import java.util.List;
 
+@Entity
+@Data
+public class Class {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // Numele clasei (ex: 10A)
-    private String classTeacher; // Profesorul titular al clasei
-    private String specialization; // Specializarea clasei
+    private String name;
+    private String classTeacher;
+    private String specialization;
+
+    @OneToMany(mappedBy = "studentClass")
+    @JsonManagedReference // Garantează serializarea unidirecțională
+    private List<Schedule> schedules;
 }

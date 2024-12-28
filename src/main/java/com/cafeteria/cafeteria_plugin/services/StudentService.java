@@ -2,6 +2,7 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.Absence;
 import com.cafeteria.cafeteria_plugin.models.Class;
+import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.repositories.ClassRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
@@ -13,6 +14,8 @@ import com.cafeteria.cafeteria_plugin.repositories.AbsenceRepository;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+
 @Service
 public class StudentService {
 
@@ -23,7 +26,7 @@ public class StudentService {
     private ClassRepository classRepository;
 
     @Autowired
-    private AbsenceRepository absenceRepository; // Adaugă repository-ul Absence
+    private AbsenceRepository absenceRepository; // Repository pentru absențe
 
     @Transactional
     public Student saveStudentWithClass(Student studentDetails, Long classId) {
@@ -34,21 +37,31 @@ public class StudentService {
         // Asociază clasa studentului
         studentDetails.setStudentClass(studentClass);
 
-        // Salvează studentul
+        // Asociază părintele doar în cadrul studentului
+        Parent parent = studentDetails.getParent();
+        if (parent != null) {
+            // Validări sau alte operațiuni asupra obiectului Parent, dacă sunt necesare
+            // Nu mai setăm relația inversă
+        }
+
+        // Salvează studentul împreună cu părintele
         return studentRepository.save(studentDetails);
     }
 
     public Optional<Student> getStudentById(Long id) {
+        // Caută studentul în baza de date și returnează inclusiv părintele
         return studentRepository.findById(id);
     }
 
-    // Modifică această metodă pentru a obține absențele din AbsenceRepository
+    // Obține absențele studentului folosind AbsenceRepository
     public List<Absence> getAbsencesByStudentId(Long studentId) {
         return absenceRepository.findByStudentId(studentId);
     }
 
+    // Exemplu pentru cursurile viitoare (poate fi extins ulterior)
     public List<Class> getUpcomingClasses(Long studentId) {
         // Înlocuiește cu logica ta pentru cursurile viitoare
         return Collections.emptyList(); // Deocamdată returnează o listă goală
     }
 }
+
