@@ -85,5 +85,38 @@ public class UserController {
         }
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
+        try {
+            String username = credentials.get("username");
+            String password = credentials.get("password");
+
+            if (username == null || password == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Username și parola sunt necesare"));
+            }
+
+            User user = userService.findByUsername(username);
+
+            // Validează utilizatorul și parola
+            if (user != null && user.getPassword().equals(password)) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("id", user.getId());
+                response.put("username", user.getUsername());
+                response.put("userType", user.getUserType());
+                response.put("isEmployee", user.isEmployee());
+
+                return ResponseEntity.ok(response);
+            }
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Credentiale invalide"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Eroare la autentificare: " + e.getMessage()));
+        }
+    }
+
+
+
 }
 
