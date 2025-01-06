@@ -1,19 +1,11 @@
 package com.cafeteria.cafeteria_plugin.models;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @Entity
-public class Student {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Student extends User {
 
     private String name;
     private String email;
@@ -26,6 +18,6 @@ public class Student {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "parent_id", referencedColumnName = "id")
     private Parent parent;
-
 }
+
 

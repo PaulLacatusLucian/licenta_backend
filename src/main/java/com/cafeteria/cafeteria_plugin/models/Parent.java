@@ -5,11 +5,7 @@ import lombok.Data;
 
 @Data
 @Entity
-public class Parent {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Parent extends User {
 
     private String motherName;
     private String motherEmail;
@@ -19,3 +15,4 @@ public class Parent {
     private String fatherEmail;
     private String fatherPhoneNumber;
 }
+

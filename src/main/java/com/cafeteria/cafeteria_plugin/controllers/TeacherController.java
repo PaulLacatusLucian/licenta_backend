@@ -19,8 +19,18 @@ public class TeacherController {
 
     @PostMapping
     public ResponseEntity<Teacher> addTeacher(@RequestBody Teacher teacher) {
+        // Generăm username și parola
+        String baseUsername = teacher.getName().toLowerCase().replaceAll("\\s+", ".");
+        teacher.setUsername(baseUsername + ".prof");
+        teacher.setPassword(baseUsername.replace(".", "_") + "123!");
+
+        // Setăm userType
+        teacher.setUserType("teacher");
+
         return ResponseEntity.ok(teacherService.addTeacher(teacher));
     }
+
+
 
     @GetMapping
     public List<Teacher> getAllTeachers() {
