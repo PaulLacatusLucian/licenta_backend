@@ -63,5 +63,9 @@ public class StudentService {
         // Înlocuiește cu logica ta pentru cursurile viitoare
         return Collections.emptyList(); // Deocamdată returnează o listă goală
     }
+
+    public Optional<Student> getStudentByParentId(Long parentId) {
+        return studentRepository.findByParentId(parentId);
+    }
 }
 

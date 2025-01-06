@@ -32,19 +32,14 @@ public class UserController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Detalii student lipsă"));
             }
 
-            User studentUser = new User();
-            studentUser.setUsername((String) studentData.get("username"));
-            studentUser.setPassword((String) studentData.get("password"));
-            studentUser.setName((String) studentData.get("name"));
-            studentUser.setEmail((String) studentData.get("email"));
-            studentUser.setPhoneNumber((String) studentData.get("phoneNumber"));
-            studentUser.setUserType("student");
-
-            // Creăm entitatea Student
+            // Creăm utilizatorul student
             Student student = new Student();
-            student.setName(studentUser.getName());
-            student.setEmail(studentUser.getEmail());
-            student.setPhoneNumber(studentUser.getPhoneNumber());
+            student.setUsername((String) studentData.get("username"));
+            student.setPassword((String) studentData.get("password"));
+            student.setUserType("student");
+            student.setName((String) studentData.get("name"));
+            student.setEmail((String) studentData.get("email"));
+            student.setPhoneNumber((String) studentData.get("phoneNumber"));
 
             // Setăm clasa studentului
             Map<String, Object> studentClassData = (Map<String, Object>) studentData.get("studentClass");
@@ -59,6 +54,9 @@ public class UserController {
             Map<String, Object> parentData = (Map<String, Object>) studentData.get("parent");
             if (parentData != null) {
                 Parent parent = new Parent();
+                parent.setUsername((String) parentData.get("username"));
+                parent.setPassword((String) parentData.get("password"));
+                parent.setUserType("parent");
                 parent.setMotherName((String) parentData.get("motherName"));
                 parent.setMotherEmail((String) parentData.get("motherEmail"));
                 parent.setMotherPhoneNumber((String) parentData.get("motherPhoneNumber"));
@@ -66,24 +64,22 @@ public class UserController {
                 parent.setFatherEmail((String) parentData.get("fatherEmail"));
                 parent.setFatherPhoneNumber((String) parentData.get("fatherPhoneNumber"));
 
-                student.setParent(parent); // Asociem părintele direct în student
+                student.setParent(parent); // Asociem părintele cu studentul
             }
 
-            // Asociem studentul cu utilizatorul
-            studentUser.setStudent(student);
-
-            // Salvăm utilizatorul student împreună cu părintele
-            User createdStudentUser = userService.createUser(studentUser);
+            // Salvăm utilizatorii student și părinte
+            userService.createUser(student); // Salvează studentul și cascadează părintele
 
             return ResponseEntity.ok(Map.of(
-                    "studentUser", createdStudentUser,
-                    "message", "Student și părinți creați cu succes!"
+                    "message", "Student și părinte creați cu succes!"
             ));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Eroare: " + e.getMessage()));
         }
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
@@ -91,30 +87,46 @@ public class UserController {
             String username = credentials.get("username");
             String password = credentials.get("password");
 
+            System.out.println("Username primit: " + username);
+            System.out.println("Parola primită: " + password);
+
             if (username == null || password == null) {
+                System.out.println("Username sau parola lipsă");
                 return ResponseEntity.badRequest().body(Map.of("message", "Username și parola sunt necesare"));
             }
 
             User user = userService.findByUsername(username);
+            System.out.println("Utilizator găsit: " + (user != null ? user.getUsername() : "null"));
 
-            // Validează utilizatorul și parola
-            if (user != null && user.getPassword().equals(password)) {
-                Map<String, Object> response = new HashMap<>();
-                response.put("id", user.getId());
-                response.put("username", user.getUsername());
-                response.put("userType", user.getUserType());
-                response.put("isEmployee", user.isEmployee());
-
-                return ResponseEntity.ok(response);
+            if (user == null) {
+                System.out.println("Utilizator inexistent");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Utilizator inexistent"));
             }
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Credentiale invalide"));
+            System.out.println("Parola utilizatorului din DB: " + user.getPassword());
+
+            if (!user.getPassword().equals(password)) {
+                System.out.println("Parolele nu se potrivesc");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Credentiale invalide"));
+            }
+
+            System.out.println("Autentificare reușită pentru utilizator: " + username);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("username", user.getUsername());
+            response.put("userType", user.getUserType());
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Eroare la autentificare: " + e.getMessage()));
         }
     }
+
 
 
 

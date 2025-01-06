@@ -1,7 +1,10 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.models.Parent;
+import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.services.ParentService;
+import com.cafeteria.cafeteria_plugin.services.StudentService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +16,11 @@ import java.util.Optional;
 public class ParentController {
 
     private final ParentService parentService;
+    private final StudentService studentService;
 
-    public ParentController(ParentService parentService) {
+    public ParentController(ParentService parentService, StudentService studentService) {
         this.parentService = parentService;
+        this.studentService = studentService;
     }
 
     @GetMapping
@@ -39,5 +44,21 @@ public class ParentController {
     public ResponseEntity<Void> deleteParent(@PathVariable Long id) {
         parentService.deleteParent(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/student")
+    public ResponseEntity<?> getStudentForParent(@PathVariable Long id) {
+        Optional<Parent> parent = parentService.getParentById(id);
+        if (parent.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parent not found");
+        }
+
+        Parent parentEntity = parent.get();
+        Optional<Student> student = studentService.getStudentByParentId(parentEntity.getId());
+        if (student.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No student associated with this parent");
+        }
+
+        return ResponseEntity.ok(student.get());
     }
 }
