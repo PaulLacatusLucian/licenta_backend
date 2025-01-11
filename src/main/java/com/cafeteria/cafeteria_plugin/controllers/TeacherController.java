@@ -1,11 +1,11 @@
 package com.cafeteria.cafeteria_plugin.controllers;
+
 import com.cafeteria.cafeteria_plugin.models.Teacher;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/teachers")
@@ -30,8 +30,6 @@ public class TeacherController {
         return ResponseEntity.ok(teacherService.addTeacher(teacher));
     }
 
-
-
     @GetMapping
     public List<Teacher> getAllTeachers() {
         return teacherService.getAllTeachers();
@@ -39,9 +37,8 @@ public class TeacherController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Teacher> getTeacherById(@PathVariable Long id) {
-        Optional<Teacher> teacher = teacherService.getTeacherById(id);
-        return teacher.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Teacher teacher = teacherService.getTeacherById(id);
+        return ResponseEntity.ok(teacher);
     }
 
     @PutMapping("/{id}")
@@ -51,7 +48,11 @@ public class TeacherController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
-        teacherService.deleteTeacher(id);
-        return ResponseEntity.noContent().build();
+        try {
+            teacherService.deleteTeacher(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build(); // Tratează cazul în care profesorul nu poate fi șters
+        }
     }
 }

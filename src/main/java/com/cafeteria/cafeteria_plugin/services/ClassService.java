@@ -1,7 +1,9 @@
 package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.Class;
+import com.cafeteria.cafeteria_plugin.models.Teacher;
 import com.cafeteria.cafeteria_plugin.repositories.ClassRepository;
+import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,9 +13,11 @@ import java.util.Optional;
 public class ClassService {
 
     private final ClassRepository classRepository;
+    private final TeacherRepository teacherRepository;
 
-    public ClassService(ClassRepository classRepository) {
+    public ClassService(ClassRepository classRepository, TeacherRepository teacherRepository) {
         this.classRepository = classRepository;
+        this.teacherRepository = teacherRepository;
     }
 
     public Class addClass(Class studentClass) {
@@ -40,5 +44,10 @@ public class ClassService {
 
     public void deleteClass(Long id) {
         classRepository.deleteById(id);
+    }
+
+    public Teacher findTeacherById(Long teacherId) {
+        return teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + teacherId));
     }
 }

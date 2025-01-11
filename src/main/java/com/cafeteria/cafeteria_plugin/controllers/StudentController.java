@@ -48,6 +48,12 @@ public class StudentController {
         }
     }
 
+    @GetMapping
+    public ResponseEntity<List<Student>> getAllStudents() {
+        List<Student> students = studentService.getAllStudents();
+        return ResponseEntity.ok(students);
+    }
+
     // Endpoint pentru numărul total de absențe
     @GetMapping("/{id}/total_absences")
     public ResponseEntity<Integer> getStudentTotalAbsences(@PathVariable Long id) {
@@ -69,4 +75,6 @@ public class StudentController {
         List<Class> upcomingClasses = studentService.getUpcomingClasses(id);
         return ResponseEntity.ok(upcomingClasses); // Returnează lista cursurilor viitoare
     }
+
+
 }

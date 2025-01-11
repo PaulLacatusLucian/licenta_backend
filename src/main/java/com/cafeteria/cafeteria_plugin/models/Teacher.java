@@ -1,5 +1,6 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -7,6 +8,11 @@ import lombok.Data;
 @Entity
 public class Teacher extends User {
 
-    private String name; // Numele profesorului
-    private String subject; // Materia predată
+    private String name;
+    private String subject;
+
+    @JsonBackReference
+    @OneToOne(mappedBy = "classTeacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Class classAsTeacher;
+
 }

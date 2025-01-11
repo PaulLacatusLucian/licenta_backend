@@ -67,5 +67,9 @@ public class StudentService {
     public Optional<Student> getStudentByParentId(Long parentId) {
         return studentRepository.findByParentId(parentId);
     }
+
+    public List<Student> getAllStudents() {
+        return studentRepository.findAll();
+    }
 }
 

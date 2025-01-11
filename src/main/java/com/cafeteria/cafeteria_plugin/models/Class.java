@@ -14,10 +14,16 @@ public class Class {
     private Long id;
 
     private String name;
-    private String classTeacher;
+
+    @OneToOne
+    @JsonManagedReference
+    @JoinColumn(name = "teacher_id", referencedColumnName = "id", unique = true)
+    private Teacher classTeacher;
+
+
     private String specialization;
 
     @OneToMany(mappedBy = "studentClass")
-    @JsonManagedReference // Garantează serializarea unidirecțională
+    @JsonManagedReference
     private List<Schedule> schedules;
 }
