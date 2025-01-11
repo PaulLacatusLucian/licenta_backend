@@ -1,6 +1,7 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.models.Class;
+import com.cafeteria.cafeteria_plugin.models.Teacher;
 import com.cafeteria.cafeteria_plugin.services.ClassService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,34 +19,42 @@ public class ClassController {
         this.classService = classService;
     }
 
+    // Adaugă o clasă și asociază un profesor prin ID
     @PostMapping
-    public ResponseEntity<Class> addClass(@RequestBody Class studentClass) {
+    public ResponseEntity<Class> addClass(@RequestBody Class studentClass, @RequestParam Long teacherId) {
+        Teacher teacher = classService.findTeacherById(teacherId);
+        studentClass.setClassTeacher(teacher);
         return ResponseEntity.ok(classService.addClass(studentClass));
     }
 
+    // Obține toate clasele
     @GetMapping
     public List<Class> getAllClasses() {
         return classService.getAllClasses();
     }
 
+    // Obține o clasă după ID
     @GetMapping("/{id}")
     public ResponseEntity<Class> getClassById(@PathVariable Long id) {
         Optional<Class> studentClass = classService.getClassById(id);
         if (studentClass.isPresent()) {
-            System.out.println("Found class with ID: " + id);
             return ResponseEntity.ok(studentClass.get());
         } else {
-            System.out.println("Class not found with ID: " + id);
             return ResponseEntity.notFound().build();
         }
     }
 
-
+    // Actualizează o clasă și (opțional) profesorul asociat
     @PutMapping("/{id}")
-    public ResponseEntity<Class> updateClass(@PathVariable Long id, @RequestBody Class studentClass) {
+    public ResponseEntity<Class> updateClass(@PathVariable Long id, @RequestBody Class studentClass, @RequestParam(required = false) Long teacherId) {
+        if (teacherId != null) {
+            Teacher teacher = classService.findTeacherById(teacherId);
+            studentClass.setClassTeacher(teacher);
+        }
         return ResponseEntity.ok(classService.updateClass(id, studentClass));
     }
 
+    // Șterge o clasă după ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClass(@PathVariable Long id) {
         classService.deleteClass(id);

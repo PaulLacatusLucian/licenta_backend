@@ -2,7 +2,9 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
+import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,9 +13,11 @@ import java.util.Optional;
 public class ParentService {
 
     private final ParentRepository parentRepository;
+    private final StudentRepository studentRepository;
 
-    public ParentService(ParentRepository parentRepository) {
+    public ParentService(ParentRepository parentRepository, StudentRepository studentRepository) {
         this.parentRepository = parentRepository;
+        this.studentRepository = studentRepository;
     }
 
     public List<Parent> getAllParents() {
@@ -24,10 +28,16 @@ public class ParentService {
         return parentRepository.findById(id);
     }
 
+    @Transactional
     public void deleteParent(Long id) {
         if (!parentRepository.existsById(id)) {
             throw new IllegalArgumentException("Părintele cu ID-ul " + id + " nu există.");
         }
+
+        // Șterge studenții asociați cu părintele
+        studentRepository.deleteByParentId(id);
+
+        // Șterge părintele
         parentRepository.deleteById(id);
     }
 
