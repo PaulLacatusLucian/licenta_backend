@@ -76,5 +76,25 @@ public class StudentController {
         return ResponseEntity.ok(upcomingClasses); // Returnează lista cursurilor viitoare
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Student> updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
+        try {
+            Student savedStudent = studentService.updateStudent(id, updatedStudent);
+            return ResponseEntity.ok(savedStudent);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+        try {
+            studentService.deleteStudent(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
 
 }
