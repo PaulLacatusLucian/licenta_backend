@@ -12,11 +12,16 @@ public class Grade {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student; // Studentul care are nota
 
-    private String subject; // Materia pentru care se dă nota
-    private Double grade; // Nota obținută
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "teacher_id", nullable = false)
+    private Teacher teacher; // Profesorul care a dat nota
 
-    private String teacher; // Profesorul care a dat nota
+    @ManyToOne
+    @JoinColumn(name = "semester_id", nullable = false)
+    private Semester semester; // Semestrul în care a fost acordată nota
+
+    private Double grade; // Nota obținută
 }

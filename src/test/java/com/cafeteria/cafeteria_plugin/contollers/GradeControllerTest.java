@@ -1,7 +1,9 @@
 package com.cafeteria.cafeteria_plugin.contollers;
 
+import com.cafeteria.cafeteria_plugin.controllers.GradeController;
 import com.cafeteria.cafeteria_plugin.models.Grade;
 import com.cafeteria.cafeteria_plugin.services.GradeService;
+import com.cafeteria.cafeteria_plugin.services.SemesterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -9,8 +11,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import com.cafeteria.cafeteria_plugin.controllers.GradeController;
 
 import java.util.Optional;
 
@@ -22,34 +22,62 @@ public class GradeControllerTest {
     @Mock
     private GradeService gradeService;
 
+    @Mock
+    private SemesterService semesterService;
+
     @InjectMocks
     private GradeController gradeController;
-
-    private Grade grade;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        grade = new Grade();
-        grade.setId(1L);
-        grade.setSubject("Math");
-        grade.setGrade(9.5);
-        grade.setTeacher("Mr. Popescu");
     }
 
     @Test
     public void testAddGrade() {
-        when(gradeService.addGrade(any(Grade.class))).thenReturn(grade);
+        Long studentId = 1L;
+        Long teacherId = 2L;
+        Long semesterId = 3L; // Simulated semester ID
+        Double gradeValue = 9.5;
 
-        ResponseEntity<Grade> response = gradeController.addGrade(grade);
+        Grade grade = new Grade();
+        grade.setId(1L);
+        grade.setGrade(gradeValue);
 
-        // Expecting a 201 Created status code for a successful creation
+        when(gradeService.addGrade(studentId, teacherId, semesterId, gradeValue)).thenReturn(grade);
+
+        ResponseEntity<Grade> response = gradeController.addGrade(studentId, teacherId, semesterId, gradeValue);
+
+        assertEquals(HttpStatus.CREATED.value(), response.getStatusCodeValue()); // 201 status
+        assertEquals(grade, response.getBody());
+    }
+
+    @Test
+    public void testAddGradeWithDefaultSemester() {
+        Long studentId = 1L;
+        Long teacherId = 2L;
+        Double gradeValue = 9.5;
+
+        Long currentSemesterId = 3L; // Mock current semester
+        Grade grade = new Grade();
+        grade.setId(1L);
+        grade.setGrade(gradeValue);
+
+        when(semesterService.getCurrentSemester().getId()).thenReturn(currentSemesterId);
+        when(gradeService.addGrade(studentId, teacherId, currentSemesterId, gradeValue)).thenReturn(grade);
+
+        ResponseEntity<Grade> response = gradeController.addGrade(studentId, teacherId, null, gradeValue);
+
         assertEquals(HttpStatus.CREATED.value(), response.getStatusCodeValue()); // 201 status
         assertEquals(grade, response.getBody());
     }
 
     @Test
     public void testGetGradeById() {
+        Grade grade = new Grade();
+        grade.setId(1L);
+        grade.setGrade(9.5);
+
         when(gradeService.getGradeById(1L)).thenReturn(Optional.of(grade));
 
         ResponseEntity<Grade> response = gradeController.getGradeById(1L);
@@ -59,31 +87,52 @@ public class GradeControllerTest {
 
     @Test
     public void testUpdateGrade() {
-        // Prepare the updated grade
+        Long gradeId = 1L;
+        Long studentId = 1L;
+        Long teacherId = 2L;
+        Long semesterId = 3L;
+        Double gradeValue = 10.0;
+
         Grade updatedGrade = new Grade();
-        updatedGrade.setId(1L);  // Ensure the updated grade has the correct ID
-        updatedGrade.setGrade(10.0);  // Set the updated grade value
+        updatedGrade.setId(gradeId);
+        updatedGrade.setGrade(gradeValue);
 
-        // Mock the gradeService to return the existing grade when getGradeById is called
-        when(gradeService.getGradeById(1L)).thenReturn(Optional.of(grade));  // Grade with ID 1L exists
+        when(gradeService.updateGrade(gradeId, studentId, teacherId, semesterId, gradeValue)).thenReturn(updatedGrade);
 
-        // Mock the gradeService to return the updated grade when updateGrade is called
-        when(gradeService.updateGrade(1L, updatedGrade)).thenReturn(updatedGrade);
+        ResponseEntity<Grade> response = gradeController.updateGrade(gradeId, studentId, teacherId, semesterId, gradeValue);
 
-        // Call the controller method
-        ResponseEntity<Grade> response = gradeController.updateGrade(1L, updatedGrade);
-
-        // Assert the correct response
-        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue());  // 200 status
-        assertEquals(updatedGrade, response.getBody());  // The body should contain the updated grade
+        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue()); // 200 status
+        assertEquals(updatedGrade, response.getBody());
     }
 
+    @Test
+    public void testUpdateGradeWithDefaultSemester() {
+        Long gradeId = 1L;
+        Long studentId = 1L;
+        Long teacherId = 2L;
+        Double gradeValue = 10.0;
+
+        Long currentSemesterId = 3L; // Mock current semester
+        Grade updatedGrade = new Grade();
+        updatedGrade.setId(gradeId);
+        updatedGrade.setGrade(gradeValue);
+
+        when(semesterService.getCurrentSemester().getId()).thenReturn(currentSemesterId);
+        when(gradeService.updateGrade(gradeId, studentId, teacherId, currentSemesterId, gradeValue)).thenReturn(updatedGrade);
+
+        ResponseEntity<Grade> response = gradeController.updateGrade(gradeId, studentId, teacherId, null, gradeValue);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue()); // 200 status
+        assertEquals(updatedGrade, response.getBody());
+    }
 
     @Test
     public void testDeleteGrade() {
-        doNothing().when(gradeService).deleteGrade(1L);
+        Long gradeId = 1L;
 
-        ResponseEntity<Void> response = gradeController.deleteGrade(1L);
+        doNothing().when(gradeService).deleteGrade(gradeId);
+
+        ResponseEntity<Void> response = gradeController.deleteGrade(gradeId);
         assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatusCodeValue()); // 204 status
     }
 }
