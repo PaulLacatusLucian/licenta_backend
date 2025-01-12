@@ -71,5 +71,27 @@ public class StudentService {
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
+
+    public Student updateStudent(Long id, Student updatedStudent) {
+        return studentRepository.findById(id)
+                .map(existingStudent -> {
+                    existingStudent.setName(updatedStudent.getName());
+                    existingStudent.setEmail(updatedStudent.getEmail());
+                    existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
+                    existingStudent.setStudentClass(updatedStudent.getStudentClass());
+                    return studentRepository.save(existingStudent);
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
+    }
+
+
+    public void deleteStudent(Long id) {
+        studentRepository.findById(id)
+                .ifPresentOrElse(studentRepository::delete,
+                        () -> {
+                            throw new IllegalArgumentException("Student not found with ID: " + id);
+                        });
+    }
+
 }
 
