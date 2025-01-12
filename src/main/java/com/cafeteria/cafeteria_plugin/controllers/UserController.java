@@ -1,9 +1,7 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.models.Parent;
-import com.cafeteria.cafeteria_plugin.models.Student;
-import com.cafeteria.cafeteria_plugin.models.User;
 import com.cafeteria.cafeteria_plugin.services.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -127,6 +125,40 @@ public class UserController {
         }
     }
 
+    @PostMapping("/register-teacher")
+    public ResponseEntity<?> registerTeacher(@RequestBody Map<String, String> teacherData) {
+        try {
+            // Validăm datele primite
+            if (teacherData == null || !teacherData.containsKey("name") || !teacherData.containsKey("subject")) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Numele și materia sunt necesare pentru profesor"));
+            }
+
+            // Creăm obiectul Teacher
+            Teacher teacher = new Teacher();
+            teacher.setName(teacherData.get("name"));
+            teacher.setSubject(teacherData.get("subject"));
+
+            // Generăm username și parola
+            String baseUsername = teacher.getName().toLowerCase().replaceAll("\\s+", ".");
+            teacher.setUsername(baseUsername + ".prof");
+            teacher.setPassword(baseUsername.replace(".", "_") + "123!");
+            teacher.setUserType("teacher");
+
+            // Salvăm profesorul utilizând UserService
+            userService.createUser(teacher);
+
+            // Răspuns de succes
+            return ResponseEntity.ok(Map.of(
+                    "message", "Profesor creat cu succes!",
+                    "username", teacher.getUsername(),
+                    "password", teacher.getPassword()
+            ));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Eroare: " + e.getMessage()));
+        }
+    }
 
 
 

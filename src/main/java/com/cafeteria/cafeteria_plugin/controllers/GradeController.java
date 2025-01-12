@@ -2,6 +2,7 @@ package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.models.Grade;
 import com.cafeteria.cafeteria_plugin.services.GradeService;
+import com.cafeteria.cafeteria_plugin.services.SemesterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,16 +15,29 @@ import java.util.Optional;
 public class GradeController {
 
     private final GradeService gradeService;
+    private final SemesterService semesterService;
 
-    public GradeController(GradeService gradeService) {
+    public GradeController(GradeService gradeService, SemesterService semesterService) {
         this.gradeService = gradeService;
+        this.semesterService = semesterService;
     }
 
     // Endpoint to add a grade
     @PostMapping
-    public ResponseEntity<Grade> addGrade(@RequestBody Grade grade) {
-        Grade savedGrade = gradeService.addGrade(grade);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedGrade);
+    public ResponseEntity<Grade> addGrade(
+            @RequestParam Long studentId,
+            @RequestParam Long teacherId,
+            @RequestParam(required = false) Long semesterId, // Optional
+            @RequestParam Double gradeValue) {
+        try {
+            if (semesterId == null) {
+                semesterId = semesterService.getCurrentSemester().getId(); // Use the current semester if not provided
+            }
+            Grade savedGrade = gradeService.addGrade(studentId, teacherId, semesterId, gradeValue);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedGrade);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
     }
 
     // Endpoint to get all grades
@@ -42,14 +56,20 @@ public class GradeController {
 
     // Endpoint to update a grade by ID
     @PutMapping("/{id}")
-    public ResponseEntity<Grade> updateGrade(@PathVariable Long id, @RequestBody Grade updatedGrade) {
-        Optional<Grade> existingGrade = gradeService.getGradeById(id);
-        if (existingGrade.isPresent()) {
-            updatedGrade.setId(id); // Ensure the ID is maintained
-            Grade updated = gradeService.updateGrade(id, updatedGrade);
-            return ResponseEntity.ok(updated);
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Grade> updateGrade(
+            @PathVariable Long id,
+            @RequestParam Long studentId,
+            @RequestParam Long teacherId,
+            @RequestParam(required = false) Long semesterId, // Optional
+            @RequestParam Double gradeValue) {
+        try {
+            if (semesterId == null) {
+                semesterId = semesterService.getCurrentSemester().getId(); // Use the current semester if not provided
+            }
+            Grade updatedGrade = gradeService.updateGrade(id, studentId, teacherId, semesterId, gradeValue);
+            return ResponseEntity.ok(updatedGrade);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
 
