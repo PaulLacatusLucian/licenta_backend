@@ -1,10 +1,9 @@
 package com.cafeteria.cafeteria_plugin.services;
 
-import com.cafeteria.cafeteria_plugin.models.Absence;
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.models.Parent;
-import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.repositories.ClassRepository;
+import com.cafeteria.cafeteria_plugin.repositories.PastStudentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +26,9 @@ public class StudentService {
 
     @Autowired
     private AbsenceRepository absenceRepository; // Repository pentru absențe
+
+    @Autowired
+    private PastStudentRepository pastStudentRepository;
 
     @Transactional
     public Student saveStudentWithClass(Student studentDetails, Long classId) {
@@ -93,5 +95,64 @@ public class StudentService {
                         });
     }
 
+    @Transactional
+    public void advanceYear() {
+        // Obține toate clasele
+        List<Class> allClasses = classRepository.findAll();
+
+        for (Class currentClass : allClasses) {
+            String className = currentClass.getName();
+
+            // Verifică dacă clasa este de tip "12X"
+            if (className.startsWith("12")) {
+                // Obține toți studenții din această clasă
+                List<Student> studentsInClass = studentRepository.findByStudentClass(currentClass);
+
+                for (Student student : studentsInClass) {
+                    // Creează un nou PastStudent
+                    PastStudent pastStudent = new PastStudent(
+                            null,
+                            student.getName(),
+                            currentClass.getSpecialization()
+                    );
+
+                    // Salvează în tabela PastStudents
+                    pastStudentRepository.save(pastStudent);
+
+                    // Șterge studentul din tabela curentă
+                    studentRepository.delete(student);
+                }
+            } else {
+                // Crește anul pentru restul claselor
+                try {
+                    // Extrage partea numerică de la începutul numelui clasei
+                    String numericPart = className.replaceAll("^(\\d+).*", "$1");
+                    int currentYear = Integer.parseInt(numericPart);
+
+                    // Creează un nou nume pentru clasă
+                    String newClassName = (currentYear + 1) + className.substring(numericPart.length());
+
+                    // Găsește sau creează noua clasă
+                    Class newClass = classRepository.findByName(newClassName)
+                            .orElseGet(() -> {
+                                Class c = new Class();
+                                c.setName(newClassName);
+                                c.setSpecialization(currentClass.getSpecialization());
+                                c.setClassTeacher(null); // Profesorul poate fi setat separat dacă e nevoie
+                                return classRepository.save(c);
+                            });
+
+                    // Mută toți studenții în noua clasă
+                    List<Student> studentsInClass = studentRepository.findByStudentClass(currentClass);
+
+                    for (Student student : studentsInClass) {
+                        student.setStudentClass(newClass); // Actualizează referința clasei
+                    }
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("Numele clasei nu începe cu un număr valid: " + className);
+                }
+            }
+        }
+    }
 }
 
