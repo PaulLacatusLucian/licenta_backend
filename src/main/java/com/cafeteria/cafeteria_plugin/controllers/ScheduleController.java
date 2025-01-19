@@ -55,14 +55,14 @@ public class ScheduleController {
     }
 
     @GetMapping("/class/{classId}/today")
-    public ResponseEntity<List<Schedule>> getSchedulesForToday(@PathVariable Long classId) {
+    public ResponseEntity<List<Schedule>> getSchedulesForToday(@PathVariable String className) {
         String englishCurrentDay = LocalDate.now()
                 .getDayOfWeek()
                 .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
         String romanianCurrentDay = DAY_TRANSLATION.getOrDefault(englishCurrentDay, "");
 
-        List<Schedule> schedulesForToday = scheduleService.getSchedulesByClassId(classId).stream()
+        List<Schedule> schedulesForToday = scheduleService.getSchedulesByClassName(className).stream()
                 .filter(schedule -> schedule.getScheduleDay().equalsIgnoreCase(romanianCurrentDay))
                 .toList();
 
@@ -70,8 +70,8 @@ public class ScheduleController {
     }
 
 
-    @GetMapping("/class/{classId}/tomorrow")
-    public ResponseEntity<List<Schedule>> getSchedulesForTomorrow(@PathVariable Long classId) {
+    @GetMapping("/class/{className}/tomorrow")
+    public ResponseEntity<List<Schedule>> getSchedulesForTomorrow(@PathVariable String className) {
         // Obține ziua următoare în limba engleză
         String englishNextDay = LocalDate.now()
                 .plusDays(1)
@@ -80,14 +80,17 @@ public class ScheduleController {
 
         // Traduce ziua în română
         String romanianNextDay = DAY_TRANSLATION.getOrDefault(englishNextDay, "");
+        className = className.toUpperCase();
 
         // Filtrare orare pentru ziua următoare
-        List<Schedule> schedulesForNextDay = scheduleService.getSchedulesByClassId(classId).stream()
+        List<Schedule> schedulesForNextDay = scheduleService.getSchedulesByClassName(className).stream()
                 .filter(schedule -> schedule.getScheduleDay().equalsIgnoreCase(romanianNextDay))
                 .toList();
 
         return ResponseEntity.ok(schedulesForNextDay);
     }
+
+
 
     private static final Map<String, String> DAY_TRANSLATION = new HashMap<>() {{
         put("Monday", "Luni");

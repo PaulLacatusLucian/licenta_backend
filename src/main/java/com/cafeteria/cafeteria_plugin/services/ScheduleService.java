@@ -47,4 +47,8 @@ public class ScheduleService {
         return scheduleRepository.findAllByClassIdWithTeacher(classId);
     }
 
+    public List<Schedule> getSchedulesByClassName(String className) {
+        return scheduleRepository.findAllByClassNameWithTeacher(className);
+    }
+
 }
