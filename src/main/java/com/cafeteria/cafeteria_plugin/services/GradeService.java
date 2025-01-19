@@ -1,11 +1,11 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Grade;
-import com.cafeteria.cafeteria_plugin.models.Semester;
 import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.repositories.ClassSessionRepository;
 import com.cafeteria.cafeteria_plugin.repositories.GradeRepository;
-import com.cafeteria.cafeteria_plugin.repositories.SemesterRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,36 +20,43 @@ public class GradeService {
     private final GradeRepository gradeRepository;
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
-    private final SemesterRepository semesterRepository;
+    private final ClassSessionRepository classSessionRepository;
 
     @Autowired
     public GradeService(GradeRepository gradeRepository,
                         StudentRepository studentRepository,
-                        TeacherRepository teacherRepository,
-                        SemesterRepository semesterRepository) {
+                        TeacherRepository teacherRepository, ClassSessionRepository classSessionRepository) {
         this.gradeRepository = gradeRepository;
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
-        this.semesterRepository = semesterRepository;
+        this.classSessionRepository = classSessionRepository;
     }
 
-    // Add a new grade
-    public Grade addGrade(Long studentId, Long teacherId, Long semesterId, Double gradeValue) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Studentul cu ID-ul specificat nu există."));
-        Teacher teacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul specificat nu există."));
-        Semester semester = semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new IllegalArgumentException("Semestrul cu ID-ul specificat nu există."));
+    public Grade addGrade(Long classSessionId, Long studentId, Double gradeValue) {
+        // Găsiți sesiunea de clasă
+        ClassSession classSession = classSessionRepository.findById(classSessionId)
+                .orElseThrow(() -> new RuntimeException("Class session not found"));
 
+        // Găsiți elevul
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        // Găsiți profesorul asociat sesiunii de clasă
+        Teacher teacher = classSession.getTeacher();
+        if (teacher == null) {
+            throw new RuntimeException("No teacher associated with the class session");
+        }
+
+        // Creați și salvați nota
         Grade grade = new Grade();
+        grade.setClassSession(classSession);
         grade.setStudent(student);
-        grade.setTeacher(teacher);
-        grade.setSemester(semester);
         grade.setGrade(gradeValue);
+        grade.setTeacher(teacher);
 
         return gradeRepository.save(grade);
     }
+
 
     // Get all grades
     public List<Grade> getAllGrades() {
@@ -62,7 +69,7 @@ public class GradeService {
     }
 
     // Update a grade
-    public Grade updateGrade(Long id, Long studentId, Long teacherId, Long semesterId, Double gradeValue) {
+    public Grade updateGrade(Long id, Long studentId, Long teacherId, Double gradeValue) {
         Grade existingGrade = gradeRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Nota cu ID-ul specificat nu există."));
 
@@ -70,12 +77,9 @@ public class GradeService {
                 .orElseThrow(() -> new IllegalArgumentException("Studentul cu ID-ul specificat nu există."));
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul specificat nu există."));
-        Semester semester = semesterRepository.findById(semesterId)
-                .orElseThrow(() -> new IllegalArgumentException("Semestrul cu ID-ul specificat nu există."));
 
         existingGrade.setStudent(student);
         existingGrade.setTeacher(teacher);
-        existingGrade.setSemester(semester);
         existingGrade.setGrade(gradeValue);
 
         return gradeRepository.save(existingGrade);
@@ -84,5 +88,20 @@ public class GradeService {
     // Delete a grade by ID
     public void deleteGrade(Long id) {
         gradeRepository.deleteById(id);
+    }
+
+    // Save grade
+    public Grade addGrade(Grade grade) {
+        return gradeRepository.save(grade);
+    }
+
+    public Student getStudentById(Long studentId) {
+        return studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Studentul cu ID-ul specificat nu există."));
+    }
+
+    public Teacher getTeacherById(Long teacherId) {
+        return teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul specificat nu există."));
     }
 }

@@ -1,27 +1,31 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity
 public class Grade {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student; // Studentul care are nota
-
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private Teacher teacher; // Profesorul care a dat nota
+    private Double grade;
 
     @ManyToOne
-    @JoinColumn(name = "semester_id", nullable = false)
-    private Semester semester; // Semestrul în care a fost acordată nota
+    @JoinColumn(name = "class_session_id", nullable = false)
+    @JsonIgnore
+    private ClassSession classSession;
 
-    private Double grade; // Nota obținută
+    @ManyToOne
+    @JoinColumn(name = "student_id", nullable = false)
+    private Student student;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_id", nullable = false)
+    @JsonIgnore
+    private Teacher teacher;
+
+    // Getters, setters, și alte metode...
 }

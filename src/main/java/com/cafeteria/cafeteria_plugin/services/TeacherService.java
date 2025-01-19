@@ -1,9 +1,8 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.models.Schedule;
-import com.cafeteria.cafeteria_plugin.models.Student;
-import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.repositories.ClassSessionRepository;
 import com.cafeteria.cafeteria_plugin.repositories.ScheduleRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
@@ -18,11 +17,14 @@ public class TeacherService {
     private final TeacherRepository teacherRepository;
     private final ScheduleRepository scheduleRepository;
     private final StudentRepository studentRepository;
+    private final ClassSessionRepository classSessionRepository;
 
-    public TeacherService(TeacherRepository teacherRepository, ScheduleRepository scheduleRepository, StudentRepository studentRepository) {
+
+    public TeacherService(TeacherRepository teacherRepository, ScheduleRepository scheduleRepository, StudentRepository studentRepository, ClassSessionRepository classSessionRepository) {
         this.teacherRepository = teacherRepository;
         this.scheduleRepository = scheduleRepository;
         this.studentRepository = studentRepository;
+        this.classSessionRepository = classSessionRepository;
     }
 
     // Adaugă un profesor
@@ -85,4 +87,10 @@ public class TeacherService {
         return scheduleRepository.findByTeacherId(teacherId);
     }
 
+    public List<ClassSession> getSessionsForTeacher(Long teacherId) {
+        if (!teacherRepository.existsById(teacherId)) {
+            throw new IllegalArgumentException("Teacher not found");
+        }
+        return classSessionRepository.findByTeacherId(teacherId);
+    }
 }

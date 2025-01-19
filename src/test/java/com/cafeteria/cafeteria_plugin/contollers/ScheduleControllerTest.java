@@ -1,4 +1,6 @@
 package com.cafeteria.cafeteria_plugin.contollers;
+
+import com.cafeteria.cafeteria_plugin.controllers.ScheduleController;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.services.ScheduleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,8 +9,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
-import com.cafeteria.cafeteria_plugin.controllers.ScheduleController;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,11 +30,13 @@ public class ScheduleControllerTest {
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        // Creează un obiect Schedule cu LocalDateTime
         schedule = new Schedule();
         schedule.setId(1L);
-        schedule.setDay("Monday");
-        schedule.setStartTime("08:00");
-        schedule.setEndTime("10:00");
+        schedule.setScheduleDay("Monday");
+        schedule.setStartTime(String.valueOf(LocalDateTime.of(2025, 1, 19, 8, 0))); // 2025-01-19T08:00
+        schedule.setEndTime(String.valueOf(LocalDateTime.of(2025, 1, 19, 10, 0))); // 2025-01-19T10:00
     }
 
     @Test
@@ -73,9 +77,9 @@ public class ScheduleControllerTest {
     @Test
     public void testUpdateSchedule() {
         Schedule updatedSchedule = new Schedule();
-        updatedSchedule.setDay("Tuesday");
-        updatedSchedule.setStartTime("10:00");
-        updatedSchedule.setEndTime("12:00");
+        updatedSchedule.setScheduleDay("Tuesday");
+        updatedSchedule.setStartTime(String.valueOf(LocalDateTime.of(2025, 1, 19, 10, 0))); // 2025-01-19T10:00
+        updatedSchedule.setEndTime(String.valueOf(LocalDateTime.of(2025, 1, 19, 12, 0))); // 2025-01-19T12:00
 
         when(scheduleService.updateSchedule(1L, updatedSchedule)).thenReturn(updatedSchedule);
 
