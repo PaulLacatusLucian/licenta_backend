@@ -1,5 +1,6 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
@@ -83,5 +84,16 @@ public class TeacherController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
+
+    @GetMapping("/{id}/sessions")
+    public ResponseEntity<List<ClassSession>> getSessionsForTeacher(@PathVariable Long id) {
+        try {
+            List<ClassSession> sessions = teacherService.getSessionsForTeacher(id);
+            return ResponseEntity.ok(sessions);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
 
 }
