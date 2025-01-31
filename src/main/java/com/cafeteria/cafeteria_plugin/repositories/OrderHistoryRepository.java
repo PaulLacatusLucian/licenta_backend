@@ -9,4 +9,8 @@ import java.util.List;
 
 public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Long> {
     List<OrderHistory> findAllByUserAndOrderTimeBetween(User user, LocalDateTime start, LocalDateTime end);
+
+    List<OrderHistory> findByStudentId(Long id);
+
+    List<OrderHistory> findByParentIdAndStudentId(Long id, Long id1);
 }

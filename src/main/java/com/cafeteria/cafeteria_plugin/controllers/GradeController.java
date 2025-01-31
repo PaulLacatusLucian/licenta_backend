@@ -1,5 +1,6 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.dtos.GradeDTO;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Grade;
 import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
@@ -43,13 +44,6 @@ public class GradeController {
         return gradeService.getAllGrades();
     }
 
-    // Endpoint to get a grade by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Grade> getGradeById(@PathVariable Long id) {
-        Optional<Grade> grade = gradeService.getGradeById(id);
-        return grade.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
 
     // Endpoint to update a grade by ID
     @PutMapping("/{id}")
@@ -80,4 +74,11 @@ public class GradeController {
         Grade savedGrade = gradeService.addGrade(grade); // Save the grade
         return ResponseEntity.ok(savedGrade);
     }
+
+    @GetMapping("/{studentId}")
+    public List<GradeDTO> getGradesByStudent(@PathVariable Long studentId) {
+        return gradeService.getGradesByStudent(studentId);
+    }
+
+
 }
