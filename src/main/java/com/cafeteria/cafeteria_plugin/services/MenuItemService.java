@@ -1,14 +1,11 @@
 package com.cafeteria.cafeteria_plugin.services;
 
-import com.cafeteria.cafeteria_plugin.models.MenuItem;
-import com.cafeteria.cafeteria_plugin.models.OrderHistory;
-import com.cafeteria.cafeteria_plugin.models.User;
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.repositories.MenuItemRepository;
 import com.cafeteria.cafeteria_plugin.repositories.OrderHistoryRepository;
-import com.cafeteria.cafeteria_plugin.repositories.UserRepository;
+import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
+import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import org.springframework.stereotype.Service;
-
-import java.io.ByteArrayOutputStream;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,29 +17,35 @@ public class MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
     private final OrderHistoryRepository orderHistoryRepository;
-    private final UserRepository userRepository;
+    private final ParentRepository parentRepository;
+    private final StudentRepository studentRepository;
 
     public MenuItemService(MenuItemRepository menuItemRepository,
                            OrderHistoryRepository orderHistoryRepository,
-                           UserRepository userRepository) {
+                           ParentRepository parentRepository,
+                           StudentRepository studentRepository) {
         this.menuItemRepository = menuItemRepository;
         this.orderHistoryRepository = orderHistoryRepository;
-        this.userRepository = userRepository;
+        this.parentRepository = parentRepository;
+        this.studentRepository = studentRepository;
     }
 
-
+    // ✅ Adaugă un nou produs în meniu
     public MenuItem addMenuItem(MenuItem menuItem) {
         return menuItemRepository.save(menuItem);
     }
 
+    // ✅ Returnează toate produsele din meniu
     public List<MenuItem> getAllMenuItems() {
         return menuItemRepository.findAll();
     }
 
+    // ✅ Returnează un produs după ID
     public Optional<MenuItem> getMenuItemById(Long id) {
         return menuItemRepository.findById(id);
     }
 
+    // ✅ Actualizează un produs
     public MenuItem updateMenuItem(Long id, MenuItem updatedMenuItem) {
         return menuItemRepository.findById(id).map(existingMenuItem -> {
             existingMenuItem.setName(updatedMenuItem.getName());
@@ -53,6 +56,7 @@ public class MenuItemService {
         }).orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
     }
 
+    // ✅ Șterge un produs
     public boolean deleteMenuItem(Long id) {
         if (menuItemRepository.existsById(id)) {
             menuItemRepository.deleteById(id);
@@ -61,6 +65,7 @@ public class MenuItemService {
         return false;
     }
 
+    // ✅ Actualizează imaginea unui produs
     public void updateMenuItemImage(Long id, String imageUrl) {
         menuItemRepository.findById(id).ifPresent(menuItem -> {
             menuItem.setImageUrl(imageUrl);
@@ -68,45 +73,54 @@ public class MenuItemService {
         });
     }
 
-    public MenuItem purchaseMenuItem(Long userId, Long menuItemId, int quantity) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
+    // ✅ Părintele comandă pentru elev
+    public void purchaseMenuItem(Long parentId, Long studentId, Long menuItemId, int quantity) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
                 .orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
 
         if (menuItem.getQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough stock available");
+            throw new IllegalArgumentException("Not enough stock available.");
         }
 
         // Scade cantitatea din stoc
         menuItem.setQuantity(menuItem.getQuantity() - quantity);
         menuItemRepository.save(menuItem);
 
-        // Creează o comandă și leag-o de utilizator
+        // Creează comanda și leag-o de părinte și elev
         OrderHistory order = new OrderHistory();
         order.setMenuItemName(menuItem.getName());
         order.setPrice(menuItem.getPrice() * quantity);
         order.setQuantity(quantity);
         order.setOrderTime(LocalDateTime.now());
-        order.setUser(user); // Asociază comanda utilizatorului
+        order.setParent(parent);
+        order.setStudent(student);
+
         orderHistoryRepository.save(order);
-
-        return menuItem;
     }
 
-
-    public List<OrderHistory> getOrderHistoryForUser(Long userId, int month, int year) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
-        return orderHistoryRepository.findAllByUserAndOrderTimeBetween(user, start, end);
+    // ✅ Returnează istoricul comenzilor unui elev
+    public List<OrderHistory> getOrderHistoryForStudent(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+        return orderHistoryRepository.findByStudentId(student.getId());
     }
 
+    // ✅ Returnează istoricul comenzilor unui părinte pentru un elev
+    public List<OrderHistory> getOrderHistoryForParent(Long parentId, Long studentId) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+        return orderHistoryRepository.findByParentIdAndStudentId(parent.getId(), student.getId());
+    }
 
-    public String generateInvoiceForUser(Long userId, int month, int year) {
-        List<OrderHistory> orders = getOrderHistoryForUser(userId, month, year);
+    // ✅ Generează o factură pentru un elev
+    public String generateInvoiceForStudent(Long studentId, int month, int year) {
+        List<OrderHistory> orders = getOrderHistoryForStudent(studentId);
         double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
@@ -118,7 +132,7 @@ public class MenuItemService {
             invoice.append(order.getMenuItemName())
                     .append(" x ").append(order.getQuantity())
                     .append(" = $").append(order.getPrice())
-                    .append(" | Date: ").append(order.getOrderTime().format(dateTimeFormatter)) // Adaugă data și ora
+                    .append(" | Date: ").append(order.getOrderTime().format(dateTimeFormatter))
                     .append("\n");
         }
         invoice.append("====================================\n");
@@ -126,5 +140,4 @@ public class MenuItemService {
 
         return invoice.toString();
     }
-
 }

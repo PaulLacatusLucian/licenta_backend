@@ -28,13 +28,14 @@ public class MenuItemController {
         this.menuItemService = menuItemService;
     }
 
+    // ✅ Adaugă un produs în meniu cu imagine
     @PostMapping("/add")
     public ResponseEntity<String> addMenuItemWithImage(
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
             @RequestParam("quantity") Integer quantity,
-            @RequestParam(value = "allergens", required = false) List<String> allergens, // Lista de alergeni
+            @RequestParam(value = "allergens", required = false) List<String> allergens,
             @RequestParam(value = "file", required = false) MultipartFile file) {
         try {
             String imageUrl = null;
@@ -51,23 +52,37 @@ public class MenuItemController {
             menuItem.setPrice(price);
             menuItem.setQuantity(quantity);
             menuItem.setImageUrl(imageUrl);
-            menuItem.setAllergens(allergens); // Setăm lista de alergeni
+            menuItem.setAllergens(allergens);
 
             menuItemService.addMenuItem(menuItem);
-
             return ResponseEntity.ok("Menu item added successfully!");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file");
         }
     }
 
+    // ✅ Părintele comandă pentru elev
+    @PostMapping("/{menuItemId}/purchase")
+    public ResponseEntity<String> purchaseMenuItem(
+            @RequestParam Long parentId,   // ID-ul părintelui care comandă
+            @RequestParam Long studentId,  // ID-ul elevului care primește comanda
+            @PathVariable Long menuItemId, // ID-ul produsului
+            @RequestParam int quantity) {
+        try {
+            menuItemService.purchaseMenuItem(parentId, studentId, menuItemId, quantity);
+            return ResponseEntity.ok("Purchase successful!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 
-
+    // ✅ Returnează toate produsele din meniu
     @GetMapping("/all")
     public List<MenuItem> getAllMenuItems() {
         return menuItemService.getAllMenuItems();
     }
 
+    // ✅ Returnează un produs după ID
     @GetMapping("/{id}")
     public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Long id) {
         Optional<MenuItem> menuItem = menuItemService.getMenuItemById(id);
@@ -75,6 +90,7 @@ public class MenuItemController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
+    // ✅ Actualizează un produs
     @PutMapping("/{id}")
     public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem updatedMenuItem) {
         Optional<MenuItem> existingMenuItem = menuItemService.getMenuItemById(id);
@@ -86,55 +102,39 @@ public class MenuItemController {
         }
     }
 
-
+    // ✅ Șterge un produs
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         boolean isDeleted = menuItemService.deleteMenuItem(id);
         if (isDeleted) {
-            return ResponseEntity.noContent().build(); // 204 No Content response
+            return ResponseEntity.noContent().build();
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // 404 Not Found response if the item isn't found
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
-    @PostMapping("/{menuItemId}/purchase")
-    public ResponseEntity<String> purchaseMenuItem(
-            @RequestParam Long userId, // ID-ul utilizatorului
-            @PathVariable Long menuItemId, // ID-ul produsului
-            @RequestParam int quantity) {
-        try {
-            menuItemService.purchaseMenuItem(userId, menuItemId, quantity);
-            return ResponseEntity.ok("Purchase successful!");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    // ✅ Returnează comenzile unui elev
+    @GetMapping("/orders/{studentId}")
+    public ResponseEntity<List<OrderHistory>> getStudentOrders(@PathVariable Long studentId) {
+        List<OrderHistory> orders = menuItemService.getOrderHistoryForStudent(studentId);
+        return ResponseEntity.ok(orders);
     }
 
-
-    @GetMapping("/{userId}/history/{month}/{year}")
-    public ResponseEntity<List<OrderHistory>> getUserOrderHistory(@PathVariable Long userId, @PathVariable int month, @PathVariable int year) {
-        return ResponseEntity.ok(menuItemService.getOrderHistoryForUser(userId, month, year));
+    // ✅ Returnează comenzile plasate de un părinte pentru un elev
+    @GetMapping("/orders/{parentId}/{studentId}")
+    public ResponseEntity<List<OrderHistory>> getParentOrdersForStudent(
+            @PathVariable Long parentId, @PathVariable Long studentId) {
+        List<OrderHistory> orders = menuItemService.getOrderHistoryForParent(parentId, studentId);
+        return ResponseEntity.ok(orders);
     }
 
-    @GetMapping("/{userId}/invoice/{month}/{year}")
-    public ResponseEntity<String> generateUserInvoice(@PathVariable Long userId, @PathVariable int month, @PathVariable int year) {
-        return ResponseEntity.ok(menuItemService.generateInvoiceForUser(userId, month, year));
+    // ✅ Generează factura unui elev pentru o anumită lună și an
+    @GetMapping("/{studentId}/invoice/{month}/{year}")
+    public ResponseEntity<String> generateStudentInvoice(@PathVariable Long studentId, @PathVariable int month, @PathVariable int year) {
+        return ResponseEntity.ok(menuItemService.generateInvoiceForStudent(studentId, month, year));
     }
 
-//    @GetMapping("/{userId}/invoice/{month}/{year}/download")
-//    public ResponseEntity<byte[]> downloadInvoicePdf(
-//            @PathVariable Long userId,
-//            @PathVariable int month,
-//            @PathVariable int year) {
-//        String invoiceContent = menuItemService.generateInvoiceForUser(userId, month, year);
-//        byte[] pdfBytes = menuItemService.generateInvoicePdf(invoiceContent);
-//
-//        return ResponseEntity.ok()
-//                .header("Content-Disposition", "attachment; filename=invoice_" + userId + "_" + month + "_" + year + ".pdf")
-//                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
-//                .body(pdfBytes);
-//    }
-
+    // ✅ Upload de imagine pentru un produs
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<String> uploadImage(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {

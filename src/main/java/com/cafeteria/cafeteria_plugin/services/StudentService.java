@@ -2,13 +2,10 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.repositories.ClassRepository;
-import com.cafeteria.cafeteria_plugin.repositories.PastStudentRepository;
-import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
+import com.cafeteria.cafeteria_plugin.repositories.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.cafeteria.cafeteria_plugin.repositories.AbsenceRepository;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +26,9 @@ public class StudentService {
 
     @Autowired
     private PastStudentRepository pastStudentRepository;
+
+    @Autowired
+    private GradeRepository gradeRepository;
 
     @Transactional
     public Student saveStudentWithClass(Student studentDetails, Long classId) {
@@ -87,13 +87,17 @@ public class StudentService {
     }
 
 
+    @Transactional
     public void deleteStudent(Long id) {
-        studentRepository.findById(id)
-                .ifPresentOrElse(studentRepository::delete,
-                        () -> {
-                            throw new IllegalArgumentException("Student not found with ID: " + id);
-                        });
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
+
+        gradeRepository.deleteByStudentId(student.getId());
+
+        // Acum poți șterge studentul în siguranță
+        studentRepository.delete(student);
     }
+
 
     @Transactional
     public void advanceYear() {

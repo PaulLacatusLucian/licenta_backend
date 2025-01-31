@@ -1,5 +1,6 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.dtos.GradeDTO;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Grade;
 import com.cafeteria.cafeteria_plugin.models.Student;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class GradeService {
@@ -103,5 +105,17 @@ public class GradeService {
     public Teacher getTeacherById(Long teacherId) {
         return teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul specificat nu există."));
+    }
+
+    public List<GradeDTO> getGradesByStudent(Long studentId) {
+        return gradeRepository.findByStudentId(studentId)
+                .stream()
+                .map(grade -> new GradeDTO(
+                        grade.getGrade(),
+                        grade.getTeacher().getName(),
+                        grade.getTeacher().getSubject(),
+                        grade.getClassSession().getStartTime() // Presupunând că ai un câmp pentru data notei
+                ))
+                .collect(Collectors.toList());
     }
 }
