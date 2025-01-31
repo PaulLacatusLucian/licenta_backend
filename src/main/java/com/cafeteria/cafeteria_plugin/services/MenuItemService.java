@@ -51,7 +51,7 @@ public class MenuItemService {
             existingMenuItem.setName(updatedMenuItem.getName());
             existingMenuItem.setDescription(updatedMenuItem.getDescription());
             existingMenuItem.setPrice(updatedMenuItem.getPrice());
-            existingMenuItem.setQuantity(updatedMenuItem.getQuantity()); // Actualizare cantitate
+            existingMenuItem.setQuantity(updatedMenuItem.getQuantity());
             return menuItemRepository.save(existingMenuItem);
         }).orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
     }
@@ -73,7 +73,25 @@ public class MenuItemService {
         });
     }
 
-    // ✅ Părintele comandă pentru elev
+    // ✅ Istoricul comenzilor pentru un părinte
+    public List<OrderHistory> getOrderHistoryForParent(Long parentId, int month, int year) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+        return orderHistoryRepository.findAllByParentAndOrderTimeBetween(parent, start, end);
+    }
+
+    // ✅ Istoricul comenzilor pentru un elev
+    public List<OrderHistory> getOrderHistoryForStudent(Long studentId, int month, int year) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+        return orderHistoryRepository.findAllByStudentAndOrderTimeBetween(student, start, end);
+    }
+
+    // ✅ Permite unui părinte să comande mâncare pentru un elev
     public void purchaseMenuItem(Long parentId, Long studentId, Long menuItemId, int quantity) {
         Parent parent = parentRepository.findById(parentId)
                 .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
@@ -83,14 +101,14 @@ public class MenuItemService {
                 .orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
 
         if (menuItem.getQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough stock available.");
+            throw new IllegalArgumentException("Not enough stock available for " + menuItem.getName());
         }
 
         // Scade cantitatea din stoc
         menuItem.setQuantity(menuItem.getQuantity() - quantity);
         menuItemRepository.save(menuItem);
 
-        // Creează comanda și leag-o de părinte și elev
+        // Creează comanda
         OrderHistory order = new OrderHistory();
         order.setMenuItemName(menuItem.getName());
         order.setPrice(menuItem.getPrice() * quantity);
@@ -102,25 +120,9 @@ public class MenuItemService {
         orderHistoryRepository.save(order);
     }
 
-    // ✅ Returnează istoricul comenzilor unui elev
-    public List<OrderHistory> getOrderHistoryForStudent(Long studentId) {
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
-        return orderHistoryRepository.findByStudentId(student.getId());
-    }
-
-    // ✅ Returnează istoricul comenzilor unui părinte pentru un elev
-    public List<OrderHistory> getOrderHistoryForParent(Long parentId, Long studentId) {
-        Parent parent = parentRepository.findById(parentId)
-                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
-        Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
-        return orderHistoryRepository.findByParentIdAndStudentId(parent.getId(), student.getId());
-    }
-
     // ✅ Generează o factură pentru un elev
     public String generateInvoiceForStudent(Long studentId, int month, int year) {
-        List<OrderHistory> orders = getOrderHistoryForStudent(studentId);
+        List<OrderHistory> orders = getOrderHistoryForStudent(studentId, month, year);
         double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
