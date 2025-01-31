@@ -61,12 +61,12 @@ public class MenuItemController {
         }
     }
 
-    // ✅ Părintele comandă pentru elev
+    // ✅ Părintele comandă mâncare pentru elev
     @PostMapping("/{menuItemId}/purchase")
     public ResponseEntity<String> purchaseMenuItem(
-            @RequestParam Long parentId,   // ID-ul părintelui care comandă
-            @RequestParam Long studentId,  // ID-ul elevului care primește comanda
-            @PathVariable Long menuItemId, // ID-ul produsului
+            @RequestParam Long parentId,
+            @RequestParam Long studentId,
+            @PathVariable Long menuItemId,
             @RequestParam int quantity) {
         try {
             menuItemService.purchaseMenuItem(parentId, studentId, menuItemId, quantity);
@@ -78,8 +78,9 @@ public class MenuItemController {
 
     // ✅ Returnează toate produsele din meniu
     @GetMapping("/all")
-    public List<MenuItem> getAllMenuItems() {
-        return menuItemService.getAllMenuItems();
+    public ResponseEntity<List<MenuItem>> getAllMenuItems() {
+        List<MenuItem> menuItems = menuItemService.getAllMenuItems();
+        return ResponseEntity.ok(menuItems);
     }
 
     // ✅ Returnează un produs după ID
@@ -93,11 +94,10 @@ public class MenuItemController {
     // ✅ Actualizează un produs
     @PutMapping("/{id}")
     public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem updatedMenuItem) {
-        Optional<MenuItem> existingMenuItem = menuItemService.getMenuItemById(id);
-        if (existingMenuItem.isPresent()) {
+        try {
             MenuItem updatedItem = menuItemService.updateMenuItem(id, updatedMenuItem);
             return ResponseEntity.ok(updatedItem);
-        } else {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
@@ -106,25 +106,22 @@ public class MenuItemController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         boolean isDeleted = menuItemService.deleteMenuItem(id);
-        if (isDeleted) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    // ✅ Returnează comenzile unui elev
-    @GetMapping("/orders/{studentId}")
-    public ResponseEntity<List<OrderHistory>> getStudentOrders(@PathVariable Long studentId) {
-        List<OrderHistory> orders = menuItemService.getOrderHistoryForStudent(studentId);
+    // ✅ Returnează comenzile unui elev pentru o anumită lună și an
+    @GetMapping("/orders/student/{studentId}/{month}/{year}")
+    public ResponseEntity<List<OrderHistory>> getStudentOrders(
+            @PathVariable Long studentId, @PathVariable int month, @PathVariable int year) {
+        List<OrderHistory> orders = menuItemService.getOrderHistoryForStudent(studentId, month, year);
         return ResponseEntity.ok(orders);
     }
 
-    // ✅ Returnează comenzile plasate de un părinte pentru un elev
-    @GetMapping("/orders/{parentId}/{studentId}")
-    public ResponseEntity<List<OrderHistory>> getParentOrdersForStudent(
-            @PathVariable Long parentId, @PathVariable Long studentId) {
-        List<OrderHistory> orders = menuItemService.getOrderHistoryForParent(parentId, studentId);
+    // ✅ Returnează comenzile unui părinte pentru un elev într-o anumită lună și an
+    @GetMapping("/orders/parent/{parentId}/{month}/{year}")
+    public ResponseEntity<List<OrderHistory>> getParentOrders(
+            @PathVariable Long parentId, @PathVariable int month, @PathVariable int year) {
+        List<OrderHistory> orders = menuItemService.getOrderHistoryForParent(parentId, month, year);
         return ResponseEntity.ok(orders);
     }
 
