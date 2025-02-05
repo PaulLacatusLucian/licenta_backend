@@ -39,4 +39,9 @@ public class ChefService {
         }
         return false;
     }
+
+    public Chef updateChef(Chef chef) {
+        return chefRepository.save(chef);
+    }
 }
+
