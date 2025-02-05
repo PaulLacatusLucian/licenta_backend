@@ -50,4 +50,19 @@ public class ChefController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+    // ✅ Actualizarea unui bucătar existent
+    @PutMapping("/{id}")
+    public ResponseEntity<Chef> updateChef(@PathVariable Long id, @RequestBody Chef updatedChef) {
+        Optional<Chef> existingChef = chefService.getChefById(id);
+        if (existingChef.isPresent()) {
+            Chef chefToUpdate = existingChef.get();
+            chefToUpdate.setName(updatedChef.getName());
+            Chef savedChef = chefService.updateChef(chefToUpdate);
+            return ResponseEntity.ok(savedChef);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

@@ -20,13 +20,14 @@ public class Class {
     @OneToOne
     @JsonManagedReference
     @JoinColumn(name = "teacher_id", referencedColumnName = "id", unique = true)
-    @EqualsAndHashCode.Exclude // Exclude pentru a preveni ciclicitatea
+    @EqualsAndHashCode.Exclude
     private Teacher classTeacher;
 
-    private String specialization;
-
-    @OneToMany(mappedBy = "studentClass")
+    @OneToMany(mappedBy = "studentClass", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Schedule> schedules;
+
+
+    private String specialization;
 }
 
