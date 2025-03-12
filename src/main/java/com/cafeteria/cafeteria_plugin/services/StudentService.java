@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-
 @Service
 public class StudentService {
 
@@ -22,7 +21,7 @@ public class StudentService {
     private ClassRepository classRepository;
 
     @Autowired
-    private AbsenceRepository absenceRepository; // Repository pentru absențe
+    private AbsenceRepository absenceRepository;
 
     @Autowired
     private PastStudentRepository pastStudentRepository;
@@ -32,38 +31,24 @@ public class StudentService {
 
     @Transactional
     public Student saveStudentWithClass(Student studentDetails, Long classId) {
-        // Caută clasa asociată
-        Class studentClass = classRepository.findById(classId)
+        Class studentSchoolClass = classRepository.findById(classId)
                 .orElseThrow(() -> new IllegalArgumentException("Clasa cu ID-ul " + classId + " nu există"));
 
-        // Asociază clasa studentului
-        studentDetails.setStudentClass(studentClass);
-
-        // Asociază părintele doar în cadrul studentului
-        Parent parent = studentDetails.getParent();
-        if (parent != null) {
-            // Validări sau alte operațiuni asupra obiectului Parent, dacă sunt necesare
-            // Nu mai setăm relația inversă
-        }
-
-        // Salvează studentul împreună cu părintele
+        studentDetails.setStudentClass(studentSchoolClass);
         return studentRepository.save(studentDetails);
     }
 
-    public Optional<Student> getStudentById(Long id) {
-        // Caută studentul în baza de date și returnează inclusiv părintele
-        return studentRepository.findById(id);
+    public Student getStudentById(Long id) {
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Studentul cu ID-ul " + id + " nu există"));
     }
 
-    // Obține absențele studentului folosind AbsenceRepository
     public List<Absence> getAbsencesByStudentId(Long studentId) {
         return absenceRepository.findByStudentId(studentId);
     }
 
-    // Exemplu pentru cursurile viitoare (poate fi extins ulterior)
     public List<Class> getUpcomingClasses(Long studentId) {
-        // Înlocuiește cu logica ta pentru cursurile viitoare
-        return Collections.emptyList(); // Deocamdată returnează o listă goală
+        return Collections.emptyList();
     }
 
     public Optional<Student> getStudentByParentId(Long parentId) {
@@ -74,18 +59,18 @@ public class StudentService {
         return studentRepository.findAll();
     }
 
+    @Transactional
     public Student updateStudent(Long id, Student updatedStudent) {
-        return studentRepository.findById(id)
-                .map(existingStudent -> {
-                    existingStudent.setName(updatedStudent.getName());
-                    existingStudent.setEmail(updatedStudent.getEmail());
-                    existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
-                    existingStudent.setStudentClass(updatedStudent.getStudentClass());
-                    return studentRepository.save(existingStudent);
-                })
+        Student existingStudent = studentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
-    }
 
+        existingStudent.setName(updatedStudent.getName());
+        existingStudent.setEmail(updatedStudent.getEmail());
+        existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
+        existingStudent.setStudentClass(updatedStudent.getStudentClass());
+
+        return studentRepository.save(existingStudent);
+    }
 
     @Transactional
     public void deleteStudent(Long id) {
@@ -93,70 +78,65 @@ public class StudentService {
                 .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
 
         gradeRepository.deleteByStudentId(student.getId());
-
-        // Acum poți șterge studentul în siguranță
         studentRepository.delete(student);
     }
 
-
     @Transactional
     public void advanceYear() {
-        // Obține toate clasele
-        List<Class> allClasses = classRepository.findAll();
+        List<Class> allSchoolClasses = classRepository.findAll();
 
-        for (Class currentClass : allClasses) {
-            String className = currentClass.getName();
+        for (Class currentSchoolClass : allSchoolClasses) {
+            String className = currentSchoolClass.getName();
 
-            // Verifică dacă clasa este de tip "12X"
             if (className.startsWith("12")) {
-                // Obține toți studenții din această clasă
-                List<Student> studentsInClass = studentRepository.findByStudentClass(currentClass);
-
-                for (Student student : studentsInClass) {
-                    // Creează un nou PastStudent
-                    PastStudent pastStudent = new PastStudent(
-                            null,
-                            student.getName(),
-                            currentClass.getSpecialization()
-                    );
-
-                    // Salvează în tabela PastStudents
-                    pastStudentRepository.save(pastStudent);
-
-                    // Șterge studentul din tabela curentă
-                    studentRepository.delete(student);
-                }
+                graduateStudents(currentSchoolClass);
             } else {
-                // Crește anul pentru restul claselor
-                try {
-                    // Extrage partea numerică de la începutul numelui clasei
-                    String numericPart = className.replaceAll("^(\\d+).*", "$1");
-                    int currentYear = Integer.parseInt(numericPart);
-
-                    // Creează un nou nume pentru clasă
-                    String newClassName = (currentYear + 1) + className.substring(numericPart.length());
-
-                    // Găsește sau creează noua clasă
-                    Class newClass = classRepository.findByName(newClassName)
-                            .orElseGet(() -> {
-                                Class c = new Class();
-                                c.setName(newClassName);
-                                c.setSpecialization(currentClass.getSpecialization());
-                                c.setClassTeacher(null); // Profesorul poate fi setat separat dacă e nevoie
-                                return classRepository.save(c);
-                            });
-
-                    // Mută toți studenții în noua clasă
-                    List<Student> studentsInClass = studentRepository.findByStudentClass(currentClass);
-
-                    for (Student student : studentsInClass) {
-                        student.setStudentClass(newClass); // Actualizează referința clasei
-                    }
-                } catch (NumberFormatException e) {
-                    throw new RuntimeException("Numele clasei nu începe cu un număr valid: " + className);
-                }
+                moveStudentsToNextClass(currentSchoolClass);
             }
         }
     }
-}
 
+    private void graduateStudents(Class currentSchoolClass) {
+        List<Student> studentsInClass = studentRepository.findByStudentClass(currentSchoolClass);
+
+        for (Student student : studentsInClass) {
+            PastStudent pastStudent = new PastStudent(
+                    null,
+                    student.getName(),
+                    currentSchoolClass.getSpecialization()
+            );
+
+            pastStudentRepository.save(pastStudent);
+            studentRepository.delete(student);
+        }
+    }
+
+    private void moveStudentsToNextClass(Class currentSchoolClass) {
+        String className = currentSchoolClass.getName();
+        String numericPart = className.replaceAll("^(\\d+).*", "$1");
+
+        try {
+            int currentYear = Integer.parseInt(numericPart);
+            String newClassName = (currentYear + 1) + className.substring(numericPart.length());
+
+            Class newSchoolClass = classRepository.findByName(newClassName)
+                    .orElseGet(() -> createNewClass(newClassName, currentSchoolClass));
+
+            List<Student> studentsInClass = studentRepository.findByStudentClass(currentSchoolClass);
+
+            for (Student student : studentsInClass) {
+                student.setStudentClass(newSchoolClass);
+            }
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Numele clasei nu începe cu un număr valid: " + className);
+        }
+    }
+
+    private Class createNewClass(String newClassName, Class oldSchoolClass) {
+        Class newSchoolClass = new Class();
+        newSchoolClass.setName(newClassName);
+        newSchoolClass.setSpecialization(oldSchoolClass.getSpecialization());
+        newSchoolClass.setClassTeacher(null);
+        return classRepository.save(newSchoolClass);
+    }
+}

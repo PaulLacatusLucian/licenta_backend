@@ -6,10 +6,11 @@ import com.cafeteria.cafeteria_plugin.services.ParentService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/parents")
@@ -23,42 +24,44 @@ public class ParentController {
         this.studentService = studentService;
     }
 
+    // ✅ Doar ADMIN poate vedea toți părinții
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping
-    public List<Parent> getAllParents() {
-        return parentService.getAllParents();
+    public ResponseEntity<List<Parent>> getAllParents() {
+        return ResponseEntity.ok(parentService.getAllParents());
     }
 
+    // ✅ PARENT poate vedea doar propriul profil, ADMIN poate vedea orice părinte
+    @PreAuthorize("hasAuthority('PARENT') or hasAuthority('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<Parent> getParentById(@PathVariable Long id) {
-        Optional<Parent> parent = parentService.getParentById(id);
-        return parent.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        Parent parent = parentService.getParentById(id);
+        return ResponseEntity.ok(parent);
     }
 
+    // ✅ Doar ADMIN sau PARENT poate modifica datele unui părinte
+    @PreAuthorize("hasAuthority('PARENT') or hasAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Parent> updateParent(@PathVariable Long id, @RequestBody Parent parent) {
         return ResponseEntity.ok(parentService.updateParent(id, parent));
     }
 
+    // ✅ Doar ADMIN poate șterge un părinte
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteParent(@PathVariable Long id) {
         parentService.deleteParent(id);
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAuthority('PARENT') or hasAuthority('TEACHER') or hasAuthority('ADMIN')")
     @GetMapping("/{id}/student")
     public ResponseEntity<?> getStudentForParent(@PathVariable Long id) {
-        Optional<Parent> parent = parentService.getParentById(id);
-        if (parent.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Parent not found");
-        }
+        Parent parent = parentService.getParentById(id);
 
-        Parent parentEntity = parent.get();
-        Optional<Student> student = studentService.getStudentByParentId(parentEntity.getId());
-        if (student.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No student associated with this parent");
-        }
-
-        return ResponseEntity.ok(student.get());
+        return studentService.getStudentByParentId(parent.getId())
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "No student associated with this parent")));
     }
+
 }

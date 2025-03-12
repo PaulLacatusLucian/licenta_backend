@@ -2,7 +2,6 @@ package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.services.ScheduleService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
