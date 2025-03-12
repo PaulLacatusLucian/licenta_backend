@@ -3,55 +3,64 @@ package com.cafeteria.cafeteria_plugin.services;
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ParentService {
 
-    private final ParentRepository parentRepository;
-    private final StudentRepository studentRepository;
+    @Autowired
+    private ParentRepository parentRepository;
 
-    public ParentService(ParentRepository parentRepository, StudentRepository studentRepository) {
-        this.parentRepository = parentRepository;
-        this.studentRepository = studentRepository;
-    }
+    @Autowired
+    private StudentRepository studentRepository;
 
+    // ✅ Obține toți părinții
     public List<Parent> getAllParents() {
         return parentRepository.findAll();
     }
 
-    public Optional<Parent> getParentById(Long id) {
-        return parentRepository.findById(id);
+    // ✅ Obține un părinte după ID
+    public Parent getParentById(Long id) {
+        return parentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Părintele cu ID-ul " + id + " nu a fost găsit."));
     }
 
+    // ✅ Adaugă un părinte în baza de date
+    @Transactional
+    public Parent addParent(Parent parent) {
+        return parentRepository.save(parent);
+    }
+
+    // ✅ Șterge un părinte și studenții asociați
     @Transactional
     public void deleteParent(Long id) {
-        if (!parentRepository.existsById(id)) {
-            throw new IllegalArgumentException("Părintele cu ID-ul " + id + " nu există.");
-        }
+        Parent parent = parentRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Părintele cu ID-ul " + id + " nu există."));
 
-        // Șterge studenții asociați cu părintele
+        // Șterge studenții asociați
         studentRepository.deleteByParentId(id);
 
         // Șterge părintele
-        parentRepository.deleteById(id);
+        parentRepository.delete(parent);
     }
 
+    // ✅ Actualizează datele unui părinte
+    @Transactional
     public Parent updateParent(Long id, Parent updatedParent) {
-        return parentRepository.findById(id)
-                .map(existingParent -> {
-                    existingParent.setMotherName(updatedParent.getMotherName());
-                    existingParent.setMotherEmail(updatedParent.getMotherEmail());
-                    existingParent.setMotherPhoneNumber(updatedParent.getMotherPhoneNumber());
-                    existingParent.setFatherName(updatedParent.getFatherName());
-                    existingParent.setFatherEmail(updatedParent.getFatherEmail());
-                    existingParent.setFatherPhoneNumber(updatedParent.getFatherPhoneNumber());
-                    return parentRepository.save(existingParent);
-                })
+        Parent existingParent = parentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Părintele cu ID-ul " + id + " nu a fost găsit."));
+
+        existingParent.setMotherName(updatedParent.getMotherName());
+        existingParent.setMotherEmail(updatedParent.getMotherEmail());
+        existingParent.setMotherPhoneNumber(updatedParent.getMotherPhoneNumber());
+        existingParent.setFatherName(updatedParent.getFatherName());
+        existingParent.setFatherEmail(updatedParent.getFatherEmail());
+        existingParent.setFatherPhoneNumber(updatedParent.getFatherPhoneNumber());
+
+        return parentRepository.save(existingParent);
     }
 }

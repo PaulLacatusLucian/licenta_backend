@@ -4,9 +4,13 @@ import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.models.User.UserType;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,46 +19,51 @@ import java.util.List;
 @RequestMapping("/teachers")
 public class TeacherController {
 
-    private final TeacherService teacherService;
+    @Autowired
+    private TeacherService teacherService;
 
-    public TeacherController(TeacherService teacherService) {
-        this.teacherService = teacherService;
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    // Adaugă un profesor
+    // ✅ Doar ADMIN poate adăuga profesori
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
     public ResponseEntity<Teacher> addTeacher(@RequestBody Teacher teacher) {
-        // Generăm username și parola
+        // Generăm username și criptăm parola
         String baseUsername = teacher.getName().toLowerCase().replaceAll("\\s+", ".");
         teacher.setUsername(baseUsername + ".prof");
-        teacher.setPassword(baseUsername.replace(".", "_") + "123!");
+        teacher.setPassword(passwordEncoder.encode(baseUsername.replace(".", "_") + "123!"));
 
-        // Setăm userType
-        teacher.setUserType("teacher");
+        // Setăm userType corect
+        teacher.setUserType(UserType.TEACHER);
 
         return ResponseEntity.ok(teacherService.addTeacher(teacher));
     }
 
-    // Obține toți profesorii
+    // ✅ Doar ADMIN sau TEACHER poate vedea profesorii
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     @GetMapping
     public List<Teacher> getAllTeachers() {
         return teacherService.getAllTeachers();
     }
 
-    // Obține un profesor după ID
+    // ✅ Doar ADMIN sau TEACHER poate vedea detaliile unui profesor
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
     @GetMapping("/{id}")
     public ResponseEntity<Teacher> getTeacherById(@PathVariable Long id) {
         Teacher teacher = teacherService.getTeacherById(id);
         return ResponseEntity.ok(teacher);
     }
 
-    // Actualizează un profesor
+    // ✅ Doar ADMIN poate actualiza profesorii
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id, @RequestBody Teacher teacher) {
         return ResponseEntity.ok(teacherService.updateTeacher(id, teacher));
     }
 
-    // Șterge un profesor
+    // ✅ Doar ADMIN poate șterge un profesor
+    @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
         try {
@@ -65,6 +74,8 @@ public class TeacherController {
         }
     }
 
+    // ✅ Doar TEACHER și ADMIN pot vedea elevii profesorului
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
     @GetMapping("/{id}/students")
     public ResponseEntity<List<Student>> getStudentsForTeacher(@PathVariable Long id) {
         try {
@@ -75,6 +86,8 @@ public class TeacherController {
         }
     }
 
+    // ✅ Doar TEACHER și ADMIN pot vedea orarul săptămânal
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
     @GetMapping("/{id}/weekly-schedule")
     public ResponseEntity<List<Schedule>> getWeeklySchedule(@PathVariable Long id) {
         try {
@@ -85,6 +98,8 @@ public class TeacherController {
         }
     }
 
+    // ✅ Doar TEACHER și ADMIN pot vedea sesiunile profesorului
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
     @GetMapping("/{id}/sessions")
     public ResponseEntity<List<ClassSession>> getSessionsForTeacher(@PathVariable Long id) {
         try {
@@ -94,6 +109,4 @@ public class TeacherController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-
-
 }

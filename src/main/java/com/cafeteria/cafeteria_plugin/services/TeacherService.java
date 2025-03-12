@@ -1,7 +1,6 @@
 package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.*;
-import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.repositories.ClassSessionRepository;
 import com.cafeteria.cafeteria_plugin.repositories.ScheduleRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
@@ -11,86 +10,73 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Service
 public class TeacherService {
 
-    private final TeacherRepository teacherRepository;
-    private final ScheduleRepository scheduleRepository;
-    private final StudentRepository studentRepository;
-    private final ClassSessionRepository classSessionRepository;
+    @Autowired
+    private TeacherRepository teacherRepository;
 
+    @Autowired
+    private ScheduleRepository scheduleRepository;
 
-    public TeacherService(TeacherRepository teacherRepository, ScheduleRepository scheduleRepository, StudentRepository studentRepository, ClassSessionRepository classSessionRepository) {
-        this.teacherRepository = teacherRepository;
-        this.scheduleRepository = scheduleRepository;
-        this.studentRepository = studentRepository;
-        this.classSessionRepository = classSessionRepository;
-    }
+    @Autowired
+    private StudentRepository studentRepository;
 
-    // Adaugă un profesor
+    @Autowired
+    private ClassSessionRepository classSessionRepository;
+
+    @Transactional
     public Teacher addTeacher(Teacher teacher) {
         return teacherRepository.save(teacher);
     }
 
-    // Obține toți profesorii
     public List<Teacher> getAllTeachers() {
         return teacherRepository.findAll();
     }
 
-    // Obține un profesor după ID
     public Teacher getTeacherById(Long id) {
         return teacherRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul " + id + " nu a fost găsit"));
     }
 
-    // Actualizează un profesor
+    @Transactional
     public Teacher updateTeacher(Long id, Teacher updatedTeacher) {
-        return teacherRepository.findById(id)
-                .map(existingTeacher -> {
-                    existingTeacher.setName(updatedTeacher.getName());
-                    existingTeacher.setSubject(updatedTeacher.getSubject());
-                    return teacherRepository.save(existingTeacher);
-                }).orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
+        Teacher existingTeacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Profesorul nu a fost găsit"));
+
+        existingTeacher.setName(updatedTeacher.getName());
+        existingTeacher.setSubject(updatedTeacher.getSubject());
+
+        return teacherRepository.save(existingTeacher);
     }
 
-    // Șterge un profesor
+    @Transactional
     public void deleteTeacher(Long id) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul nu a fost găsit"));
 
-        // Șterge profesorul
         teacherRepository.delete(teacher);
     }
 
-    // Obține elevii pentru profesor
     public List<Student> getStudentsForTeacher(Long teacherId) {
-        // Găsește toate orele predate de profesor
-        List<Schedule> schedules = scheduleRepository.findByTeacherId(teacherId);
-
-        // Extrage ID-urile claselor din orar
-        List<Long> classIds = schedules.stream()
+        // Găsește ID-urile claselor în care profesorul predă
+        List<Long> classIds = scheduleRepository.findByTeacherId(teacherId).stream()
                 .map(schedule -> schedule.getStudentClass().getId())
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Găsește toți studenții care aparțin claselor respective
-        return studentRepository.findAll().stream()
-                .filter(student -> classIds.contains(student.getStudentClass().getId()))
-                .distinct()
-                .collect(Collectors.toList());
+        // Returnează studenții direct din baza de date
+        return studentRepository.findByStudentClassIdIn(classIds);
     }
 
     public List<Schedule> getWeeklyScheduleForTeacher(Long teacherId) {
-        Teacher teacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + teacherId));
-
         return scheduleRepository.findByTeacherId(teacherId);
     }
 
     public List<ClassSession> getSessionsForTeacher(Long teacherId) {
-        if (!teacherRepository.existsById(teacherId)) {
-            throw new IllegalArgumentException("Teacher not found");
-        }
         return classSessionRepository.findByTeacherId(teacherId);
     }
 }

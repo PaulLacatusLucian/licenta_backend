@@ -1,31 +1,87 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.email.EmailService;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
+import com.cafeteria.cafeteria_plugin.services.ClassService;
 import com.cafeteria.cafeteria_plugin.services.UserService;
 import com.cafeteria.cafeteria_plugin.services.ChefService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/auth/")
 public class UserController {
 
-    private final UserService userService;
-    private final ChefService chefService;
+    @Autowired
+    private UserService userService;
 
-    public UserController(UserService userService, ChefService chefService) {
-        this.userService = userService;
-        this.chefService = chefService;
+    @Autowired
+    private ChefService chefService;
+
+    @Autowired
+    private ClassService classService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private EmailService emailService;
+
+    // ✅ Autentificare utilizator (Oricine poate accesa)
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
+        try {
+
+            String username = credentials.get("username");
+            String password = credentials.get("password");
+
+            if (username == null || password == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Username și parola sunt necesare"));
+            }
+
+            User user = userService.findByUsername(username).orElse(null);
+            System.out.println();
+            System.out.println();
+            System.out.println();
+            System.out.println("Parola introdusă din Postmnan la login: " + password);
+            System.out.println("Parola stocată în DB: " + user.getPassword());
+            System.out.println();
+            System.out.println();
+
+            Optional<User> testuser = userService.findByUsername(username);
+            if (testuser.isPresent()) {
+                System.out.println("Utilizator găsit: " + testuser.get().getUsername());
+                System.out.println("Parola salvată în DB: " + testuser.get().getPassword());
+            } else {
+                System.out.println("Utilizatorul nu există!");
+            }
+
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credentiale invalide"));
+            }
+
+            String token = jwtUtil.generateToken(username, user.getUserType());
+
+            return ResponseEntity.ok(Map.of("token", token));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Eroare la autentificare: " + e.getMessage()));
+        }
     }
 
-    // ✅ Înregistrare student cu părinte
+    // ✅ Înregistrare student cu părinte (accesibil doar administratorului)
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/register-with-parent")
     public ResponseEntity<?> registerStudentWithParent(@RequestBody Map<String, Object> userData) {
         try {
@@ -34,41 +90,62 @@ public class UserController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Detalii student lipsă"));
             }
 
+            System.out.println("Student Data: " + studentData);
+            System.out.println("Student Email Extracted: " + studentData.get("email"));
+
+
             Student student = new Student();
-            student.setUsername((String) studentData.get("username"));
-            student.setPassword((String) studentData.get("password"));
-            student.setUserType("student");
+            student.setUserType(User.UserType.STUDENT);
             student.setName((String) studentData.get("name"));
             student.setEmail((String) studentData.get("email"));
             student.setPhoneNumber((String) studentData.get("phoneNumber"));
+            String studentBaseName = ((String) studentData.get("name")).toLowerCase().replaceAll("\\s+", "_");
+            student.setUsername(studentBaseName + ".student");
+            String studentRawPassword = studentBaseName.replace(".", "") + "123!";
+            student.setPassword(passwordEncoder.encode(studentRawPassword));
 
             // Setare clasa student
             Map<String, Object> studentClassData = (Map<String, Object>) studentData.get("studentClass");
             if (studentClassData != null) {
                 Long classId = Long.parseLong(studentClassData.get("id").toString());
-                Class studentClass = new Class();
-                studentClass.setId(classId);
-                student.setStudentClass(studentClass);
+
+                // Încarcă clasa din baza de date
+                Class studentSchoolClass = classService.getClassById(classId)
+                        .orElseThrow(() -> new RuntimeException("Class with ID " + classId + " not found in database"));
+
+                student.setStudentClass(studentSchoolClass);
             }
+
 
             // Setare părinte
             Map<String, Object> parentData = (Map<String, Object>) studentData.get("parent");
             if (parentData != null) {
                 Parent parent = new Parent();
-                parent.setUsername((String) parentData.get("username"));
-                parent.setPassword((String) parentData.get("password"));
-                parent.setUserType("parent");
+                String parentBaseName = ((String) parentData.get("motherName")).toLowerCase().replaceAll("\\s+", "_");
+                parent.setUsername(parentBaseName + ".parent");
+                String parentRawPassword = parentBaseName.replace(".", "") + "123!";
+                parent.setPassword(passwordEncoder.encode(parentRawPassword));
+                parent.setUserType(User.UserType.PARENT);
                 parent.setMotherName((String) parentData.get("motherName"));
                 parent.setMotherEmail((String) parentData.get("motherEmail"));
                 parent.setMotherPhoneNumber((String) parentData.get("motherPhoneNumber"));
                 parent.setFatherName((String) parentData.get("fatherName"));
                 parent.setFatherEmail((String) parentData.get("fatherEmail"));
                 parent.setFatherPhoneNumber((String) parentData.get("fatherPhoneNumber"));
+                parent.setEmail((String) parentData.get("email"));
 
                 student.setParent(parent);
+
+                String studentResetLink = "http://localhost:8080/auth/reset-password?username=" + student.getUsername();
+                emailService.sendResetPasswordEmail(student.getEmail(), student.getUsername(), studentResetLink);
+
+                String parentResetLink = "http://localhost:8080/auth/reset-password?username=" + parent.getUsername();
+                emailService.sendResetPasswordEmail(parent.getEmail(), parent.getFatherName(), parentResetLink);
             }
+            System.out.println("Student înainte de salvare: " + student);
 
             userService.createUser(student);
+
 
             return ResponseEntity.ok(Map.of("message", "Student și părinte creați cu succes!"));
         } catch (Exception e) {
@@ -77,104 +154,98 @@ public class UserController {
         }
     }
 
-    // ✅ Autentificare utilizator
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody Map<String, String> credentials) {
-        try {
-            String username = credentials.get("username");
-            String password = credentials.get("password");
-
-            if (username == null || password == null) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Username și parola sunt necesare"));
-            }
-
-            User user = userService.findByUsername(username);
-            if (user == null || !user.getPassword().equals(password)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Credentiale invalide"));
-            }
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("username", user.getUsername());
-            response.put("userType", user.getUserType());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Eroare la autentificare: " + e.getMessage()));
-        }
-    }
-
-    // ✅ Înregistrare profesor
+    // ✅ Doar ADMIN poate înregistra un profesor
+    @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping("/register-teacher")
-    public ResponseEntity<?> registerTeacher(@RequestBody Map<String, String> teacherData) {
+    public ResponseEntity<?> registerTeacher(@RequestBody Teacher teacher) {
         try {
-            if (!teacherData.containsKey("name") || !teacherData.containsKey("subject")) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Numele și materia sunt necesare pentru profesor"));
+            if (teacher.getName() == null || teacher.getSubject() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Numele și materia sunt necesare"));
             }
 
-            Teacher teacher = new Teacher();
-            teacher.setName(teacherData.get("name"));
-            teacher.setSubject(teacherData.get("subject"));
-
-            String baseUsername = teacher.getName().toLowerCase().replaceAll("\\s+", ".");
+            String baseUsername = teacher.getName().toLowerCase().replaceAll("\\s+", "_");
             teacher.setUsername(baseUsername + ".prof");
-            teacher.setPassword(baseUsername.replace(".", "_") + "123!");
-            teacher.setUserType("teacher");
+            String rawPassword = baseUsername.replace(".", "") + "123!";
+            teacher.setPassword(passwordEncoder.encode(rawPassword));
+            teacher.setUserType(User.UserType.TEACHER);
 
             userService.createUser(teacher);
+            String resetLink = "http://localhost:8080/auth/reset-password?username=" + teacher.getUsername();
+            emailService.sendResetPasswordEmail(teacher.getEmail(), teacher.getUsername(), resetLink);
+            return ResponseEntity.ok(Map.of("message", "Profesor creat cu succes!", "username", teacher.getUsername()));
 
-            return ResponseEntity.ok(Map.of(
-                    "message", "Profesor creat cu succes!",
-                    "username", teacher.getUsername(),
-                    "password", teacher.getPassword()
-            ));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Eroare: " + e.getMessage()));
         }
     }
 
-    // ✅ Înregistrare bucătăreasă
-    @PostMapping("/register-chef")
-    public ResponseEntity<?> registerChef(@RequestBody Map<String, String> chefData) {
+
+    // ✅ Înregistrare ADMIN (Oricine poate accesa pentru a crea primul admin)
+    @PostMapping("/register-admin")
+    public ResponseEntity<?> registerAdmin(@RequestBody Map<String, String> request) {
         try {
-            if (!chefData.containsKey("name")) {
+            String name = request.get("name");  // înlocuiește „username” cu „name”
+            String email = request.get("email");
+
+            if (name == null || email == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Numele și email-ul sunt necesare"));
+            }
+
+            String baseUsername = name.toLowerCase().replaceAll("\\s+", "_");
+            String username = baseUsername + ".admin";
+            String rawPassword = baseUsername.replace(".", "") + "123!";
+
+            Admin admin = new Admin();
+            admin.setUsername(username);
+            admin.setPassword(passwordEncoder.encode(rawPassword));
+            admin.setEmail(email);
+
+            userService.createUser(admin);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Admin creat cu succes!",
+                    "username", username,
+                    "password", rawPassword
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Eroare la crearea adminului: " + e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/register-chef")
+    public ResponseEntity<?> registerChef(@RequestBody Chef chef) {
+        try {
+            if (chef.getName() == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Numele bucătăresei este necesar"));
             }
 
-            Chef chef = new Chef();
-            chef.setName(chefData.get("name"));
+            // Generare username și parolă automat
+            String baseUsername = chef.getName().toLowerCase().replaceAll("\\s+", "_");
+            String username = baseUsername + ".chef";
+            String rawPassword = baseUsername.replace("_", "") + "123!";
 
-            String baseUsername = chef.getName().toLowerCase().replaceAll("\\s+", ".");
-            chef.setUsername(baseUsername + ".chef");
-            chef.setPassword(baseUsername.replace(".", "_") + "123!");
-            chef.setUserType("chef");
+            chef.setUsername(username);
+            chef.setPassword(passwordEncoder.encode(rawPassword));
+            chef.setUserType(User.UserType.CHEF);
 
-            chefService.createChef(chef);
+            // ATENȚIE: Salvăm chef-ul în tabelul `users`, nu doar în `chefs`
+            userService.createUser(chef);
+            String resetLink = "http://localhost:8080/auth/reset-password?username=" + username;
+            emailService.sendResetPasswordEmail(chef.getEmail(), chef.getUsername(), resetLink);
 
-            return ResponseEntity.ok(Map.of("message", "Bucătăreasă înregistrată cu succes!"));
+            return ResponseEntity.ok(Map.of(
+                    "message", "Bucătăreasă înregistrată cu succes!",
+                    "username", username,
+                    "password", rawPassword
+            ));
+
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Eroare: " + e.getMessage()));
-        }
-    }
-
-    // ✅ Obținerea tuturor bucătăreselor
-    @GetMapping("/chefs")
-    public ResponseEntity<List<Chef>> getAllChefs() {
-        List<Chef> chefs = chefService.getAllChefs();
-        return ResponseEntity.ok(chefs);
-    }
-
-    // ✅ Ștergerea unei bucătărese după ID
-    @DeleteMapping("/chefs/{id}")
-    public ResponseEntity<Void> deleteChef(@PathVariable Long id) {
-        boolean deleted = chefService.deleteChef(id);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    Map.of("message", "Eroare: " + e.getMessage())
+            );
         }
     }
 }
