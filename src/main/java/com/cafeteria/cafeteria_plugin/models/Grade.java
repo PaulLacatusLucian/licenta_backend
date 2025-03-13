@@ -14,6 +14,8 @@ public class Grade {
 
     private Double grade;
 
+    private String description;
+
     @Getter
     @ManyToOne
     @JoinColumn(name = "class_session_id", nullable = false)
@@ -23,11 +25,4 @@ public class Grade {
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
-
-    @Getter
-    @ManyToOne
-    @JoinColumn(name = "teacher_id", nullable = false)
-    @JsonIgnore
-    private Teacher teacher;
-
 }
