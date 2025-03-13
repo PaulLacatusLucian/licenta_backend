@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TeacherMapper {
-    public TeacherDTO toDto(Teacher teacher) {
+    public static TeacherDTO toDto(Teacher teacher) {
         if (teacher == null) return null;
 
         TeacherDTO dto = new TeacherDTO();
