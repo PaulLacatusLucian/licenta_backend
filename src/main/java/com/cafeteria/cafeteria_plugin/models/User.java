@@ -1,5 +1,6 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.cafeteria.cafeteria_plugin.email.PasswordResetToken;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,6 +30,11 @@ public abstract class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserType userType;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private PasswordResetToken resetToken;
+
 
     public enum UserType {
         STUDENT, PARENT, TEACHER, CHEF, ADMIN

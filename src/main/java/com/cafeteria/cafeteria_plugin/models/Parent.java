@@ -1,7 +1,10 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -24,4 +27,9 @@ public class Parent extends User {
     private String fatherEmail;
 
     private String fatherPhoneNumber;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Student> students;
+
 }

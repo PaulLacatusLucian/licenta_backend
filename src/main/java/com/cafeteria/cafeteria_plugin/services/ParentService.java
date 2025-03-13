@@ -1,8 +1,10 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
+import com.cafeteria.cafeteria_plugin.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,12 @@ public class ParentService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // ✅ Obține toți părinții
     public List<Parent> getAllParents() {
@@ -35,18 +43,18 @@ public class ParentService {
         return parentRepository.save(parent);
     }
 
-    // ✅ Șterge un părinte și studenții asociați
     @Transactional
     public void deleteParent(Long id) {
         Parent parent = parentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Părintele cu ID-ul " + id + " nu există."));
+                .orElseThrow(() -> new IllegalArgumentException("Parent not found with ID: " + id));
 
-        // Șterge studenții asociați
-        studentRepository.deleteByParentId(id);
+        tokenRepository.deleteAllByUser_Id(parent.getId());
 
-        // Șterge părintele
         parentRepository.delete(parent);
+
+        userRepository.deleteById(parent.getId());
     }
+
 
     // ✅ Actualizează datele unui părinte
     @Transactional
