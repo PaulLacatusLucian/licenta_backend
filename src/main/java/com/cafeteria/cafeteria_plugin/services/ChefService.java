@@ -49,13 +49,22 @@ public class ChefService {
     }
 
     // ✅ Actualizare bucătar
-    public Chef updateChef(Long id, Chef updatedChef) {
-        return chefRepository.findById(id).map(chef -> {
-            chef.setName(updatedChef.getName());
-            chef.setEmail(updatedChef.getEmail());
-            chef.setUsername(updatedChef.getUsername());
-            chef.setPassword(updatedChef.getPassword());
-            return chefRepository.save(chef);
-        }).orElseThrow(() -> new IllegalArgumentException("Chef-ul cu ID-ul " + id + " nu există!"));
+    public Chef updateChef(Long id, Chef chefDetails) {
+        return chefRepository.findById(id).map(existingChef -> {
+            if (chefDetails.getName() != null) {
+                existingChef.setName(chefDetails.getName());
+            }
+
+            // 🔐 Nu actualizăm username și password dacă nu sunt furnizate
+            if (chefDetails.getUsername() != null) {
+                existingChef.setUsername(chefDetails.getUsername());
+            }
+
+            if (chefDetails.getPassword() != null) {
+                existingChef.setPassword(chefDetails.getPassword());
+            }
+
+            return chefRepository.save(existingChef);
+        }).orElseThrow(() -> new IllegalArgumentException("Chef cu ID-ul " + id + " nu a fost găsit."));
     }
 }
