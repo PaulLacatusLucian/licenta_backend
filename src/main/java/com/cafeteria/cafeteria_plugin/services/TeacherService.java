@@ -1,10 +1,8 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.*;
-import com.cafeteria.cafeteria_plugin.repositories.ClassSessionRepository;
-import com.cafeteria.cafeteria_plugin.repositories.ScheduleRepository;
-import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
-import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
+import com.cafeteria.cafeteria_plugin.repositories.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +25,12 @@ public class TeacherService {
 
     @Autowired
     private ClassSessionRepository classSessionRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Transactional
     public Teacher addTeacher(Teacher teacher) {
@@ -57,8 +61,9 @@ public class TeacherService {
     public void deleteTeacher(Long id) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul nu a fost găsit"));
-
-        teacherRepository.delete(teacher);
+        tokenRepository.deleteAllByUser_Id(id);
+        teacherRepository.deleteById(id);
+        userRepository.deleteById(id);
     }
 
     public List<Student> getStudentsForTeacher(Long teacherId) {

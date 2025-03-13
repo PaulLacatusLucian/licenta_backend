@@ -1,6 +1,8 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.email.EmailService;
+import com.cafeteria.cafeteria_plugin.email.PasswordResetService;
+import com.cafeteria.cafeteria_plugin.email.PasswordResetToken;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
@@ -38,6 +40,10 @@ public class UserController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
+
 
     // ✅ Autentificare utilizator (Oricine poate accesa)
     @PostMapping("/login")
@@ -136,11 +142,14 @@ public class UserController {
 
                 student.setParent(parent);
 
-                String studentResetLink = "http://localhost:8080/auth/reset-password?username=" + student.getUsername();
-                emailService.sendResetPasswordEmail(student.getEmail(), student.getUsername(), studentResetLink);
+                PasswordResetToken studentToken = passwordResetService.createTokenForUser(student);
+                String studentResetLink = "http://localhost:8080/auth/reset-password?token=" + studentToken.getToken();
+//                emailService.sendResetPasswordEmail(student.getEmail(), student.getUsername(), studentResetLink);
 
-                String parentResetLink = "http://localhost:8080/auth/reset-password?username=" + parent.getUsername();
-                emailService.sendResetPasswordEmail(parent.getEmail(), parent.getFatherName(), parentResetLink);
+                PasswordResetToken parentToken = passwordResetService.createTokenForUser(parent);
+                String parentResetLink = "http://localhost:8080/auth/reset-password?token=" + parentToken.getToken();
+//                emailService.sendResetPasswordEmail(parent.getEmail(), parent.getFatherName(), parentResetLink);
+
             }
             System.out.println("Student înainte de salvare: " + student);
 
@@ -155,7 +164,7 @@ public class UserController {
     }
 
     // ✅ Doar ADMIN poate înregistra un profesor
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register-teacher")
     public ResponseEntity<?> registerTeacher(@RequestBody Teacher teacher) {
         try {
@@ -170,8 +179,11 @@ public class UserController {
             teacher.setUserType(User.UserType.TEACHER);
 
             userService.createUser(teacher);
-            String resetLink = "http://localhost:8080/auth/reset-password?username=" + teacher.getUsername();
-            emailService.sendResetPasswordEmail(teacher.getEmail(), teacher.getUsername(), resetLink);
+            PasswordResetToken token = passwordResetService.createTokenForUser(teacher);
+            String resetLink = "http://localhost:8080/auth/reset-password?token=" + token.getToken();
+//            emailService.sendResetPasswordEmail(teacher.getEmail(), teacher.getUsername(), resetLink);
+
+
             return ResponseEntity.ok(Map.of("message", "Profesor creat cu succes!", "username", teacher.getUsername()));
 
         } catch (Exception e) {
@@ -233,8 +245,10 @@ public class UserController {
 
             // ATENȚIE: Salvăm chef-ul în tabelul `users`, nu doar în `chefs`
             userService.createUser(chef);
-            String resetLink = "http://localhost:8080/auth/reset-password?username=" + username;
-            emailService.sendResetPasswordEmail(chef.getEmail(), chef.getUsername(), resetLink);
+            PasswordResetToken token = passwordResetService.createTokenForUser(chef);
+            String resetLink = "http://localhost:8080/auth/reset-password?token=" + token.getToken();
+//            emailService.sendResetPasswordEmail(chef.getEmail(), chef.getUsername(), resetLink);
+
 
             return ResponseEntity.ok(Map.of(
                     "message", "Bucătăreasă înregistrată cu succes!",

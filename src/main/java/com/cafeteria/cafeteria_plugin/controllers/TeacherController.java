@@ -26,7 +26,7 @@ public class TeacherController {
     private PasswordEncoder passwordEncoder;
 
     // ✅ Doar ADMIN poate adăuga profesori
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Teacher> addTeacher(@RequestBody Teacher teacher) {
         // Generăm username și criptăm parola
@@ -41,14 +41,14 @@ public class TeacherController {
     }
 
     // ✅ Doar ADMIN sau TEACHER poate vedea profesorii
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping
     public List<Teacher> getAllTeachers() {
         return teacherService.getAllTeachers();
     }
 
     // ✅ Doar ADMIN sau TEACHER poate vedea detaliile unui profesor
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping("/{id}")
     public ResponseEntity<Teacher> getTeacherById(@PathVariable Long id) {
         Teacher teacher = teacherService.getTeacherById(id);
@@ -56,14 +56,14 @@ public class TeacherController {
     }
 
     // ✅ Doar ADMIN poate actualiza profesorii
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id, @RequestBody Teacher teacher) {
         return ResponseEntity.ok(teacherService.updateTeacher(id, teacher));
     }
 
     // ✅ Doar ADMIN poate șterge un profesor
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
         try {
@@ -75,7 +75,7 @@ public class TeacherController {
     }
 
     // ✅ Doar TEACHER și ADMIN pot vedea elevii profesorului
-    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping("/{id}/students")
     public ResponseEntity<List<Student>> getStudentsForTeacher(@PathVariable Long id) {
         try {
@@ -87,7 +87,7 @@ public class TeacherController {
     }
 
     // ✅ Doar TEACHER și ADMIN pot vedea orarul săptămânal
-    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping("/{id}/weekly-schedule")
     public ResponseEntity<List<Schedule>> getWeeklySchedule(@PathVariable Long id) {
         try {
@@ -99,7 +99,7 @@ public class TeacherController {
     }
 
     // ✅ Doar TEACHER și ADMIN pot vedea sesiunile profesorului
-    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping("/{id}/sessions")
     public ResponseEntity<List<ClassSession>> getSessionsForTeacher(@PathVariable Long id) {
         try {
