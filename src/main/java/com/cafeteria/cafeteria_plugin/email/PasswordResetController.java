@@ -13,31 +13,50 @@ import org.springframework.web.bind.annotation.*;
 public class PasswordResetController {
 
     @Autowired
+    private PasswordResetService passwordResetService;
+
+    @Autowired
     private UserService userService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @GetMapping("/reset-password")
-    public String showResetForm(@RequestParam("username") String username, Model model) {
-        model.addAttribute("username", username);
-        return "reset-password-form";
+    public String showResetForm(@RequestParam("token") String token, Model model) {
+        PasswordResetToken resetToken = passwordResetService.validateToken(token);
+
+        if (resetToken == null) {
+            return "reset-password-expired";  // ➤ token invalid sau expirat
+        }
+
+        if (resetToken.isUsed()) {
+            return "reset-password-already-used";  // ➤ token deja folosit
+        }
+
+        model.addAttribute("token", token);
+        return "reset-password-form";  // ➤ token valid => form de schimbare parolă
     }
 
     @PostMapping("/reset-password")
-    public String resetPassword(@RequestParam("username") String username,
+    public String resetPassword(@RequestParam("token") String token,
                                 @RequestParam("newPassword") String newPassword,
                                 Model model) {
-        User user = userService.findByUsername(username).orElse(null);
+        PasswordResetToken resetToken = passwordResetService.validateToken(token);
 
-        if (user == null) {
-            model.addAttribute("error", "Utilizatorul nu a fost găsit!");
-            return "reset-password-form";
+        if (resetToken == null) {
+            return "reset-password-expired";
         }
 
+        if (resetToken.isUsed()) {
+            return "reset-password-already-used";
+        }
+
+        User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
         userService.forceUpdatePassword(user);
-        model.addAttribute("success", "Parola a fost schimbată cu succes!");
-        return "reset-password-form";
+        passwordResetService.markTokenAsUsed(resetToken);
+
+        return "reset-password-success";
     }
+
 }
