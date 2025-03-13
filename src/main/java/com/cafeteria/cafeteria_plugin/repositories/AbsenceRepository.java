@@ -15,5 +15,5 @@ public interface AbsenceRepository extends JpaRepository<Absence, Long> {
 
     List<Absence> findByStudentId(Long studentId);
 
-    boolean existsByStudentIdAndClassSessionIdAndDate(Long studentId, Long classSessionId, LocalDate date);
+    boolean existsByStudentIdAndClassSessionId(Long id, Long id1);
 }
