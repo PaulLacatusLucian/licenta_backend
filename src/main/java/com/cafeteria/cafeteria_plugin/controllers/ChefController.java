@@ -13,24 +13,8 @@ import java.util.List;
 @RequestMapping("/chefs")
 public class ChefController {
 
-    private final ChefService chefService;
-
     @Autowired
-    public ChefController(ChefService chefService) {
-        this.chefService = chefService;
-    }
-
-    // ✅ Creare bucătar (doar ADMIN)
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/create")
-    public ResponseEntity<?> createChef(@RequestBody Chef chef) {
-        try {
-            Chef createdChef = chefService.createChef(chef);
-            return ResponseEntity.ok(createdChef);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+    private ChefService chefService;
 
     // ✅ Obținere toți bucătarii (doar ADMIN)
     @PreAuthorize("hasRole('ADMIN')")
