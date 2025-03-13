@@ -1,67 +1,82 @@
 package com.cafeteria.cafeteria_plugin.controllers;
+
+import com.cafeteria.cafeteria_plugin.dtos.AbsenceDTO;
+import com.cafeteria.cafeteria_plugin.dtos.AddAbsenceRequestDTO;
+import com.cafeteria.cafeteria_plugin.mappers.AbsenceMapper;
 import com.cafeteria.cafeteria_plugin.models.Absence;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
+import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.services.AbsenceService;
 import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
+import com.cafeteria.cafeteria_plugin.services.StudentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/absences")
 public class AbsenceController {
 
-    private final AbsenceService absenceService;
-    private final ClassSessionService classSessionService;
+    @Autowired private AbsenceService absenceService;
+    @Autowired private ClassSessionService classSessionService;
+    @Autowired private StudentService studentService;
+    @Autowired private AbsenceMapper absenceMapper;
 
-    public AbsenceController(AbsenceService absenceService, ClassSessionService classSessionService) {
-        this.absenceService = absenceService;
-        this.classSessionService = classSessionService;
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PostMapping("/session/{sessionId}")
+    public ResponseEntity<AbsenceDTO> addAbsenceToSession(@PathVariable Long sessionId, @RequestBody AddAbsenceRequestDTO request) {
+        ClassSession session = classSessionService.getSessionById(sessionId);
+        Student student = studentService.getStudentById(request.getStudentId());
+
+        Absence absence = new Absence();
+        absence.setStudent(student);
+        absence.setClassSession(session);
+
+        Absence saved = absenceService.addAbsence(absence);
+        return ResponseEntity.status(HttpStatus.CREATED).body(absenceMapper.toDto(saved));
     }
 
-    @PostMapping
-    public ResponseEntity<Absence> addAbsence(@RequestBody Absence absence) {
-        return ResponseEntity.ok(absenceService.addAbsence(absence));
-    }
-
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
-    public List<Absence> getAllAbsences() {
-        return absenceService.getAllAbsences();
+    public ResponseEntity<List<AbsenceDTO>> getAllAbsences() {
+        List<AbsenceDTO> dtos = absenceService.getAllAbsences()
+                .stream().map(absenceMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<Absence> getAbsenceById(@PathVariable Long id) {
+    public ResponseEntity<AbsenceDTO> getAbsenceById(@PathVariable Long id) {
         Optional<Absence> absence = absenceService.getAbsenceById(id);
-        return absence.map(ResponseEntity::ok)
+        return absence.map(a -> ResponseEntity.ok(absenceMapper.toDto(a)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Absence> updateAbsence(@PathVariable Long id, @RequestBody Absence updatedAbsence) {
-        return ResponseEntity.ok(absenceService.updateAbsence(id, updatedAbsence));
+    public ResponseEntity<AbsenceDTO> updateAbsence(@PathVariable Long id, @RequestBody AddAbsenceRequestDTO request) {
+        ClassSession session = classSessionService.getSessionById(request.getClassSessionId());
+        Student student = studentService.getStudentById(request.getStudentId());
+
+        Absence updated = new Absence();
+        updated.setId(id);
+        updated.setStudent(student);
+        updated.setClassSession(session);
+
+        Absence saved = absenceService.updateAbsence(id, updated);
+        return ResponseEntity.ok(absenceMapper.toDto(saved));
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAbsence(@PathVariable Long id) {
         absenceService.deleteAbsence(id);
         return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/session/{sessionId}")
-    public ResponseEntity<Absence> addAbsenceToSession(@PathVariable Long sessionId, @RequestBody Absence absence) {
-        // Găsește sesiunea asociată
-        ClassSession session = classSessionService.getSessionById(sessionId);
-
-        // Asociază sesiunea cu absența
-        absence.setClassSession(session);
-
-        // Salvează absența
-        Absence savedAbsence = absenceService.addAbsence(absence);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedAbsence);
-    }
-
 }

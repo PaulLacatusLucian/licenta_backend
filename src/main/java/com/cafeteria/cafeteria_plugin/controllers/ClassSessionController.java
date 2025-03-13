@@ -1,142 +1,96 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.dtos.AbsenceDTO;
+import com.cafeteria.cafeteria_plugin.dtos.ClassSessionDTO;
+import com.cafeteria.cafeteria_plugin.dtos.GradeDTO;
+import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
+import com.cafeteria.cafeteria_plugin.mappers.AbsenceMapper;
+import com.cafeteria.cafeteria_plugin.mappers.ClassSessionMapper;
+import com.cafeteria.cafeteria_plugin.mappers.GradeMapper;
+import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
-import com.cafeteria.cafeteria_plugin.services.AbsenceService;
-import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
-import com.cafeteria.cafeteria_plugin.services.GradeService;
+import com.cafeteria.cafeteria_plugin.services.*;
+import jdk.jfr.Unsigned;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/class-sessions")
+@RequestMapping("/class-sessions")
 public class ClassSessionController {
 
     @Autowired
     private ClassSessionService classSessionService;
-
     @Autowired
     private GradeService gradeService;
-
+    @Autowired
+    private StudentService studentService;
     @Autowired
     private AbsenceService absenceService;
+    @Autowired
+    private TeacherService teacherService;
 
+    @Autowired
+    private ClassSessionMapper classSessionMapper;
+    @Autowired
+    private GradeMapper gradeMapper;
+    @Autowired
+    private AbsenceMapper absenceMapper;
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<ClassSession> addClassSession(@RequestBody ClassSession classSession) {
-        ClassSession savedSession = classSessionService.addClassSession(classSession);
-        return ResponseEntity.ok(savedSession);
+    public ResponseEntity<ClassSessionDTO> addClassSession(@RequestBody ClassSessionDTO dto) {
+        Teacher teacher = teacherService.getTeacherById(dto.getTeacher().getId());
+        ClassSession session = classSessionMapper.toEntity(dto);
+        session.setTeacher(teacher);
+        ClassSession saved = classSessionService.addClassSession(session);
+        return ResponseEntity.ok(classSessionMapper.toDto(saved));
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<ClassSession>> getAllClassSessions() {
-        List<ClassSession> sessions = classSessionService.getAllClassSessions();
-        return ResponseEntity.ok(sessions);
+    public ResponseEntity<List<ClassSessionDTO>> getAllClassSessions() {
+        List<ClassSessionDTO> dtos = classSessionService.getAllClassSessions()
+                .stream().map(classSessionMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/teacher/{teacherId}")
-    public ResponseEntity<List<ClassSession>> getSessionsByTeacher(@PathVariable Long teacherId) {
-        List<ClassSession> sessions = classSessionService.getSessionsByTeacher(teacherId);
-        return ResponseEntity.ok(sessions);
+    public ResponseEntity<List<ClassSessionDTO>> getSessionsByTeacher(@PathVariable Long teacherId) {
+        List<ClassSessionDTO> dtos = classSessionService.getSessionsByTeacher(teacherId)
+                .stream().map(classSessionMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/subject/{subject}")
-    public ResponseEntity<List<ClassSession>> getSessionsBySubject(@PathVariable String subject) {
-        List<ClassSession> sessions = classSessionService.getSessionsBySubject(subject);
-        return ResponseEntity.ok(sessions);
+    public ResponseEntity<List<ClassSessionDTO>> getSessionsBySubject(@PathVariable String subject) {
+        List<ClassSessionDTO> dtos = classSessionService.getSessionsBySubject(subject)
+                .stream().map(classSessionMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/time")
-    public ResponseEntity<List<ClassSession>> getSessionsByTimeInterval(@RequestParam LocalDateTime start, @RequestParam LocalDateTime end) {
-        List<ClassSession> sessions = classSessionService.getSessionsByTimeInterval(start, end);
-        return ResponseEntity.ok(sessions);
+    public ResponseEntity<List<ClassSessionDTO>> getSessionsByTimeInterval(@RequestParam LocalDateTime start, @RequestParam LocalDateTime end) {
+        List<ClassSessionDTO> dtos = classSessionService.getSessionsByTimeInterval(start, end)
+                .stream().map(classSessionMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClassSession(@PathVariable Long id) {
         classSessionService.deleteClassSession(id);
         return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/session/{sessionId}")
-    public ResponseEntity<Grade> addGradeToSession(
-            @PathVariable Long sessionId,
-            @RequestParam Long studentId,
-            @RequestParam double gradeValue) {
-        try {
-            // Fetch class session
-            ClassSession session = classSessionService.getSessionById(sessionId);
-            if (session == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-
-            // Fetch student
-            Student student = gradeService.getStudentById(studentId);
-            if (student == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-
-            // Create and save grade
-            Grade grade = new Grade();
-            grade.setClassSession(session);
-            grade.setStudent(student);
-            grade.setGrade(gradeValue);
-            grade.setTeacher(session.getTeacher()); // Set teacher from session
-
-            Grade savedGrade = gradeService.addGrade(grade);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedGrade);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
-    @PostMapping("/session/{sessionId}/absences")
-    public ResponseEntity<Absence> addAbsenceToSession(
-            @PathVariable Long sessionId,
-            @RequestParam Long studentId) { // Adăugăm teacherId
-        try {
-            // Preluăm sesiunea
-            ClassSession session = classSessionService.getSessionById(sessionId);
-            if (session == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-
-            // Preluăm studentul
-            Student student = gradeService.getStudentById(studentId);
-            if (student == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-
-            // Preluăm profesorul care înregistrează absența
-            Teacher teacher = session.getTeacher(); // Creează metoda dacă nu există
-            if (teacher == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
-
-            // Creăm absența
-            Absence absence = new Absence();
-            absence.setClassSession(session);
-            absence.setStudent(student);
-            absence.setDate(session.getStartTime().toLocalDate()); // Data este preluată din sesiunea selectată
-            absence.setSubject(session.getSubject()); // Setăm materia din sesiune
-            absence.setTeacher(teacher); // Setăm profesorul care înregistrează absența
-
-            // Salvăm absența
-            Absence savedAbsence = absenceService.saveAbsence(absence);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedAbsence);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
-
-
-
 }
