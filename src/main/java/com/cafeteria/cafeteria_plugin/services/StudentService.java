@@ -1,5 +1,7 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
+import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.repositories.*;
@@ -28,6 +30,16 @@ public class StudentService {
 
     @Autowired
     private GradeRepository gradeRepository;
+
+    @Autowired
+    private ClassService classService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
+
 
     @Transactional
     public Student saveStudentWithClass(Student studentDetails, Long classId) {
@@ -62,24 +74,40 @@ public class StudentService {
     @Transactional
     public Student updateStudent(Long id, Student updatedStudent) {
         Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Studentul nu a fost găsit"));
 
         existingStudent.setName(updatedStudent.getName());
-        existingStudent.setEmail(updatedStudent.getEmail());
         existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
-        existingStudent.setStudentClass(updatedStudent.getStudentClass());
+
+        if (updatedStudent.getStudentClass() != null && updatedStudent.getStudentClass().getId() != null) {
+            Class studentClass = classService.getClassById(updatedStudent.getStudentClass().getId())
+                    .orElseThrow(() -> new RuntimeException("Class not found"));
+            existingStudent.setStudentClass(studentClass);
+        }
 
         return studentRepository.save(existingStudent);
     }
+
 
     @Transactional
     public void deleteStudent(Long id) {
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
 
+        // 1. Șterge notele
         gradeRepository.deleteByStudentId(student.getId());
-        studentRepository.delete(student);
+
+        // 2. Șterge TOATE tokenurile asociate utilizatorului
+        tokenRepository.deleteAllByUser_Id(student.getId());
+
+        // 3. Șterge Student-ul (entitate derivată)
+        studentRepository.deleteById(student.getId());
+
+        // 4. Șterge User-ul
+        userRepository.deleteById(student.getId());
     }
+
+
 
     @Transactional
     public void advanceYear() {
@@ -139,4 +167,5 @@ public class StudentService {
         newSchoolClass.setClassTeacher(null);
         return classRepository.save(newSchoolClass);
     }
+
 }

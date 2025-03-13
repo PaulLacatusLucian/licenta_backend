@@ -86,8 +86,7 @@ public class UserController {
         }
     }
 
-    // ✅ Înregistrare student cu părinte (accesibil doar administratorului)
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register-with-parent")
     public ResponseEntity<?> registerStudentWithParent(@RequestBody Map<String, Object> userData) {
         try {
@@ -99,31 +98,27 @@ public class UserController {
             System.out.println("Student Data: " + studentData);
             System.out.println("Student Email Extracted: " + studentData.get("email"));
 
-
+            // === CREARE STUDENT ===
             Student student = new Student();
             student.setUserType(User.UserType.STUDENT);
             student.setName((String) studentData.get("name"));
             student.setEmail((String) studentData.get("email"));
             student.setPhoneNumber((String) studentData.get("phoneNumber"));
-            String studentBaseName = ((String) studentData.get("name")).toLowerCase().replaceAll("\\s+", "_");
+            String studentBaseName = student.getName().toLowerCase().replaceAll("\\s+", "_");
             student.setUsername(studentBaseName + ".student");
             String studentRawPassword = studentBaseName.replace(".", "") + "123!";
             student.setPassword(passwordEncoder.encode(studentRawPassword));
 
-            // Setare clasa student
+            // === SETARE CLASĂ ===
             Map<String, Object> studentClassData = (Map<String, Object>) studentData.get("studentClass");
             if (studentClassData != null) {
                 Long classId = Long.parseLong(studentClassData.get("id").toString());
-
-                // Încarcă clasa din baza de date
                 Class studentSchoolClass = classService.getClassById(classId)
                         .orElseThrow(() -> new RuntimeException("Class with ID " + classId + " not found in database"));
-
                 student.setStudentClass(studentSchoolClass);
             }
 
-
-            // Setare părinte
+            // === CREARE ȘI SALVARE PĂRINTE ÎNAINTE DE STUDENT ===
             Map<String, Object> parentData = (Map<String, Object>) studentData.get("parent");
             if (parentData != null) {
                 Parent parent = new Parent();
@@ -140,28 +135,38 @@ public class UserController {
                 parent.setFatherPhoneNumber((String) parentData.get("fatherPhoneNumber"));
                 parent.setEmail((String) parentData.get("email"));
 
+                // 👉 Salvăm întâi părintele în DB
+                userService.createUser(parent);
+
+                // 👉 Asociem părintele la student
                 student.setParent(parent);
-
-                PasswordResetToken studentToken = passwordResetService.createTokenForUser(student);
-                String studentResetLink = "http://localhost:8080/auth/reset-password?token=" + studentToken.getToken();
-//                emailService.sendResetPasswordEmail(student.getEmail(), student.getUsername(), studentResetLink);
-
-                PasswordResetToken parentToken = passwordResetService.createTokenForUser(parent);
-                String parentResetLink = "http://localhost:8080/auth/reset-password?token=" + parentToken.getToken();
-//                emailService.sendResetPasswordEmail(parent.getEmail(), parent.getFatherName(), parentResetLink);
-
             }
+
             System.out.println("Student înainte de salvare: " + student);
 
+            // 👉 Salvăm studentul în DB
             userService.createUser(student);
 
+            // 👉 Abia acum creăm tokenurile pentru resetare parolă
+            PasswordResetToken studentToken = passwordResetService.createTokenForUser(student);
+            String studentResetLink = "http://localhost:8080/auth/reset-password?token=" + studentToken.getToken();
+//        emailService.sendResetPasswordEmail(student.getEmail(), student.getUsername(), studentResetLink);
+
+            if (student.getParent() != null) {
+                PasswordResetToken parentToken = passwordResetService.createTokenForUser(student.getParent());
+                String parentResetLink = "http://localhost:8080/auth/reset-password?token=" + parentToken.getToken();
+//            emailService.sendResetPasswordEmail(student.getParent().getEmail(), student.getParent().getUsername(), parentResetLink);
+            }
 
             return ResponseEntity.ok(Map.of("message", "Student și părinte creați cu succes!"));
+
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Eroare: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Eroare: " + e.getMessage()));
         }
     }
+
 
     // ✅ Doar ADMIN poate înregistra un profesor
     @PreAuthorize("hasRole('ADMIN')")
@@ -226,7 +231,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/register-chef")
     public ResponseEntity<?> registerChef(@RequestBody Chef chef) {
         try {
