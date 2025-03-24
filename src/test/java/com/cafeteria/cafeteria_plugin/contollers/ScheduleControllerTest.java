@@ -1,6 +1,7 @@
 package com.cafeteria.cafeteria_plugin.contollers;
 
 import com.cafeteria.cafeteria_plugin.controllers.ScheduleController;
+import com.cafeteria.cafeteria_plugin.mappers.ScheduleMapper;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.services.ScheduleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,10 @@ public class ScheduleControllerTest {
 
     @InjectMocks
     private ScheduleController scheduleController;
+
+    @Mock
+    private ScheduleMapper scheduleMapper;
+
 
     private Schedule schedule;
 
