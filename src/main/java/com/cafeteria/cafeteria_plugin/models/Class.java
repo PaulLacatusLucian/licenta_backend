@@ -29,6 +29,8 @@ public class Class {
     @JsonManagedReference
     private List<Schedule> schedules;
 
+    @Enumerated(EnumType.STRING)
+    private EducationLevel educationLevel;
 
     private String specialization;
 }

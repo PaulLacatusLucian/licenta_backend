@@ -17,6 +17,9 @@ public class Teacher extends User {
     @Column(nullable = false)
     private String subject;
 
+    @Enumerated(EnumType.STRING)
+    private TeacherType type;
+
     @JsonBackReference
     @OneToOne(mappedBy = "classTeacher")
     @ToString.Exclude

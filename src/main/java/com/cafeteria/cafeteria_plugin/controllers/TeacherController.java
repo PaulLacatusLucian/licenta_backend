@@ -1,9 +1,6 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
-import com.cafeteria.cafeteria_plugin.models.ClassSession;
-import com.cafeteria.cafeteria_plugin.models.Schedule;
-import com.cafeteria.cafeteria_plugin.models.Student;
-import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.User.UserType;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,4 +106,15 @@ public class TeacherController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/by-type")
+    public ResponseEntity<List<Teacher>> getTeachersByType(@RequestParam TeacherType type) {
+        return ResponseEntity.ok(
+                teacherService.getAllTeachers().stream()
+                        .filter(t -> t.getType() == type)
+                        .toList()
+        );
+    }
+
 }
