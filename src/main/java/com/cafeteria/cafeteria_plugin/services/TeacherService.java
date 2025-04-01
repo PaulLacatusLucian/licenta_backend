@@ -53,9 +53,11 @@ public class TeacherService {
 
         existingTeacher.setName(updatedTeacher.getName());
         existingTeacher.setSubject(updatedTeacher.getSubject());
+        existingTeacher.setType(updatedTeacher.getType());
 
         return teacherRepository.save(existingTeacher);
     }
+
 
     @Transactional
     public void deleteTeacher(Long id) {

@@ -1,7 +1,9 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.models.Class;
+import com.cafeteria.cafeteria_plugin.models.EducationLevel;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.models.TeacherType;
 import com.cafeteria.cafeteria_plugin.services.ClassService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,12 +23,56 @@ public class ClassController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<Class> addClass(@RequestBody Class studentClass, @RequestParam Long teacherId) {
+    @PostMapping("/create-primary")
+    public ResponseEntity<Class> createPrimaryClass(@RequestBody Class studentClass, @RequestParam(required = false) Long teacherId) {
+        studentClass.setEducationLevel(EducationLevel.PRIMARY);
+        studentClass.setSpecialization(null);
+
+        if (teacherId != null) {
+            Teacher teacher = classService.findTeacherById(teacherId);
+            if (teacher.getType() != TeacherType.EDUCATOR) {
+                return ResponseEntity.badRequest().body(null);
+            }
+            studentClass.setClassTeacher(teacher);
+        }
+
+        return ResponseEntity.ok(classService.addClass(studentClass));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/create-middle")
+    public ResponseEntity<Class> createMiddleClass(@RequestBody Class studentClass, @RequestParam Long teacherId) {
+        studentClass.setEducationLevel(EducationLevel.MIDDLE);
+        studentClass.setSpecialization(null);
+
         Teacher teacher = classService.findTeacherById(teacherId);
+        if (teacher.getType() != TeacherType.TEACHER) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
         studentClass.setClassTeacher(teacher);
         return ResponseEntity.ok(classService.addClass(studentClass));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/create-high")
+    public ResponseEntity<Class> createHighClass(@RequestBody Class studentClass, @RequestParam Long teacherId) {
+        if (studentClass.getSpecialization() == null || studentClass.getSpecialization().isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        Teacher teacher = classService.findTeacherById(teacherId);
+        if (teacher.getType() != TeacherType.TEACHER) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        studentClass.setEducationLevel(EducationLevel.HIGH);
+        studentClass.setClassTeacher(teacher);
+        return ResponseEntity.ok(classService.addClass(studentClass));
+    }
+
+
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
@@ -56,6 +102,7 @@ public class ClassController {
 
         existingClass.setName(studentClass.getName());
         existingClass.setSpecialization(studentClass.getSpecialization());
+        existingClass.setEducationLevel(studentClass.getEducationLevel());
 
         if (teacherId != null) {
             Teacher teacher = classService.findTeacherById(teacherId);
