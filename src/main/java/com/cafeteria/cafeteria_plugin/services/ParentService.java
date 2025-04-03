@@ -2,6 +2,7 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.Parent;
+import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.UserRepository;
@@ -71,4 +72,14 @@ public class ParentService {
 
         return parentRepository.save(existingParent);
     }
+
+    @Transactional
+    public Student addStudentToParent(Long parentId, Student student) {
+        Parent parent = parentRepository.findById(parentId)
+                .orElseThrow(() -> new IllegalArgumentException("Părintele nu există"));
+
+        student.setParent(parent);
+        return studentRepository.save(student);
+    }
+
 }

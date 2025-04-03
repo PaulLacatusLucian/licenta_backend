@@ -42,6 +42,8 @@ public class SecurityConfig {
         logger.info("Configuring security filter chain");
 
         http
+                .cors()
+                .and()
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth

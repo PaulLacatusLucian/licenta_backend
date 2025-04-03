@@ -22,6 +22,9 @@ public class StudentMapper {
         dto.setUsername(student.getUsername());
         dto.setName(student.getName());
         dto.setPhoneNumber(student.getPhoneNumber());
+        dto.setEmail(student.getEmail());
+        dto.setClassId(student.getStudentClass() != null ? student.getStudentClass().getId() : null);
+
 
         if (student.getStudentClass() != null) {
             dto.setClassName(student.getStudentClass().getName());

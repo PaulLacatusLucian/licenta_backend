@@ -9,4 +9,6 @@ public class TeacherDTO {
     private String email;
     private String name;
     private String subject;
+    private boolean hasClassAssigned;
+
 }
