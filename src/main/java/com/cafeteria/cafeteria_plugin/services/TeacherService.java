@@ -2,10 +2,13 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.*;
+import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.repositories.*;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.transaction.Transactional;
@@ -32,6 +35,10 @@ public class TeacherService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ClassRepository classRepository;
+
+
     @Transactional
     public Teacher addTeacher(Teacher teacher) {
         return teacherRepository.save(teacher);
@@ -46,10 +53,19 @@ public class TeacherService {
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul " + id + " nu a fost găsit"));
     }
 
-    @Transactional
     public Teacher updateTeacher(Long id, Teacher updatedTeacher) {
         Teacher existingTeacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul nu a fost găsit"));
+
+        Optional<Class> assignedClassOpt = classRepository.findByClassTeacherId(existingTeacher.getId());
+        if (assignedClassOpt.isPresent()) {
+            Class assignedClass = assignedClassOpt.get();
+            if (assignedClass.getEducationLevel() == EducationLevel.PRIMARY &&
+                    !updatedTeacher.getType().equals(TeacherType.EDUCATOR)) {
+                throw new IllegalStateException("Profesorul este asignat unei clase primare și nu poate fi transformat în TEACHER.");
+            }
+        }
+
 
         existingTeacher.setName(updatedTeacher.getName());
         existingTeacher.setSubject(updatedTeacher.getSubject());
@@ -57,6 +73,7 @@ public class TeacherService {
 
         return teacherRepository.save(existingTeacher);
     }
+
 
 
     @Transactional
@@ -86,4 +103,16 @@ public class TeacherService {
     public List<ClassSession> getSessionsForTeacher(Long teacherId) {
         return classSessionRepository.findByTeacherId(teacherId);
     }
+
+    public List<Teacher> findAvailableTeachers() {
+        return teacherRepository.findAll().stream()
+                .filter(teacher -> teacher.getClassAsTeacher() == null)
+                .toList();
+    }
+
+    public Teacher getEducatorByClassId(Long classId) {
+        return teacherRepository.findEducatorByClassId(classId);
+    }
+
+
 }

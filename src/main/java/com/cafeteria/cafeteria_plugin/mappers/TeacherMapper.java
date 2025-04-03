@@ -15,6 +15,7 @@ public class TeacherMapper {
         dto.setEmail(teacher.getEmail());
         dto.setName(teacher.getName());
         dto.setSubject(teacher.getSubject());
+        dto.setHasClassAssigned(teacher.getClassAsTeacher() != null);
         return dto;
     }
 }

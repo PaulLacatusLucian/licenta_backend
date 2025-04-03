@@ -21,7 +21,8 @@ public class Student extends User {
     private Class studentClass;
 
     @JsonIgnore
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "parent_id", referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
     private Parent parent;
+
 }

@@ -12,6 +12,8 @@ public class StudentDTO {
     private String username;
     private String name;
     private String phoneNumber;
+    private String email;
+    private Long classId;
 
     private String className;
     private String classSpecialization;

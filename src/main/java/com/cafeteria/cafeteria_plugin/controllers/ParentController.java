@@ -5,6 +5,7 @@ import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
 import com.cafeteria.cafeteria_plugin.mappers.ParentMapper;
 import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.Parent;
+import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.services.ParentService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +79,17 @@ public class ParentController {
                 .map(student -> ResponseEntity.ok(studentMapper.toDTO(student)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StudentDTO()));
 
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{parentId}/add-student")
+    public ResponseEntity<?> addStudentToParent(@PathVariable Long parentId, @RequestBody Student student) {
+        try {
+            Student added = parentService.addStudentToParent(parentId, student);
+            return ResponseEntity.ok(added);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 }

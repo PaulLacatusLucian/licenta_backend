@@ -2,6 +2,7 @@ package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.models.TeacherType;
 import com.cafeteria.cafeteria_plugin.repositories.ClassRepository;
 import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
 import com.cafeteria.cafeteria_plugin.models.EducationLevel;
@@ -34,18 +35,39 @@ public class ClassService {
         return classRepository.findById(id);
     }
 
-    public Class updateClass(Long id, Class updatedClass) {
-        return classRepository.findById(id)
-                .map(existingClass -> {
-                    existingClass.setName(updatedClass.getName());
-                    existingClass.setClassTeacher(updatedClass.getClassTeacher());
-                    existingClass.setSpecialization(updatedClass.getSpecialization());
-                    existingClass.setEducationLevel(updatedClass.getEducationLevel());
+    public Class updateClass(Long id, Class updated) {
+        EducationLevel level = updated.getEducationLevel();
 
-                    validateClassByEducationLevel(existingClass);
-                    return classRepository.save(existingClass);
-                }).orElseThrow(() -> new IllegalArgumentException("Class not found"));
+        if (level == null) {
+            throw new IllegalArgumentException("Education level must not be null.");
+        }
+
+        switch (level) {
+            case PRIMARY -> {
+                if (updated.getClassTeacher() != null && updated.getClassTeacher().getType() != TeacherType.EDUCATOR) {
+                    throw new IllegalArgumentException("Primary class must have an educator.");
+                }
+                updated.setSpecialization(null);
+            }
+            case MIDDLE -> {
+                if (updated.getClassTeacher() != null && updated.getClassTeacher().getType() != TeacherType.TEACHER) {
+                    throw new IllegalArgumentException("Middle class must have a regular teacher.");
+                }
+                updated.setSpecialization(null);
+            }
+            case HIGH -> {
+                if (updated.getClassTeacher() != null && updated.getClassTeacher().getType() != TeacherType.TEACHER) {
+                    throw new IllegalArgumentException("High school class must have a regular teacher.");
+                }
+                if (updated.getSpecialization() == null || updated.getSpecialization().isBlank()) {
+                    throw new IllegalArgumentException("High school class must have a specialization.");
+                }
+            }
+        }
+
+        return classRepository.save(updated);
     }
+
 
 
     public void deleteClass(Long id) {

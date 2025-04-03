@@ -4,6 +4,7 @@ import com.cafeteria.cafeteria_plugin.dtos.ScheduleDTO;
 import com.cafeteria.cafeteria_plugin.mappers.ScheduleMapper;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.services.ClassService;
 import com.cafeteria.cafeteria_plugin.services.ScheduleService;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,9 @@ public class ScheduleController {
     @Autowired
     private TeacherService teacherService;
 
+    @Autowired
+    private ClassService classService;
+
 
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
@@ -49,13 +53,27 @@ public class ScheduleController {
                 return ResponseEntity.badRequest().build();
             }
 
-            if (schedule.getTeacher() == null || schedule.getTeacher().getId() == null) {
-                return ResponseEntity.badRequest().build();
-            }
+            com.cafeteria.cafeteria_plugin.models.Class fullClass =
+                    classService.getClassById(schedule.getStudentClass().getId())
+                            .orElseThrow(() -> new IllegalArgumentException("Clasa nu a fost găsită"));
 
-            // Adaugă această linie:
-            Teacher fullTeacher = teacherService.getTeacherById(schedule.getTeacher().getId());
-            schedule.setTeacher(fullTeacher);
+            schedule.setStudentClass(fullClass);
+
+            Teacher fullTeacher;
+
+            if (fullClass.getEducationLevel() == com.cafeteria.cafeteria_plugin.models.EducationLevel.PRIMARY) {
+                fullTeacher = teacherService.getEducatorByClassId(fullClass.getId());
+                if (fullTeacher == null) {
+                    return ResponseEntity.badRequest().body(null);
+                }
+                schedule.setTeacher(fullTeacher);
+            } else {
+                if (schedule.getTeacher() == null || schedule.getTeacher().getId() == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                fullTeacher = teacherService.getTeacherById(schedule.getTeacher().getId());
+                schedule.setTeacher(fullTeacher);
+            }
 
             if (schedule.getStartTime() == null || schedule.getEndTime() == null) {
                 return ResponseEntity.badRequest().build();
@@ -63,12 +81,14 @@ public class ScheduleController {
 
             LocalTime startTime = LocalTime.parse(schedule.getStartTime(), DateTimeFormatter.ofPattern("H:mm"));
             LocalTime endTime = LocalTime.parse(schedule.getEndTime(), DateTimeFormatter.ofPattern("H:mm"));
+
             if (!endTime.isAfter(startTime)) {
                 return ResponseEntity.badRequest().build();
             }
 
             Schedule savedSchedule = scheduleService.addSchedule(schedule);
 
+            // Creează și sesiunea de clasă
             ClassSession classSession = new ClassSession();
             classSession.setSubject(schedule.getSubjects().get(0));
             classSession.setTeacher(fullTeacher);
@@ -83,6 +103,7 @@ public class ScheduleController {
             return ResponseEntity.badRequest().build();
         }
     }
+
 
 
     @GetMapping

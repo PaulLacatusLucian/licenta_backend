@@ -1,5 +1,7 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.dtos.TeacherDTO;
+import com.cafeteria.cafeteria_plugin.mappers.TeacherMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.User.UserType;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
@@ -22,6 +24,9 @@ public class TeacherController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private TeacherMapper teacherMapper;
+
     // ✅ Doar ADMIN poate adăuga profesori
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
@@ -35,6 +40,14 @@ public class TeacherController {
         teacher.setUserType(UserType.TEACHER);
 
         return ResponseEntity.ok(teacherService.addTeacher(teacher));
+    }
+
+    @GetMapping("/teachers/available")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<TeacherDTO> getAvailableTeachers() {
+        return teacherService.findAvailableTeachers().stream()
+                .map(TeacherMapper::toDto)
+                .toList();
     }
 
     // ✅ Doar ADMIN sau TEACHER poate vedea profesorii
