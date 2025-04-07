@@ -27,6 +27,7 @@ public class Class {
 
     @OneToMany(mappedBy = "studentClass", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
+    @ToString.Exclude
     private List<Schedule> schedules;
 
     @Enumerated(EnumType.STRING)

@@ -3,16 +3,16 @@ package com.cafeteria.cafeteria_plugin.controllers;
 import com.cafeteria.cafeteria_plugin.dtos.ScheduleDTO;
 import com.cafeteria.cafeteria_plugin.mappers.ScheduleMapper;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
+import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
-import com.cafeteria.cafeteria_plugin.services.ClassService;
-import com.cafeteria.cafeteria_plugin.services.ScheduleService;
-import com.cafeteria.cafeteria_plugin.services.TeacherService;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
+import com.cafeteria.cafeteria_plugin.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
-import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -41,8 +41,13 @@ public class ScheduleController {
     private TeacherService teacherService;
 
     @Autowired
-    private ClassService classService;
+    private StudentService studentService;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private ClassService classService;
 
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
@@ -105,7 +110,6 @@ public class ScheduleController {
     }
 
 
-
     @GetMapping
     public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
         List<ScheduleDTO> dtos = scheduleService.getAllSchedules().stream()
@@ -165,7 +169,6 @@ public class ScheduleController {
     }
 
 
-
     @GetMapping("/class/{className}/tomorrow")
     public ResponseEntity<List<ScheduleDTO>> getSchedulesForTomorrow(@PathVariable String className) {
         // Obține ziua următoare în limba engleză
@@ -188,6 +191,52 @@ public class ScheduleController {
                 .toList();
 
         return ResponseEntity.ok(dtos);
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/weekly")
+    public ResponseEntity<List<ScheduleDTO>> getWeeklyScheduleForStudent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Student student = studentService.findByUsername(username);
+
+        if (student == null || student.getStudentClass() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<ScheduleDTO> schedule = scheduleService
+                .getSchedulesByClassId(student.getStudentClass().getId())
+                .stream()
+                .map(scheduleMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(schedule);
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/today")
+    public ResponseEntity<List<ScheduleDTO>> getTodayScheduleForStudent(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+
+        if (student == null || student.getStudentClass() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String today = LocalDate.now()
+                .getDayOfWeek()
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+
+        String romanianToday = DAY_TRANSLATION.getOrDefault(today, "");
+
+        List<ScheduleDTO> schedule = scheduleService
+                .getSchedulesByClassId(student.getStudentClass().getId())
+                .stream()
+                .filter(s -> s.getScheduleDay().equalsIgnoreCase(romanianToday))
+                .map(scheduleMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(schedule);
     }
 
 

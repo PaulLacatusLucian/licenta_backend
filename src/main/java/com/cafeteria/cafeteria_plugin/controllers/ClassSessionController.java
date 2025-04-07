@@ -106,7 +106,7 @@ public class ClassSessionController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
 
-            Student student = gradeService.getStudentById(studentId);
+            Student student = studentService.getStudentById(studentId);
             if (student == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
@@ -130,7 +130,7 @@ public class ClassSessionController {
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}/grades")
-    public ResponseEntity<Grade> addGradeToSession(
+    public ResponseEntity<GradeDTO> addGradeToSession(
             @PathVariable Long sessionId,
             @RequestParam Long studentId,
             @RequestParam double gradeValue) {
@@ -147,11 +147,14 @@ public class ClassSessionController {
             grade.setGrade(gradeValue);
 
             Grade savedGrade = gradeService.addGrade(grade);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedGrade);
+            GradeDTO dto = gradeMapper.toDto(savedGrade); // 🔁 transformăm în DTO
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
 }

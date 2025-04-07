@@ -9,9 +9,14 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
@@ -21,6 +26,9 @@ public class StudentService {
 
     @Autowired
     private ClassRepository classRepository;
+
+    @Autowired
+    private ClassSessionRepository classSessionRepository;
 
     @Autowired
     private AbsenceRepository absenceRepository;
@@ -39,6 +47,9 @@ public class StudentService {
 
     @Autowired
     private PasswordResetTokenRepository tokenRepository;
+
+    @Autowired
+    private ScheduleRepository scheduleRepository;
 
 
     @Transactional
@@ -59,9 +70,54 @@ public class StudentService {
         return absenceRepository.findByStudentId(studentId);
     }
 
-    public List<Class> getUpcomingClasses(Long studentId) {
-        return Collections.emptyList();
+
+    public List<Schedule> getUpcomingSchedules(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+
+        Class studentClass = student.getStudentClass();
+        List<Schedule> allSchedules = scheduleRepository.findByStudentClassId(studentClass.getId());
+
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        LocalTime now = LocalTime.now();
+
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
+
+        Map<String, DayOfWeek> ziMap = Map.of(
+                "Luni", DayOfWeek.MONDAY,
+                "Marți", DayOfWeek.TUESDAY,
+                "Miercuri", DayOfWeek.WEDNESDAY,
+                "Joi", DayOfWeek.THURSDAY,
+                "Vineri", DayOfWeek.FRIDAY,
+                "Sâmbătă", DayOfWeek.SATURDAY,
+                "Duminică", DayOfWeek.SUNDAY
+        );
+
+        return allSchedules.stream()
+                .filter(schedule -> {
+                    DayOfWeek scheduleDay = ziMap.get(schedule.getScheduleDay());
+                    if (scheduleDay == null) return false;
+
+                    if (scheduleDay.getValue() > today.getValue()) {
+                        return true;
+                    } else if (scheduleDay.getValue() == today.getValue()) {
+                        try {
+                            LocalTime start = LocalTime.parse(schedule.getStartTime(), timeFormatter);
+                            return start.isAfter(now);
+                        } catch (DateTimeParseException e) {
+                            return false;
+                        }
+                    }
+                    return false;
+                })
+                .sorted(Comparator
+                        .comparing((Schedule s) -> ziMap.get(s.getScheduleDay()).getValue())
+                        .thenComparing(s -> LocalTime.parse(s.getStartTime(), timeFormatter)))
+                .limit(3)
+                .collect(Collectors.toList());
     }
+
+
 
     public Optional<Student> getStudentByParentId(Long parentId) {
         return studentRepository.findByParentId(parentId);
@@ -170,4 +226,10 @@ public class StudentService {
     public Student findByUsername(String username) {
         return studentRepository.findByUsername(username);
     }
+
+    public Student getStudentByUserId(Long userId) {
+        return studentRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Student not found with userId: " + userId));
+    }
+
 }

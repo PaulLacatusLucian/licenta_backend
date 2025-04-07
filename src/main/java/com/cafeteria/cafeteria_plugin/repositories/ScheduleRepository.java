@@ -15,4 +15,7 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 
     @Query("SELECT s FROM Schedule s JOIN s.studentClass c WHERE c.name = :className")
     List<Schedule> findAllByClassNameWithTeacher(@Param("className") String className);
+
+    List<Schedule> findByStudentClassId(Long classId);
+
 }
