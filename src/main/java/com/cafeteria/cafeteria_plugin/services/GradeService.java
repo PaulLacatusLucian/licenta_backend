@@ -71,4 +71,8 @@ public class GradeService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    public Student getStudentById(Long studentId) {
+        return getStudentById(studentId);
+    }
 }

@@ -32,6 +32,7 @@ public class ClassSession {
 
     @OneToMany(mappedBy = "classSession", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @JsonIgnore
     private List<Absence> absences; // Lista absențelor pentru această sesiune
 
     @OneToMany(mappedBy = "classSession", cascade = CascadeType.ALL)

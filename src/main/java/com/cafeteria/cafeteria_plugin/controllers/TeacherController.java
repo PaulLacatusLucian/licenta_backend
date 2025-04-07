@@ -4,6 +4,7 @@ import com.cafeteria.cafeteria_plugin.dtos.TeacherDTO;
 import com.cafeteria.cafeteria_plugin.mappers.TeacherMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.User.UserType;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,9 @@ public class TeacherController {
 
     @Autowired
     private TeacherMapper teacherMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // ✅ Doar ADMIN poate adăuga profesori
     @PreAuthorize("hasRole('ADMIN')")
@@ -129,5 +133,58 @@ public class TeacherController {
                         .toList()
         );
     }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<TeacherDTO> getCurrentTeacher(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt); // sub from token
+
+        Teacher teacher = teacherService.findByUsername(username);
+        if (teacher == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok(teacherMapper.toDto(teacher));
+    }
+
+    @GetMapping("/me/students")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<Student>> getMyStudents(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Teacher teacher = teacherService.findByUsername(username);
+        if (teacher == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        List<Student> students = teacherService.getStudentsForTeacher(teacher.getId());
+        return ResponseEntity.ok(students);
+    }
+
+    @GetMapping("/me/weekly-schedule")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<Schedule>> getMySchedule(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Teacher teacher = teacherService.findByUsername(username);
+        if (teacher == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        List<Schedule> schedule = teacherService.getWeeklyScheduleForTeacher(teacher.getId());
+        return ResponseEntity.ok(schedule);
+    }
+
+    @GetMapping("/me/sessions")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<ClassSession>> getMySessions(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Teacher teacher = teacherService.findByUsername(username);
+        if (teacher == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        List<ClassSession> sessions = teacherService.getSessionsForTeacher(teacher.getId());
+        return ResponseEntity.ok(sessions);
+    }
+
+
+
 
 }
