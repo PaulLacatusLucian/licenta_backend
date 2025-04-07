@@ -108,7 +108,6 @@ public class StudentService {
     }
 
 
-
     @Transactional
     public void advanceYear() {
         List<Class> allSchoolClasses = classRepository.findAll();
@@ -168,4 +167,7 @@ public class StudentService {
         return classRepository.save(newSchoolClass);
     }
 
+    public Student findByUsername(String username) {
+        return studentRepository.findByUsername(username);
+    }
 }

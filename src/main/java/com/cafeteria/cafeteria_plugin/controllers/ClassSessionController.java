@@ -93,4 +93,65 @@ public class ClassSessionController {
         classSessionService.deleteClassSession(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PostMapping("/session/{sessionId}/absences")
+    public ResponseEntity<AbsenceDTO> addAbsenceToSession(
+            @PathVariable Long sessionId,
+            @RequestParam Long studentId) {
+
+        try {
+            ClassSession session = classSessionService.getSessionById(sessionId);
+            if (session == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            Student student = gradeService.getStudentById(studentId);
+            if (student == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            Absence absence = new Absence();
+            absence.setClassSession(session);
+            absence.setStudent(student);
+
+            Absence savedAbsence = absenceService.saveAbsence(absence);
+            AbsenceDTO dto = absenceMapper.toDto(savedAbsence);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PostMapping("/session/{sessionId}/grades")
+    public ResponseEntity<Grade> addGradeToSession(
+            @PathVariable Long sessionId,
+            @RequestParam Long studentId,
+            @RequestParam double gradeValue) {
+        try {
+            ClassSession session = classSessionService.getSessionById(sessionId);
+            if (session == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+            Student student = studentService.getStudentById(studentId);
+            if (student == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+            Grade grade = new Grade();
+            grade.setClassSession(session);
+            grade.setStudent(student);
+            grade.setGrade(gradeValue);
+
+            Grade savedGrade = gradeService.addGrade(grade);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedGrade);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

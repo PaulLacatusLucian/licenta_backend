@@ -115,4 +115,7 @@ public class TeacherService {
     }
 
 
+    public Teacher findByUsername(String username) {
+        return teacherRepository.findByUsername(username);
+    }
 }

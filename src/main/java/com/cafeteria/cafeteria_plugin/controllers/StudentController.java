@@ -5,9 +5,11 @@ import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.Absence;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import com.cafeteria.cafeteria_plugin.services.AbsenceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,9 @@ public class StudentController {
 
     @Autowired
     private StudentMapper studentMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // ✅ Doar TEACHER sau ADMIN poate adăuga studenți
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
@@ -95,5 +100,44 @@ public class StudentController {
     public ResponseEntity<List<Class>> getStudentUpcomingClasses(@PathVariable Long id) {
         List<Class> upcomingClasses = studentService.getUpcomingClasses(id);
         return ResponseEntity.ok(upcomingClasses);
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me")
+    public ResponseEntity<StudentDTO> getCurrentStudent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt); // extrage `sub` din token
+
+        Student student = studentService.findByUsername(username);
+        if (student == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        return ResponseEntity.ok(studentMapper.toDTO(student));
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/total-absences")
+    public ResponseEntity<Integer> getTotalAbsencesForCurrentStudent(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+        if (student == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        int total = absenceService.getTotalAbsencesForStudent(student.getId());
+        return ResponseEntity.ok(total);
+    }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/upcoming-classes")
+    public ResponseEntity<List<Class>> getUpcomingClassesForCurrentStudent(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+        if (student == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(studentService.getUpcomingClasses(student.getId()));
     }
 }
