@@ -5,6 +5,7 @@ import com.cafeteria.cafeteria_plugin.mappers.GradeMapper;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Grade;
 import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
 import com.cafeteria.cafeteria_plugin.services.GradeService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,6 +32,8 @@ public class GradeController {
     private StudentService studentService;
     @Autowired
     private GradeMapper gradeMapper;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}")
@@ -94,4 +98,20 @@ public class GradeController {
         List<GradeDTO> grades = gradeService.getGradesByStudent(studentId);
         return ResponseEntity.ok(grades);
     }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me")
+    public ResponseEntity<List<GradeDTO>> getGradesForCurrentStudent(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+
+        if (student == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<GradeDTO> grades = gradeService.getGradesByStudent(student.getId());
+        return ResponseEntity.ok(grades);
+    }
+
+
 }

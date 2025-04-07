@@ -73,6 +73,8 @@ public class GradeService {
     }
 
     public Student getStudentById(Long studentId) {
-        return getStudentById(studentId);
+        return studentRepository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
     }
+
 }

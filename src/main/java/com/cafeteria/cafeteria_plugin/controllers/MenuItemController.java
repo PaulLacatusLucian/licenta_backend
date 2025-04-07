@@ -4,7 +4,10 @@ import com.cafeteria.cafeteria_plugin.dtos.OrderHistoryDTO;
 import com.cafeteria.cafeteria_plugin.mappers.OrderHistoryMapper;
 import com.cafeteria.cafeteria_plugin.models.MenuItem;
 import com.cafeteria.cafeteria_plugin.models.OrderHistory;
+import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.MenuItemService;
+import com.cafeteria.cafeteria_plugin.services.StudentService;
 import jakarta.persistence.criteria.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,6 +28,12 @@ public class MenuItemController {
 
     @Autowired
     private MenuItemService menuItemService;
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Autowired
     private OrderHistoryMapper orderHistoryMapper;
@@ -121,13 +130,14 @@ public class MenuItemController {
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    @GetMapping("/orders/student")
+    @GetMapping("/orders/student/me")
     public ResponseEntity<List<OrderHistoryDTO>> getStudentOrders(
-            @RequestParam(name = "studentId") Long studentId,
+            @RequestHeader("Authorization") String token,
             @RequestParam(name = "month") int month,
             @RequestParam(name = "year") int year) {
-
-        var rawOrders = menuItemService.getOrderHistoryForStudent(studentId, month, year);
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+        var rawOrders = menuItemService.getOrderHistoryForStudent(student.getId(), month, year);
         var dtos = rawOrders.stream()
                 .map(orderHistoryMapper::toDto)
                 .toList();

@@ -1,5 +1,6 @@
 package com.cafeteria.cafeteria_plugin.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,6 +19,7 @@ public class Student extends User {
 
     @ManyToOne
     @JoinColumn(name = "class_id", nullable = false)
+    @JsonBackReference
     private Class studentClass;
 
     @JsonIgnore
