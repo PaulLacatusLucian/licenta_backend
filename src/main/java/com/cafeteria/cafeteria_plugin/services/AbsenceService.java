@@ -69,4 +69,9 @@ public class AbsenceService {
 
         return absenceRepository.save(absence);
     }
+
+    public List<Absence> getAbsencesForStudent(Long studentId) {
+        return absenceRepository.findByStudentId(studentId);
+    }
+
 }

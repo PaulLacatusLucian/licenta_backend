@@ -6,6 +6,7 @@ import com.cafeteria.cafeteria_plugin.mappers.AbsenceMapper;
 import com.cafeteria.cafeteria_plugin.models.Absence;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.AbsenceService;
 import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
@@ -27,6 +28,7 @@ public class AbsenceController {
     @Autowired private ClassSessionService classSessionService;
     @Autowired private StudentService studentService;
     @Autowired private AbsenceMapper absenceMapper;
+    @Autowired private JwtUtil jwtUtil;
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}")
@@ -79,4 +81,19 @@ public class AbsenceController {
         absenceService.deleteAbsence(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me")
+    public ResponseEntity<List<AbsenceDTO>> getAbsencesForCurrentStudent(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+        if (student == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Absence> absences = absenceService.getAbsencesForStudent(student.getId());
+        List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
+
 }
