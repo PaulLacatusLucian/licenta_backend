@@ -5,6 +5,8 @@ import com.cafeteria.cafeteria_plugin.models.EducationLevel;
 import com.cafeteria.cafeteria_plugin.models.Teacher;
 import com.cafeteria.cafeteria_plugin.models.TeacherType;
 import com.cafeteria.cafeteria_plugin.services.ClassService;
+import com.cafeteria.cafeteria_plugin.services.ParentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -16,11 +18,11 @@ import java.util.Optional;
 @RequestMapping("/classes")
 public class ClassController {
 
-    private final ClassService classService;
+    @Autowired
+    private  ClassService classService;
 
-    public ClassController(ClassService classService) {
-        this.classService = classService;
-    }
+    @Autowired
+    private ParentService parentService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create-primary")
@@ -119,4 +121,12 @@ public class ClassController {
         classService.deleteClass(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @GetMapping("/classes/{classId}/parent-emails")
+    public ResponseEntity<List<String>> getParentEmailsByClass(@PathVariable Long classId) {
+        List<String> emails = parentService.getParentEmailsByClassId(classId);
+        return ResponseEntity.ok(emails);
+    }
+
 }

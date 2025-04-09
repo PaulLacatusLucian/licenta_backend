@@ -5,6 +5,7 @@ import com.cafeteria.cafeteria_plugin.mappers.TeacherMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.User.UserType;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
+import com.cafeteria.cafeteria_plugin.services.ParentService;
 import com.cafeteria.cafeteria_plugin.services.TeacherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,9 @@ public class TeacherController {
 
     @Autowired
     private TeacherService teacherService;
+
+    @Autowired
+    private ParentService parentService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -184,6 +188,19 @@ public class TeacherController {
         return ResponseEntity.ok(sessions);
     }
 
+    @GetMapping("/my-class/parent-emails")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<List<String>> getParentEmailsForOwnClass(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Teacher teacher = teacherService.findByUsername(username);
+
+        if (teacher.getClassAsTeacher() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<String> emails = parentService.getParentEmailsByClassId(teacher.getClassAsTeacher().getId());
+        return ResponseEntity.ok(emails);
+    }
 
 
 
