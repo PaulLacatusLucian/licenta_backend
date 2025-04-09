@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class ParentService {
@@ -80,6 +82,16 @@ public class ParentService {
 
         student.setParent(parent);
         return studentRepository.save(student);
+    }
+
+    public List<String> getParentEmailsByClassId(Long classId) {
+        List<Parent> parents = parentRepository.findDistinctByStudents_StudentClass_Id(classId);
+
+        return parents.stream()
+                .flatMap(parent -> Stream.of(parent.getMotherEmail(), parent.getFatherEmail()))
+                .filter(email -> email != null && !email.isBlank())
+                .distinct()
+                .collect(Collectors.toList());
     }
 
 }
