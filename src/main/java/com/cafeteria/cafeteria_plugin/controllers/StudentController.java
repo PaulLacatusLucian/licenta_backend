@@ -39,7 +39,7 @@ public class StudentController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // ✅ Doar TEACHER sau ADMIN poate adăuga studenți
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/class/{classId}")
     public ResponseEntity<StudentDTO> createStudent(@RequestBody Student studentDetails, @PathVariable Long classId) {
@@ -48,7 +48,7 @@ public class StudentController {
         return ResponseEntity.ok(dto);
     }
 
-    // ✅ STUDENT poate vedea doar propriile date, TEACHER și ADMIN pot vedea orice student
+
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
@@ -57,7 +57,7 @@ public class StudentController {
         return ResponseEntity.ok(dto);
     }
 
-    // ✅ TEACHER și ADMIN pot vedea toți studenții
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
@@ -67,7 +67,7 @@ public class StudentController {
         return ResponseEntity.ok(studentDTOs);
     }
 
-    // ✅ STUDENT poate edita propriile date, TEACHER și ADMIN pot edita orice student
+
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
@@ -76,7 +76,7 @@ public class StudentController {
         return ResponseEntity.ok(dto);
     }
 
-    // ✅ Doar ADMIN poate șterge studenți
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
@@ -84,27 +84,12 @@ public class StudentController {
         return ResponseEntity.noContent().build();
     }
 
-    // ✅ STUDENT poate vedea doar propriile absențe, TEACHER și ADMIN pot vedea orice absență
-    @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
-    @GetMapping("/{id}/absences")
-    public ResponseEntity<List<Absence>> getStudentAbsences(@PathVariable Long id) {
-        List<Absence> absences = studentService.getAbsencesByStudentId(id);
-        return ResponseEntity.ok(absences);
-    }
-
-    // ✅ TEACHER și ADMIN pot vedea totalul absențelor
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
-    @GetMapping("/{id}/total-absences")
-    public ResponseEntity<Integer> getStudentTotalAbsences(@PathVariable Long id) {
-        int totalAbsences = absenceService.getTotalAbsencesForStudent(id);
-        return ResponseEntity.ok(totalAbsences);
-    }
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me")
     public ResponseEntity<StudentDTO> getCurrentStudent(@RequestHeader("Authorization") String token) {
         String jwt = token.replace("Bearer ", "");
-        String username = jwtUtil.extractUsername(jwt); // extrage `sub` din token
+        String username = jwtUtil.extractUsername(jwt);
 
         Student student = studentService.findByUsername(username);
         if (student == null) {
@@ -113,6 +98,7 @@ public class StudentController {
 
         return ResponseEntity.ok(studentMapper.toDTO(student));
     }
+
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/total-absences")
@@ -140,7 +126,4 @@ public class StudentController {
         List<ScheduleDTO> dtos = schedules.stream().map(scheduleMapper::toDto).toList();
         return ResponseEntity.ok(dtos);
     }
-
-
-
 }

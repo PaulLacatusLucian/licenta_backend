@@ -3,14 +3,12 @@ package com.cafeteria.cafeteria_plugin.controllers;
 import com.cafeteria.cafeteria_plugin.dtos.AbsenceDTO;
 import com.cafeteria.cafeteria_plugin.dtos.ClassSessionDTO;
 import com.cafeteria.cafeteria_plugin.dtos.GradeDTO;
-import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
 import com.cafeteria.cafeteria_plugin.mappers.AbsenceMapper;
 import com.cafeteria.cafeteria_plugin.mappers.ClassSessionMapper;
 import com.cafeteria.cafeteria_plugin.mappers.GradeMapper;
 import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.services.*;
-import jdk.jfr.Unsigned;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +23,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/class-sessions")
 public class ClassSessionController {
 
+
     @Autowired
     private ClassSessionService classSessionService;
     @Autowired
@@ -35,7 +34,6 @@ public class ClassSessionController {
     private AbsenceService absenceService;
     @Autowired
     private TeacherService teacherService;
-
     @Autowired
     private ClassSessionMapper classSessionMapper;
     @Autowired
@@ -44,6 +42,7 @@ public class ClassSessionController {
     private AbsenceMapper absenceMapper;
     @Autowired
     private StudentMapper studentMapper;
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping
@@ -55,6 +54,7 @@ public class ClassSessionController {
         return ResponseEntity.ok(classSessionMapper.toDto(saved));
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ClassSessionDTO>> getAllClassSessions() {
@@ -62,6 +62,7 @@ public class ClassSessionController {
                 .stream().map(classSessionMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/teacher/{teacherId}")
@@ -71,6 +72,7 @@ public class ClassSessionController {
         return ResponseEntity.ok(dtos);
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/subject/{subject}")
     public ResponseEntity<List<ClassSessionDTO>> getSessionsBySubject(@PathVariable String subject) {
@@ -78,6 +80,7 @@ public class ClassSessionController {
                 .stream().map(classSessionMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/time")
@@ -87,12 +90,14 @@ public class ClassSessionController {
         return ResponseEntity.ok(dtos);
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClassSession(@PathVariable Long id) {
         classSessionService.deleteClassSession(id);
         return ResponseEntity.noContent().build();
     }
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}/absences")
@@ -127,7 +132,6 @@ public class ClassSessionController {
     }
 
 
-
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}/grades")
     public ResponseEntity<GradeDTO> addGradeToSession(
@@ -147,7 +151,7 @@ public class ClassSessionController {
             grade.setGrade(gradeValue);
 
             Grade savedGrade = gradeService.addGrade(grade);
-            GradeDTO dto = gradeMapper.toDto(savedGrade); // 🔁 transformăm în DTO
+            GradeDTO dto = gradeMapper.toDto(savedGrade);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (Exception e) {
@@ -155,6 +159,4 @@ public class ClassSessionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-
 }

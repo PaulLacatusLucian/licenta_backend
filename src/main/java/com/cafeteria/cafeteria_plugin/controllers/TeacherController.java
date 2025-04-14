@@ -35,37 +35,27 @@ public class TeacherController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // ✅ Doar ADMIN poate adăuga profesori
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Teacher> addTeacher(@RequestBody Teacher teacher) {
-        // Generăm username și criptăm parola
         String baseUsername = teacher.getName().toLowerCase().replaceAll("\\s+", ".");
         teacher.setUsername(baseUsername + ".prof");
         teacher.setPassword(passwordEncoder.encode(baseUsername.replace(".", "_") + "123!"));
 
-        // Setăm userType corect
         teacher.setUserType(UserType.TEACHER);
 
         return ResponseEntity.ok(teacherService.addTeacher(teacher));
     }
 
-    @GetMapping("/teachers/available")
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<TeacherDTO> getAvailableTeachers() {
-        return teacherService.findAvailableTeachers().stream()
-                .map(TeacherMapper::toDto)
-                .toList();
-    }
 
-    // ✅ Doar ADMIN sau TEACHER poate vedea profesorii
     @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping
     public List<Teacher> getAllTeachers() {
         return teacherService.getAllTeachers();
     }
 
-    // ✅ Doar ADMIN sau TEACHER poate vedea detaliile unui profesor
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping("/{id}")
     public ResponseEntity<Teacher> getTeacherById(@PathVariable Long id) {
@@ -73,14 +63,14 @@ public class TeacherController {
         return ResponseEntity.ok(teacher);
     }
 
-    // ✅ Doar ADMIN poate actualiza profesorii
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Teacher> updateTeacher(@PathVariable Long id, @RequestBody Teacher teacher) {
         return ResponseEntity.ok(teacherService.updateTeacher(id, teacher));
     }
 
-    // ✅ Doar ADMIN poate șterge un profesor
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTeacher(@PathVariable Long id) {
@@ -92,57 +82,12 @@ public class TeacherController {
         }
     }
 
-    // ✅ Doar TEACHER și ADMIN pot vedea elevii profesorului
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-    @GetMapping("/{id}/students")
-    public ResponseEntity<List<Student>> getStudentsForTeacher(@PathVariable Long id) {
-        try {
-            List<Student> students = teacherService.getStudentsForTeacher(id);
-            return ResponseEntity.ok(students);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    // ✅ Doar TEACHER și ADMIN pot vedea orarul săptămânal
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-    @GetMapping("/{id}/weekly-schedule")
-    public ResponseEntity<List<Schedule>> getWeeklySchedule(@PathVariable Long id) {
-        try {
-            List<Schedule> weeklySchedule = teacherService.getWeeklyScheduleForTeacher(id);
-            return ResponseEntity.ok(weeklySchedule);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    // ✅ Doar TEACHER și ADMIN pot vedea sesiunile profesorului
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
-    @GetMapping("/{id}/sessions")
-    public ResponseEntity<List<ClassSession>> getSessionsForTeacher(@PathVariable Long id) {
-        try {
-            List<ClassSession> sessions = teacherService.getSessionsForTeacher(id);
-            return ResponseEntity.ok(sessions);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/by-type")
-    public ResponseEntity<List<Teacher>> getTeachersByType(@RequestParam TeacherType type) {
-        return ResponseEntity.ok(
-                teacherService.getAllTeachers().stream()
-                        .filter(t -> t.getType() == type)
-                        .toList()
-        );
-    }
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<TeacherDTO> getCurrentTeacher(@RequestHeader("Authorization") String token) {
         String jwt = token.replace("Bearer ", "");
-        String username = jwtUtil.extractUsername(jwt); // sub from token
+        String username = jwtUtil.extractUsername(jwt);
 
         Teacher teacher = teacherService.findByUsername(username);
         if (teacher == null) {
@@ -151,6 +96,7 @@ public class TeacherController {
 
         return ResponseEntity.ok(teacherMapper.toDto(teacher));
     }
+
 
     @GetMapping("/me/students")
     @PreAuthorize("hasRole('TEACHER')")
@@ -164,6 +110,7 @@ public class TeacherController {
         return ResponseEntity.ok(students);
     }
 
+
     @GetMapping("/me/weekly-schedule")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<List<Schedule>> getMySchedule(@RequestHeader("Authorization") String token) {
@@ -176,6 +123,7 @@ public class TeacherController {
         return ResponseEntity.ok(schedule);
     }
 
+
     @GetMapping("/me/sessions")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<List<ClassSession>> getMySessions(@RequestHeader("Authorization") String token) {
@@ -187,6 +135,7 @@ public class TeacherController {
         List<ClassSession> sessions = teacherService.getSessionsForTeacher(teacher.getId());
         return ResponseEntity.ok(sessions);
     }
+
 
     @GetMapping("/my-class/parent-emails")
     @PreAuthorize("hasRole('TEACHER')")
@@ -201,7 +150,4 @@ public class TeacherController {
         List<String> emails = parentService.getParentEmailsByClassId(teacher.getClassAsTeacher().getId());
         return ResponseEntity.ok(emails);
     }
-
-
-
 }

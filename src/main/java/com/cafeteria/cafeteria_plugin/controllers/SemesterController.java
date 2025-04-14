@@ -2,6 +2,7 @@ package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.models.Semester;
 import com.cafeteria.cafeteria_plugin.services.SemesterService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,17 +10,16 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/semesters")
 public class SemesterController {
 
-    private final SemesterService semesterService;
+    @Autowired
+    SemesterService semesterService;
 
-    public SemesterController(SemesterService semesterService) {
-        this.semesterService = semesterService;
-    }
 
     @GetMapping("/current")
     public ResponseEntity<Semester> getCurrentSemester() {
         Semester currentSemester = semesterService.getCurrentSemester();
         return ResponseEntity.ok(currentSemester);
     }
+
 
     @PostMapping("/next")
     public ResponseEntity<Semester> incrementSemester() {

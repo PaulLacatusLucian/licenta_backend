@@ -24,11 +24,17 @@ import java.util.stream.Collectors;
 @RequestMapping("/absences")
 public class AbsenceController {
 
-    @Autowired private AbsenceService absenceService;
-    @Autowired private ClassSessionService classSessionService;
-    @Autowired private StudentService studentService;
-    @Autowired private AbsenceMapper absenceMapper;
-    @Autowired private JwtUtil jwtUtil;
+    @Autowired
+    private AbsenceService absenceService;
+    @Autowired
+    private ClassSessionService classSessionService;
+    @Autowired
+    private StudentService studentService;
+    @Autowired
+    private AbsenceMapper absenceMapper;
+    @Autowired
+    private JwtUtil jwtUtil;
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}")
@@ -44,6 +50,7 @@ public class AbsenceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(absenceMapper.toDto(saved));
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<AbsenceDTO>> getAllAbsences() {
@@ -52,6 +59,7 @@ public class AbsenceController {
         return ResponseEntity.ok(dtos);
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<AbsenceDTO> getAbsenceById(@PathVariable Long id) {
@@ -59,6 +67,7 @@ public class AbsenceController {
         return absence.map(a -> ResponseEntity.ok(absenceMapper.toDto(a)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
@@ -75,12 +84,14 @@ public class AbsenceController {
         return ResponseEntity.ok(absenceMapper.toDto(saved));
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAbsence(@PathVariable Long id) {
         absenceService.deleteAbsence(id);
         return ResponseEntity.noContent().build();
     }
+
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me")
@@ -95,5 +106,4 @@ public class AbsenceController {
         List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtoList);
     }
-
 }
