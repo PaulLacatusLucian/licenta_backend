@@ -94,4 +94,7 @@ public class ParentService {
                 .collect(Collectors.toList());
     }
 
+    public Parent findByUsername(String username) {
+        return parentRepository.findByUsername(username);
+    }
 }

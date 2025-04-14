@@ -19,7 +19,7 @@ import java.util.Optional;
 public class ClassController {
 
     @Autowired
-    private  ClassService classService;
+    private ClassService classService;
 
     @Autowired
     private ParentService parentService;
@@ -41,6 +41,7 @@ public class ClassController {
         return ResponseEntity.ok(classService.addClass(studentClass));
     }
 
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create-middle")
     public ResponseEntity<Class> createMiddleClass(@RequestBody Class studentClass, @RequestParam Long teacherId) {
@@ -55,6 +56,7 @@ public class ClassController {
         studentClass.setClassTeacher(teacher);
         return ResponseEntity.ok(classService.addClass(studentClass));
     }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create-high")
@@ -74,13 +76,12 @@ public class ClassController {
     }
 
 
-
-
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public List<Class> getAllClasses() {
         return classService.getAllClasses();
     }
+
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
@@ -88,6 +89,7 @@ public class ClassController {
         Optional<Class> studentClass = classService.getClassById(id);
         return studentClass.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -121,12 +123,4 @@ public class ClassController {
         classService.deleteClass(id);
         return ResponseEntity.noContent().build();
     }
-
-    @PreAuthorize("hasRole('TEACHER')")
-    @GetMapping("/classes/{classId}/parent-emails")
-    public ResponseEntity<List<String>> getParentEmailsByClass(@PathVariable Long classId) {
-        List<String> emails = parentService.getParentEmailsByClassId(classId);
-        return ResponseEntity.ok(emails);
-    }
-
 }

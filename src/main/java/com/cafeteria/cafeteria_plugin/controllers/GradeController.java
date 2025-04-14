@@ -54,6 +54,7 @@ public class GradeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(gradeMapper.toDto(saved));
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<GradeDTO>> getAllGrades() {
@@ -85,6 +86,7 @@ public class GradeController {
         return ResponseEntity.ok(gradeMapper.toDto(saved));
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGrade(@PathVariable Long id) {
@@ -92,12 +94,14 @@ public class GradeController {
         return ResponseEntity.noContent().build();
     }
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<GradeDTO>> getGradesByStudent(@PathVariable Long studentId) {
         List<GradeDTO> grades = gradeService.getGradesByStudent(studentId);
         return ResponseEntity.ok(grades);
     }
+
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me")
@@ -112,6 +116,4 @@ public class GradeController {
         List<GradeDTO> grades = gradeService.getGradesByStudent(student.getId());
         return ResponseEntity.ok(grades);
     }
-
-
 }

@@ -101,11 +101,13 @@ public class MenuItemController {
         }
     }
 
+
     @GetMapping("/all")
     public ResponseEntity<List<MenuItem>> getAllMenuItems() {
         List<MenuItem> menuItems = menuItemService.getAllMenuItems();
         return ResponseEntity.ok(menuItems);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Long id) {
@@ -113,6 +115,7 @@ public class MenuItemController {
         return menuItem.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem updatedMenuItem) {
@@ -124,11 +127,13 @@ public class MenuItemController {
         }
     }
 
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         boolean isDeleted = menuItemService.deleteMenuItem(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
+
 
     @GetMapping("/orders/student/me")
     public ResponseEntity<List<OrderHistoryDTO>> getStudentOrders(
@@ -158,6 +163,7 @@ public class MenuItemController {
         );
     }
 
+
     @GetMapping("/invoice")
     public ResponseEntity<String> generateStudentInvoice(
             @RequestParam(name = "studentId") Long studentId,
@@ -165,6 +171,7 @@ public class MenuItemController {
             @RequestParam(name = "year") int year) {
         return ResponseEntity.ok(menuItemService.generateInvoiceForStudent(studentId, month, year));
     }
+
 
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<String> uploadImage(
@@ -175,14 +182,12 @@ public class MenuItemController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File size exceeds the maximum limit of 10MB");
             }
 
-            // Create directory if it doesn't exist
             File uploadDirectory = new File(uploadDir);
             if (!uploadDirectory.exists()) {
                 uploadDirectory.mkdirs();
             }
 
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-            // Use File constructor with parent and child
             File destinationFile = new File(uploadDir, fileName);
             file.transferTo(destinationFile);
 

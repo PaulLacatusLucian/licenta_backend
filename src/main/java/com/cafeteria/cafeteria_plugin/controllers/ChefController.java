@@ -16,14 +16,14 @@ public class ChefController {
     @Autowired
     private ChefService chefService;
 
-    // ✅ Obținere toți bucătarii (doar ADMIN)
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<Chef>> getAllChefs() {
         return ResponseEntity.ok(chefService.getAllChefs());
     }
 
-    // ✅ Obținere bucătar după ID (ADMIN și CHEF)
+
     @PreAuthorize("hasAnyRole('ADMIN', 'CHEF')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getChefById(@PathVariable Long id) {
@@ -32,7 +32,7 @@ public class ChefController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // ✅ Actualizare bucătar (doar ADMIN)
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateChef(@PathVariable Long id, @RequestBody Chef chefDetails) {
@@ -44,7 +44,7 @@ public class ChefController {
         }
     }
 
-    // ✅ Ștergere bucătar (doar ADMIN)
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteChef(@PathVariable Long id) {

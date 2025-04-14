@@ -13,4 +13,6 @@ public interface ParentRepository extends JpaRepository<Parent, Long> {
 
     @Query("SELECT DISTINCT p FROM Parent p JOIN p.students s WHERE s.studentClass.id = :classId")
     List<Parent> findDistinctByStudents_StudentClass_Id(@Param("classId") Long classId);
+
+    Parent findByUsername(String username);
 }

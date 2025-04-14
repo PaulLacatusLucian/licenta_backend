@@ -93,7 +93,6 @@ public class ScheduleController {
 
             Schedule savedSchedule = scheduleService.addSchedule(schedule);
 
-            // Creează și sesiunea de clasă
             ClassSession classSession = new ClassSession();
             classSession.setSubject(schedule.getSubjects().get(0));
             classSession.setTeacher(fullTeacher);
@@ -134,12 +133,14 @@ public class ScheduleController {
         return ResponseEntity.ok(scheduleService.updateSchedule(id, schedule));
     }
 
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
         scheduleService.deleteSchedule(id);
         return ResponseEntity.noContent().build();
     }
+
 
     @GetMapping("/class/{classId}")
     public ResponseEntity<List<ScheduleDTO>> getSchedulesByClassId(@PathVariable Long classId) {
@@ -171,17 +172,14 @@ public class ScheduleController {
 
     @GetMapping("/class/{className}/tomorrow")
     public ResponseEntity<List<ScheduleDTO>> getSchedulesForTomorrow(@PathVariable String className) {
-        // Obține ziua următoare în limba engleză
         String englishNextDay = LocalDate.now()
                 .plusDays(1)
                 .getDayOfWeek()
                 .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
 
-        // Traduce ziua în română
         String romanianNextDay = DAY_TRANSLATION.getOrDefault(englishNextDay, "");
         className = className.toUpperCase();
 
-        // Filtrare orare pentru ziua următoare
         List<Schedule> schedulesForNextDay = scheduleService.getSchedulesByClassName(className).stream()
                 .filter(schedule -> schedule.getScheduleDay().equalsIgnoreCase(romanianNextDay))
                 .toList();
@@ -192,6 +190,7 @@ public class ScheduleController {
 
         return ResponseEntity.ok(dtos);
     }
+
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/weekly")
@@ -212,6 +211,7 @@ public class ScheduleController {
 
         return ResponseEntity.ok(schedule);
     }
+
 
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/today")
@@ -249,5 +249,4 @@ public class ScheduleController {
         put("Saturday", "Sâmbătă");
         put("Sunday", "Duminică");
     }};
-
 }

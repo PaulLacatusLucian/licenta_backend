@@ -6,6 +6,7 @@ import com.cafeteria.cafeteria_plugin.mappers.ParentMapper;
 import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.ParentService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,7 +34,10 @@ public class ParentController {
     @Autowired
     private StudentMapper studentMapper;
 
-    // ✅ Doar ADMIN poate vedea toți părinții
+    @Autowired
+    private JwtUtil jwtUtil;
+
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ParentDTO>> getAllParents() {
@@ -45,7 +48,7 @@ public class ParentController {
         return ResponseEntity.ok(parentDTOs);
     }
 
-    // ✅ PARENT poate vedea doar propriul profil, ADMIN poate vedea orice părinte
+
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ParentDTO> getParentById(@PathVariable Long id) {
@@ -53,7 +56,7 @@ public class ParentController {
         return ResponseEntity.ok(parentMapper.toDto(parent));
     }
 
-    // ✅ Doar ADMIN sau PARENT poate modifica datele unui părinte
+
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ParentDTO> updateParent(@PathVariable Long id, @RequestBody ParentDTO parentDTO) {
@@ -61,7 +64,7 @@ public class ParentController {
         return ResponseEntity.ok(parentMapper.toDto(updatedParent));
     }
 
-    // ✅ Doar ADMIN poate șterge un părinte
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteParent(@PathVariable Long id) {
@@ -71,9 +74,11 @@ public class ParentController {
 
 
     @PreAuthorize("hasRole('PARENT') or hasRole('TEACHER') or hasRole('ADMIN')")
-    @GetMapping("/{id}/student")
-    public ResponseEntity<?> getStudentForParent(@PathVariable Long id) {
-        Parent parent = parentService.getParentById(id);
+    @GetMapping("/me/child")
+    public ResponseEntity<?> getStudentForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
 
         return studentService.getStudentByParentId(parent.getId())
                 .map(student -> ResponseEntity.ok(studentMapper.toDTO(student)))
@@ -81,15 +86,19 @@ public class ParentController {
 
     }
 
+
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/{parentId}/add-student")
-    public ResponseEntity<?> addStudentToParent(@PathVariable Long parentId, @RequestBody Student student) {
+    @PostMapping("/me/add-student")
+    public ResponseEntity<?> addStudentToParent(@RequestHeader("Authorization") String token, @RequestBody Student student) {
         try {
-            Student added = parentService.addStudentToParent(parentId, student);
+            String jwt = token.replace("Bearer ", "");
+            String username = jwtUtil.extractUsername(jwt);
+            Parent parent = parentService.findByUsername(username);
+
+            Student added = parentService.addStudentToParent(parent.getId(), student);
             return ResponseEntity.ok(added);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
 }
