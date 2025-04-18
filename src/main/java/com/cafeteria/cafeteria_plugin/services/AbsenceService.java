@@ -74,4 +74,7 @@ public class AbsenceService {
         return absenceRepository.findByStudentId(studentId);
     }
 
+    public boolean existsByStudentIdAndClassSessionId(Long studentId, Long classSessionId) {
+        return absenceRepository.existsByStudentIdAndClassSessionId(studentId, classSessionId);
+    }
 }
