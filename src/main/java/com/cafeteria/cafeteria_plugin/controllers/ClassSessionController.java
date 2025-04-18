@@ -101,19 +101,25 @@ public class ClassSessionController {
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}/absences")
-    public ResponseEntity<AbsenceDTO> addAbsenceToSession(
+    public ResponseEntity<?> addAbsenceToSession(
             @PathVariable Long sessionId,
             @RequestParam Long studentId) {
 
         try {
             ClassSession session = classSessionService.getSessionById(sessionId);
             if (session == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Session not found");
             }
 
             Student student = studentService.getStudentById(studentId);
             if (student == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+            }
+
+            // 🛑 Verificare: dacă are deja notă, nu poate fi marcat absent
+            boolean hasGrade = gradeService.existsByStudentIdAndClassSessionId(studentId, sessionId);
+            if (hasGrade) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Elevul are deja notă și nu poate fi marcat absent.");
             }
 
             Absence absence = new Absence();
@@ -127,23 +133,30 @@ public class ClassSessionController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Eroare la salvarea absenței.");
         }
     }
 
 
+
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}/grades")
-    public ResponseEntity<GradeDTO> addGradeToSession(
+    public ResponseEntity<?> addGradeToSession(
             @PathVariable Long sessionId,
             @RequestParam Long studentId,
             @RequestParam double gradeValue) {
         try {
             ClassSession session = classSessionService.getSessionById(sessionId);
-            if (session == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            if (session == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Session not found");
 
             Student student = studentService.getStudentById(studentId);
-            if (student == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            if (student == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Student not found");
+
+            // 🛑 Verificare: dacă studentul este absent, nu poate primi notă
+            boolean isAbsent = absenceService.existsByStudentIdAndClassSessionId(studentId, sessionId);
+            if (isAbsent) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Elevul este absent și nu poate primi notă.");
+            }
 
             Grade grade = new Grade();
             grade.setClassSession(session);
@@ -156,7 +169,7 @@ public class ClassSessionController {
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Eroare la salvarea notei.");
         }
     }
 }

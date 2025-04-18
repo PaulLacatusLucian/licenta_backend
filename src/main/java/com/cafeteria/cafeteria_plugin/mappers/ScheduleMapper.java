@@ -24,6 +24,10 @@ public class ScheduleMapper {
         teacherDTO.setSubject(schedule.getTeacher().getSubject());
         dto.setTeacher(teacherDTO);
 
+        if (schedule.getStudentClass() != null) {
+            dto.setClassName(schedule.getStudentClass().getName());
+        }
+
         return dto;
     }
 }

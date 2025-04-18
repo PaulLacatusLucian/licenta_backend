@@ -1,6 +1,10 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.dtos.ScheduleDTO;
+import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
 import com.cafeteria.cafeteria_plugin.dtos.TeacherDTO;
+import com.cafeteria.cafeteria_plugin.mappers.ScheduleMapper;
+import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.mappers.TeacherMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.User.UserType;
@@ -31,6 +35,12 @@ public class TeacherController {
 
     @Autowired
     private TeacherMapper teacherMapper;
+
+    @Autowired
+    private ScheduleMapper scheduleMapper;
+
+    @Autowired
+    private StudentMapper studentMapper;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -100,27 +110,34 @@ public class TeacherController {
 
     @GetMapping("/me/students")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<List<Student>> getMyStudents(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<StudentDTO>> getMyStudents(@RequestHeader("Authorization") String token) {
         String jwt = token.replace("Bearer ", "");
         String username = jwtUtil.extractUsername(jwt);
         Teacher teacher = teacherService.findByUsername(username);
         if (teacher == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
         List<Student> students = teacherService.getStudentsForTeacher(teacher.getId());
-        return ResponseEntity.ok(students);
+        List<StudentDTO> studentDTOs = students.stream()
+                .map(studentMapper::toDTO)
+                .toList();
+
+        return ResponseEntity.ok(studentDTOs);
     }
 
 
     @GetMapping("/me/weekly-schedule")
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<List<Schedule>> getMySchedule(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<ScheduleDTO>> getMySchedule(@RequestHeader("Authorization") String token) {
         String jwt = token.replace("Bearer ", "");
         String username = jwtUtil.extractUsername(jwt);
         Teacher teacher = teacherService.findByUsername(username);
         if (teacher == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
         List<Schedule> schedule = teacherService.getWeeklyScheduleForTeacher(teacher.getId());
-        return ResponseEntity.ok(schedule);
+        List<ScheduleDTO> scheduleDTOs = schedule.stream()
+                .map(scheduleMapper::toDto)
+                .toList();
+        return ResponseEntity.ok(scheduleDTOs);
     }
 
 

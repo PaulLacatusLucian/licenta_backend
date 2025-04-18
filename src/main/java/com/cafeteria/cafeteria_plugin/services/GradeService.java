@@ -77,4 +77,8 @@ public class GradeService {
                 .orElseThrow(() -> new IllegalArgumentException("Student not found"));
     }
 
+    public boolean existsByStudentIdAndClassSessionId(Long studentId, Long classSessionId) {
+        return gradeRepository.existsByStudentIdAndClassSessionId(studentId, classSessionId);
+    }
+
 }

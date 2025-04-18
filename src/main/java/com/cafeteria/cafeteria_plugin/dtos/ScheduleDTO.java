@@ -11,4 +11,6 @@ public class ScheduleDTO {
     private String endTime;
     private List<String> subjects;
     private TeacherDTO teacher;
+    private String className;
+
 }
