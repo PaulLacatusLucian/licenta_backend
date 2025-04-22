@@ -1,14 +1,17 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
-import com.cafeteria.cafeteria_plugin.dtos.ParentDTO;
-import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
+import com.cafeteria.cafeteria_plugin.dtos.*;
+import com.cafeteria.cafeteria_plugin.email.EmailService;
+import com.cafeteria.cafeteria_plugin.mappers.GradeMapper;
+import com.cafeteria.cafeteria_plugin.mappers.OrderHistoryMapper;
 import com.cafeteria.cafeteria_plugin.mappers.ParentMapper;
 import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.Parent;
+import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.models.Teacher;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
-import com.cafeteria.cafeteria_plugin.services.ParentService;
-import com.cafeteria.cafeteria_plugin.services.StudentService;
+import com.cafeteria.cafeteria_plugin.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,6 +31,25 @@ public class ParentController {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private AbsenceService absenceService;
+
+    @Autowired
+    private GradeService gradeService;
+
+    @Autowired
+    private MenuItemService menuItemService;
+
+    @Autowired
+    private EmailService emailService;
+
+
+    @Autowired
+    private OrderHistoryMapper orderHistoryMapper;
+
+    @Autowired
+    private GradeMapper gradeMapper;
 
     @Autowired
     private ParentMapper parentMapper;
@@ -101,4 +124,125 @@ public class ParentController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/absences")
+    public ResponseEntity<?> getChildAbsencesForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    int total = absenceService.getTotalAbsencesForStudent(student.getId());
+                    return ResponseEntity.ok(Map.of("total", total));
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("total", 0)));
+    }
+
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/grades")
+    public ResponseEntity<?> getChildGradesForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    List<GradeDTO> grades = gradeService.getGradesByStudent(student.getId());
+                    return ResponseEntity.ok(grades);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
+    }
+
+
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/orders")
+    public ResponseEntity<?> getChildOrdersForParent(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(name = "month") int month,
+            @RequestParam(name = "year") int year) {
+
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    var orders = menuItemService.getOrderHistoryForStudent(student.getId(), month, year)
+                            .stream()
+                            .map(orderHistoryMapper::toDto)
+                            .toList();
+                    return ResponseEntity.ok(orders);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
+    }
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/child/total-absences")
+    public ResponseEntity<Map<String, Integer>> getTotalAbsencesForChildren(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Parent parent = parentService.findByUsername(username);
+        if (parent == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        int total = parent.getStudents().stream()
+                .mapToInt(student -> absenceService.getTotalAbsencesForStudent(student.getId()))
+                .sum();
+
+        return ResponseEntity.ok(Map.of("total", total));
+    }
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/teachers")
+    public ResponseEntity<List<TeacherBriefDTO>> getTeachersForMyChild(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    List<Teacher> teachers = student.getStudentClass().getSchedules().stream()
+                            .map(Schedule::getTeacher)
+                            .distinct()
+                            .toList();
+
+                    List<TeacherBriefDTO> result = teachers.stream().map(teacher -> {
+                        TeacherBriefDTO dto = new TeacherBriefDTO();
+                        dto.setName(teacher.getName());
+                        dto.setSubject(teacher.getSubject());
+                        dto.setEmail(teacher.getEmail());
+                        return dto;
+                    }).toList();
+
+                    return ResponseEntity.ok(result);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
+    }
+
+    @PostMapping("/parents/me/send-message")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<Void> sendMessageToTeacher(@RequestBody EmailMessageDTO request, @RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Parent parent = parentService.findByUsername(username);
+
+        if (parent == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        try {
+            emailService.sendMessageFromParent(
+                    parent.getEmail(),
+                    request.getTeacherEmail(),
+                    request.getSubject(),
+                    request.getContent()
+            );
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+
+
 }
