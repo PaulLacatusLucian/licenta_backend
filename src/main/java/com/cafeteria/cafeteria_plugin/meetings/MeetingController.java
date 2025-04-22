@@ -1,6 +1,7 @@
 package com.cafeteria.cafeteria_plugin.meetings;
 
 import com.cafeteria.cafeteria_plugin.meetings.GoogleCalendarService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,11 +13,8 @@ import java.util.List;
 @RequestMapping("/meetings")
 public class MeetingController {
 
-    private final GoogleCalendarService calendarService;
-
-    public MeetingController(GoogleCalendarService calendarService) {
-        this.calendarService = calendarService;
-    }
+    @Autowired
+    GoogleCalendarService calendarService;
 
     @PostMapping("/start")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
