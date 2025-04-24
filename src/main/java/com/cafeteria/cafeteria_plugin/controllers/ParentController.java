@@ -243,6 +243,16 @@ public class ParentController {
         }
     }
 
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me")
+    public ResponseEntity<ParentDTO> getMyProfile(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Parent parent = parentService.findByUsername(username);
+        if (parent == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok(parentMapper.toDto(parent));
+    }
 
 
 }
