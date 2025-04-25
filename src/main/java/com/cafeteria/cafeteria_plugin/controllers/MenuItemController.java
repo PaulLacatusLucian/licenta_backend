@@ -4,15 +4,19 @@ import com.cafeteria.cafeteria_plugin.dtos.OrderHistoryDTO;
 import com.cafeteria.cafeteria_plugin.mappers.OrderHistoryMapper;
 import com.cafeteria.cafeteria_plugin.models.MenuItem;
 import com.cafeteria.cafeteria_plugin.models.OrderHistory;
+import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.MenuItemService;
+import com.cafeteria.cafeteria_plugin.services.ParentService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
-import jakarta.persistence.criteria.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +35,9 @@ public class MenuItemController {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private ParentService parentService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -78,6 +85,8 @@ public class MenuItemController {
             menuItem.setImageUrl(imageUrl);
             menuItem.setAllergens(allergens);
 
+            menuItemService.addMenuItem(menuItem);
+
             return ResponseEntity.ok("Menu item added successfully with image URL: " + imageUrl);
         } catch (Exception e) {
             System.err.println("Error in addMenuItemWithImage: " + e.getMessage());
@@ -86,12 +95,51 @@ public class MenuItemController {
         }
     }
 
+    /**
+     * Purchase a menu item, extracting parent and student info from the token
+     */
+    @PostMapping("/me/purchase/{menuItemId}")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<String> purchaseMenuItemForMyChild(
+            @PathVariable Long menuItemId,
+            @RequestParam(name = "quantity") int quantity,
+            @RequestHeader("Authorization") String token) {
+        try {
+            // Extract parent from token
+            String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+            Parent parent = parentService.findByUsername(username);
 
-    @PostMapping("/purchase")
+            if (parent == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Parent not found");
+            }
+
+            // Get student associated with parent
+            Optional<Student> studentOpt = studentService.getStudentByParentId(parent.getId());
+            if (studentOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No student found for this parent");
+            }
+
+            Student student = studentOpt.get();
+
+            // Process the purchase
+            menuItemService.purchaseMenuItem(parent.getId(), student.getId(), menuItemId, quantity);
+            return ResponseEntity.ok("Purchase successful!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing purchase: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Legacy method - maintained for backward compatibility
+     */
+    @PostMapping("/{menuItemId}/purchase")
     public ResponseEntity<String> purchaseMenuItem(
+            @PathVariable Long menuItemId,
             @RequestParam(name = "parentId") Long parentId,
             @RequestParam(name = "studentId") Long studentId,
-            @RequestParam(name = "menuItemId") Long menuItemId,
             @RequestParam(name = "quantity") int quantity) {
         try {
             menuItemService.purchaseMenuItem(parentId, studentId, menuItemId, quantity);
@@ -101,13 +149,11 @@ public class MenuItemController {
         }
     }
 
-
     @GetMapping("/all")
     public ResponseEntity<List<MenuItem>> getAllMenuItems() {
         List<MenuItem> menuItems = menuItemService.getAllMenuItems();
         return ResponseEntity.ok(menuItems);
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Long id) {
@@ -115,7 +161,6 @@ public class MenuItemController {
         return menuItem.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem updatedMenuItem) {
@@ -127,21 +172,24 @@ public class MenuItemController {
         }
     }
 
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         boolean isDeleted = menuItemService.deleteMenuItem(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-
     @GetMapping("/orders/student/me")
-    public ResponseEntity<List<OrderHistoryDTO>> getStudentOrders(
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<OrderHistoryDTO>> getMyStudentOrders(
             @RequestHeader("Authorization") String token,
             @RequestParam(name = "month") int month,
             @RequestParam(name = "year") int year) {
         String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
         Student student = studentService.findByUsername(username);
+        if (student == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
+        }
+
         var rawOrders = menuItemService.getOrderHistoryForStudent(student.getId(), month, year);
         var dtos = rawOrders.stream()
                 .map(orderHistoryMapper::toDto)
@@ -149,21 +197,64 @@ public class MenuItemController {
         return ResponseEntity.ok(dtos);
     }
 
-
-    @GetMapping("/orders/parent")
-    public ResponseEntity<List<OrderHistoryDTO>> getParentOrders(
-            @RequestParam(name = "parentId") Long parentId,
+    @GetMapping("/me/child/orders")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<List<OrderHistoryDTO>> getChildOrdersForParent(
+            @RequestHeader("Authorization") String token,
             @RequestParam(name = "month") int month,
             @RequestParam(name = "year") int year) {
-        return ResponseEntity.ok(
-                menuItemService.getOrderHistoryForParent(parentId, month, year)
-                        .stream()
-                        .map(orderHistoryMapper::toDto)
-                        .toList()
-        );
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Parent parent = parentService.findByUsername(username);
+        if (parent == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
+        }
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    var orders = menuItemService.getOrderHistoryForStudent(student.getId(), month, year)
+                            .stream()
+                            .map(orderHistoryMapper::toDto)
+                            .toList();
+                    return ResponseEntity.ok(orders);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
     }
 
+    @GetMapping("/me/invoice")
+    @PreAuthorize("hasRole('PARENT')")
+    public ResponseEntity<byte[]> generateInvoiceForMyChild(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(name = "month") int month,
+            @RequestParam(name = "year") int year) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Parent parent = parentService.findByUsername(username);
+        if (parent == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body("Unauthorized".getBytes());
+        }
 
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    // Get the PDF bytes
+                    byte[] pdfBytes = menuItemService.generateInvoicePDF(student.getId(), month, year);
+
+                    // Return with appropriate headers
+                    return ResponseEntity
+                            .ok()
+                            .contentType(MediaType.APPLICATION_PDF)
+                            .header(HttpHeaders.CONTENT_DISPOSITION,
+                                    "attachment; filename=invoice_" + month + "_" + year + ".pdf")
+                            .body(pdfBytes);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .body("No student found".getBytes()));
+    }
+
+    /**
+     * Legacy method - maintained for backward compatibility
+     */
     @GetMapping("/invoice")
     public ResponseEntity<String> generateStudentInvoice(
             @RequestParam(name = "studentId") Long studentId,
@@ -171,7 +262,6 @@ public class MenuItemController {
             @RequestParam(name = "year") int year) {
         return ResponseEntity.ok(menuItemService.generateInvoiceForStudent(studentId, month, year));
     }
-
 
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<String> uploadImage(

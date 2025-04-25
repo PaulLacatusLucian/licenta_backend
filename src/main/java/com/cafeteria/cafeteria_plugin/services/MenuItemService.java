@@ -5,12 +5,23 @@ import com.cafeteria.cafeteria_plugin.repositories.MenuItemRepository;
 import com.cafeteria.cafeteria_plugin.repositories.OrderHistoryRepository;
 import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 @Service
 public class MenuItemService {
@@ -141,5 +152,156 @@ public class MenuItemService {
         invoice.append("Total: $").append(total).append("\n");
 
         return invoice.toString();
+    }
+
+    // Add these methods to your MenuItemService.java
+
+    /**
+     * Get most popular menu items based on order count
+     */
+    public List<Map<String, Object>> getMostPopularItems(int limit) {
+        return orderHistoryRepository.findMostOrderedItems(limit);
+    }
+
+    /**
+     * Get total revenue for a specific time period
+     */
+    public double getTotalRevenueForPeriod(int month, int year) {
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+        return orderHistoryRepository.sumOrderPricesBetween(start, end);
+    }
+
+    /**
+     * Get daily sales for a specific month
+     */
+    public List<Map<String, Object>> getDailySalesForMonth(int month, int year) {
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime end = start.plusMonths(1).minusSeconds(1);
+        return orderHistoryRepository.findDailySalesBetween(start, end);
+    }
+
+    /**
+     * Get students with the most orders
+     */
+    public List<Map<String, Object>> getTopStudentsByOrderCount(int limit) {
+        return orderHistoryRepository.findStudentsWithMostOrders(limit);
+    }
+
+    /**
+     * Get current inventory status
+     */
+    public List<Map<String, Object>> getInventoryStatus() {
+        List<MenuItem> items = menuItemRepository.findAll();
+        return items.stream()
+                .map(item -> {
+                    Map<String, Object> status = new HashMap<>();
+                    status.put("id", item.getId());
+                    status.put("name", item.getName());
+                    status.put("quantity", item.getQuantity());
+                    status.put("status", item.getQuantity() > 10 ? "In Stock" :
+                            (item.getQuantity() > 0 ? "Low Stock" : "Out of Stock"));
+                    return status;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get orders count by allergen
+     */
+    public Map<String, Long> getOrderCountByAllergen() {
+        List<OrderHistory> allOrders = orderHistoryRepository.findAll();
+        return allOrders.stream()
+                .flatMap(order -> {
+                    Optional<MenuItem> menuItem = menuItemRepository.findByName(order.getMenuItemName());
+                    if (menuItem.isPresent() && menuItem.get().getAllergens() != null) {
+                        return menuItem.get().getAllergens().stream();
+                    }
+                    return Stream.empty();
+                })
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
+
+    /**
+     * Generate a PDF invoice for a student
+     */
+    public byte[] generateInvoicePDF(Long studentId, int month, int year) {
+        try {
+            List<OrderHistory> orders = getOrderHistoryForStudent(studentId, month, year);
+            double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
+
+            // Get student details
+            Student student = studentRepository.findById(studentId)
+                    .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+
+            // Create PDF document
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            Document document = new Document(PageSize.A4);
+            PdfWriter.getInstance(document, outputStream);
+
+            // Open document
+            document.open();
+
+            // Add title
+            Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
+            Paragraph title = new Paragraph("INVOICE", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new Paragraph(" ")); // Add space
+
+            // Add invoice details
+            Font normalFont = new Font(Font.FontFamily.HELVETICA, 12);
+            Font boldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
+
+            document.add(new Paragraph("Invoice for: " + student.getName(), boldFont));
+            document.add(new Paragraph("Month: " + month + "/" + year, normalFont));
+            document.add(new Paragraph("Date Generated: " + LocalDateTime.now().format(
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")), normalFont));
+            document.add(new Paragraph(" ")); // Add space
+
+            // Create table for order items
+            PdfPTable table = new PdfPTable(4); // 4 columns
+            table.setWidthPercentage(100);
+
+            // Add table headers
+            Stream.of("Item", "Quantity", "Price", "Date")
+                    .forEach(columnTitle -> {
+                        PdfPCell header = new PdfPCell();
+                        header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                        header.setBorderWidth(2);
+                        header.setPhrase(new Phrase(columnTitle, boldFont));
+                        table.addCell(header);
+                    });
+
+            // Add data rows
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
+            for (OrderHistory order : orders) {
+                table.addCell(new Phrase(order.getMenuItemName(), normalFont));
+                table.addCell(new Phrase(String.valueOf(order.getQuantity()), normalFont));
+                table.addCell(new Phrase("$" + order.getPrice(), normalFont));
+                table.addCell(new Phrase(order.getOrderTime().format(dateTimeFormatter), normalFont));
+            }
+
+            document.add(table);
+            document.add(new Paragraph(" ")); // Add space
+
+            // Add total
+            Paragraph totalParagraph = new Paragraph("Total: $" + total, boldFont);
+            totalParagraph.setAlignment(Element.ALIGN_RIGHT);
+            document.add(totalParagraph);
+
+            // Add footer
+            Paragraph footer = new Paragraph("Thank you for your order!", normalFont);
+            footer.setAlignment(Element.ALIGN_CENTER);
+            document.add(footer);
+
+            // Close document
+            document.close();
+
+            return outputStream.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to generate PDF invoice: " + e.getMessage());
+        }
     }
 }
