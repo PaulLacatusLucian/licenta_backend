@@ -59,7 +59,6 @@ public class ParentService {
     }
 
 
-    // ✅ Actualizează datele unui părinte
     @Transactional
     public Parent updateParent(Long id, Parent updatedParent) {
         Parent existingParent = parentRepository.findById(id)
@@ -71,9 +70,11 @@ public class ParentService {
         existingParent.setFatherName(updatedParent.getFatherName());
         existingParent.setFatherEmail(updatedParent.getFatherEmail());
         existingParent.setFatherPhoneNumber(updatedParent.getFatherPhoneNumber());
+        existingParent.setProfileImage(updatedParent.getProfileImage()); // ⭐ aici
 
         return parentRepository.save(existingParent);
     }
+
 
     @Transactional
     public Student addStudentToParent(Long parentId, Student student) {
@@ -97,4 +98,12 @@ public class ParentService {
     public Parent findByUsername(String username) {
         return parentRepository.findByUsername(username);
     }
+
+    @Transactional
+    public Parent saveParent(Parent parent) {
+        return parentRepository.save(parent);
+    }
+
+
+
 }

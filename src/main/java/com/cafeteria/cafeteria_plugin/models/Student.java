@@ -27,4 +27,7 @@ public class Student extends User {
     @JoinColumn(name = "parent_id")
     private Parent parent;
 
+    @Column
+    private String profileImage;
+
 }

@@ -11,18 +11,26 @@ import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import com.cafeteria.cafeteria_plugin.services.AbsenceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/students")
 public class StudentController {
+
+    @Value("${image.upload.dir}")
+    private String uploadDir;
 
     @Autowired
     private StudentService studentService;
@@ -126,4 +134,41 @@ public class StudentController {
         List<ScheduleDTO> dtos = schedules.stream().map(scheduleMapper::toDto).toList();
         return ResponseEntity.ok(dtos);
     }
+
+    @PreAuthorize("hasRole('STUDENT')")
+    @PostMapping("/me/profile-image")
+    public ResponseEntity<String> uploadStudentProfileImage(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("profileImage") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("No file uploaded");
+            }
+
+            String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+            Student student = studentService.findByUsername(username);
+
+            if (student == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Student not found");
+            }
+
+            File uploadDirectory = new File(uploadDir);
+            if (!uploadDirectory.exists()) {
+                uploadDirectory.mkdirs();
+            }
+
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            File destinationFile = new File(uploadDir, fileName);
+            file.transferTo(destinationFile);
+
+            String imageUrl = "/images/" + fileName;
+            student.setProfileImage(imageUrl);
+            studentService.saveStudent(student);
+
+            return ResponseEntity.ok("{\"imageUrl\": \"" + imageUrl + "\"}");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+        }
+    }
+
 }

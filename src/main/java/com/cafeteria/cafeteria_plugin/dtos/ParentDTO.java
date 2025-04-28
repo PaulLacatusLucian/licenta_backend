@@ -13,4 +13,5 @@ public class ParentDTO {
     private String fatherName;
     private String fatherEmail;
     private String fatherPhoneNumber;
+    private String profileImage;
 }
