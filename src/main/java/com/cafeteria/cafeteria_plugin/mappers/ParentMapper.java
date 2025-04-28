@@ -18,6 +18,7 @@ public class ParentMapper {
         dto.setFatherName(parent.getFatherName());
         dto.setFatherEmail(parent.getFatherEmail());
         dto.setFatherPhoneNumber(parent.getFatherPhoneNumber());
+        dto.setProfileImage(parent.getProfileImage());
         return dto;
     }
 
@@ -32,6 +33,7 @@ public class ParentMapper {
         parent.setFatherName(dto.getFatherName());
         parent.setFatherEmail(dto.getFatherEmail());
         parent.setFatherPhoneNumber(dto.getFatherPhoneNumber());
+        parent.setProfileImage(dto.getProfileImage());
         return parent;
     }
 }

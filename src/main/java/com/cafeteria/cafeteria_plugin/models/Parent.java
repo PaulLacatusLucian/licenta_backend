@@ -28,6 +28,9 @@ public class Parent extends User {
 
     private String fatherPhoneNumber;
 
+    @Column
+    private String profileImage;
+
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Student> students;

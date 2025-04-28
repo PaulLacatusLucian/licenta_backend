@@ -14,7 +14,7 @@ public class StudentDTO {
     private String phoneNumber;
     private String email;
     private Long classId;
-
+    private String profileImage;
     private String className;
     private String classSpecialization;
     private TeacherDTO classTeacher;

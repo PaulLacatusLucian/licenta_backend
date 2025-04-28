@@ -232,4 +232,9 @@ public class StudentService {
                 .orElseThrow(() -> new RuntimeException("Student not found with userId: " + userId));
     }
 
+    @Transactional
+    public Student saveStudent(Student student) {
+        return studentRepository.save(student);
+    }
+
 }
