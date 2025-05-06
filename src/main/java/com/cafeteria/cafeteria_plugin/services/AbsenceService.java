@@ -35,9 +35,8 @@ public class AbsenceService {
     public Absence updateAbsence(Long id, Absence updatedAbsence) {
         return absenceRepository.findById(id)
                 .map(existingAbsence -> {
-                    existingAbsence.setSubject(updatedAbsence.getSubject());
-                    existingAbsence.setDate(updatedAbsence.getDate());
                     existingAbsence.setClassSession(updatedAbsence.getClassSession());
+                    existingAbsence.setStudent(updatedAbsence.getStudent());
                     return absenceRepository.save(existingAbsence);
                 }).orElseThrow(() -> new IllegalArgumentException("Absence not found"));
     }
@@ -52,25 +51,30 @@ public class AbsenceService {
         return absenceRepository.countByStudentId(studentId);
     }
 
+    // Validare și salvare absență
     public Absence saveAbsence(Absence absence) {
-        // Validare: verifică dacă studentul, sesiunea și data sunt prezente
-        if (absence.getStudent() == null || absence.getClassSession() == null || absence.getDate() == null) {
-            throw new IllegalArgumentException("Student, Class Session, and Date are required fields.");
+        if (absence.getStudent() == null || absence.getClassSession() == null) {
+            throw new IllegalArgumentException("Student and Class Session are required fields.");
         }
 
-        // Validare suplimentară: verifică dacă absența pentru acest student la această sesiune și dată există deja
-        boolean exists = absenceRepository.existsByStudentIdAndClassSessionIdAndDate(
+        // Dacă vrei, poți păstra această verificare (dacă vrei să eviți duplicate)
+        boolean exists = absenceRepository.existsByStudentIdAndClassSessionId(
                 absence.getStudent().getId(),
-                absence.getClassSession().getId(),
-                absence.getDate()
+                absence.getClassSession().getId()
         );
 
         if (exists) {
-            throw new IllegalArgumentException("Absence already exists for this student in this class session on this date.");
+            throw new IllegalArgumentException("Absence already exists for this student in this class session.");
         }
 
-        // Salvează absența dacă totul este valid
         return absenceRepository.save(absence);
     }
 
+    public List<Absence> getAbsencesForStudent(Long studentId) {
+        return absenceRepository.findByStudentId(studentId);
+    }
+
+    public boolean existsByStudentIdAndClassSessionId(Long studentId, Long classSessionId) {
+        return absenceRepository.existsByStudentIdAndClassSessionId(studentId, classSessionId);
+    }
 }

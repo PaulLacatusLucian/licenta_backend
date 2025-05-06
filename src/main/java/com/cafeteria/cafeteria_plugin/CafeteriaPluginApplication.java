@@ -11,10 +11,11 @@ public class CafeteriaPluginApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CafeteriaPluginApplication.class, args);
 
-		File uploadDir = new File("uploads/");
-		if (!uploadDir.exists()) {
-			uploadDir.mkdirs();
-		}
+//		File uploadDir = new File(System.getProperty("user.dir") + "/uploads/");
+//		System.out.println("Upload dir: " + uploadDir.getAbsolutePath());
+//		if (!uploadDir.exists()) {
+//			uploadDir.mkdirs();
+//		}
 	}
 
 }

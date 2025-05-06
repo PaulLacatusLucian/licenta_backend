@@ -3,11 +3,13 @@ package com.cafeteria.cafeteria_plugin.controllers;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/year")
 public class YearController {
 
@@ -17,9 +19,7 @@ public class YearController {
         this.studentService = studentService;
     }
 
-    /**
-     * Endpoint pentru avansarea anului școlar
-     */
+
     @PostMapping("/start-new-year")
     public ResponseEntity<String> startNewYear() {
         try {

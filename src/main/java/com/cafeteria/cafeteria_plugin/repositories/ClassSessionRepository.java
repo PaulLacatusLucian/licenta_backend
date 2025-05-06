@@ -20,5 +20,4 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     List<ClassSession> findByStartTimeBetween(LocalDateTime start, LocalDateTime end);
 
     List<ClassSession> findByTeacher_Id(Long teacherId);
-
 }

@@ -1,96 +1,121 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.repositories.ClassSessionRepository;
-import com.cafeteria.cafeteria_plugin.repositories.ScheduleRepository;
-import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
-import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
+import com.cafeteria.cafeteria_plugin.repositories.*;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class TeacherService {
 
-    private final TeacherRepository teacherRepository;
-    private final ScheduleRepository scheduleRepository;
-    private final StudentRepository studentRepository;
-    private final ClassSessionRepository classSessionRepository;
+    @Autowired
+    private TeacherRepository teacherRepository;
+
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private ClassSessionRepository classSessionRepository;
+
+    @Autowired
+    private PasswordResetTokenRepository tokenRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ClassRepository classRepository;
 
 
-    public TeacherService(TeacherRepository teacherRepository, ScheduleRepository scheduleRepository, StudentRepository studentRepository, ClassSessionRepository classSessionRepository) {
-        this.teacherRepository = teacherRepository;
-        this.scheduleRepository = scheduleRepository;
-        this.studentRepository = studentRepository;
-        this.classSessionRepository = classSessionRepository;
-    }
-
-    // Adaugă un profesor
+    @Transactional
     public Teacher addTeacher(Teacher teacher) {
         return teacherRepository.save(teacher);
     }
 
-    // Obține toți profesorii
     public List<Teacher> getAllTeachers() {
         return teacherRepository.findAll();
     }
 
-    // Obține un profesor după ID
     public Teacher getTeacherById(Long id) {
         return teacherRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Profesorul cu ID-ul " + id + " nu a fost găsit"));
     }
 
-    // Actualizează un profesor
     public Teacher updateTeacher(Long id, Teacher updatedTeacher) {
-        return teacherRepository.findById(id)
-                .map(existingTeacher -> {
-                    existingTeacher.setName(updatedTeacher.getName());
-                    existingTeacher.setSubject(updatedTeacher.getSubject());
-                    return teacherRepository.save(existingTeacher);
-                }).orElseThrow(() -> new IllegalArgumentException("Teacher not found"));
+        Teacher existingTeacher = teacherRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Profesorul nu a fost găsit"));
+
+        Optional<Class> assignedClassOpt = classRepository.findByClassTeacherId(existingTeacher.getId());
+        if (assignedClassOpt.isPresent()) {
+            Class assignedClass = assignedClassOpt.get();
+            if (assignedClass.getEducationLevel() == EducationLevel.PRIMARY &&
+                    !updatedTeacher.getType().equals(TeacherType.EDUCATOR)) {
+                throw new IllegalStateException("Profesorul este asignat unei clase primare și nu poate fi transformat în TEACHER.");
+            }
+        }
+
+
+        existingTeacher.setName(updatedTeacher.getName());
+        existingTeacher.setSubject(updatedTeacher.getSubject());
+        existingTeacher.setType(updatedTeacher.getType());
+
+        return teacherRepository.save(existingTeacher);
     }
 
-    // Șterge un profesor
+
+
+    @Transactional
     public void deleteTeacher(Long id) {
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Profesorul nu a fost găsit"));
-
-        // Șterge profesorul
-        teacherRepository.delete(teacher);
+        tokenRepository.deleteAllByUser_Id(id);
+        teacherRepository.deleteById(id);
+        userRepository.deleteById(id);
     }
 
-    // Obține elevii pentru profesor
     public List<Student> getStudentsForTeacher(Long teacherId) {
-        // Găsește toate orele predate de profesor
-        List<Schedule> schedules = scheduleRepository.findByTeacherId(teacherId);
-
-        // Extrage ID-urile claselor din orar
-        List<Long> classIds = schedules.stream()
+        // Găsește ID-urile claselor în care profesorul predă
+        List<Long> classIds = scheduleRepository.findByTeacherId(teacherId).stream()
                 .map(schedule -> schedule.getStudentClass().getId())
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Găsește toți studenții care aparțin claselor respective
-        return studentRepository.findAll().stream()
-                .filter(student -> classIds.contains(student.getStudentClass().getId()))
-                .distinct()
-                .collect(Collectors.toList());
+        // Returnează studenții direct din baza de date
+        return studentRepository.findByStudentClassIdIn(classIds);
     }
 
     public List<Schedule> getWeeklyScheduleForTeacher(Long teacherId) {
-        Teacher teacher = teacherRepository.findById(teacherId)
-                .orElseThrow(() -> new IllegalArgumentException("Teacher not found with ID: " + teacherId));
-
         return scheduleRepository.findByTeacherId(teacherId);
     }
 
     public List<ClassSession> getSessionsForTeacher(Long teacherId) {
-        if (!teacherRepository.existsById(teacherId)) {
-            throw new IllegalArgumentException("Teacher not found");
-        }
         return classSessionRepository.findByTeacherId(teacherId);
+    }
+
+    public List<Teacher> findAvailableTeachers() {
+        return teacherRepository.findAll().stream()
+                .filter(teacher -> teacher.getClassAsTeacher() == null)
+                .toList();
+    }
+
+    public Teacher getEducatorByClassId(Long classId) {
+        return teacherRepository.findEducatorByClassId(classId);
+    }
+
+
+    public Teacher findByUsername(String username) {
+        return teacherRepository.findByUsername(username);
     }
 }

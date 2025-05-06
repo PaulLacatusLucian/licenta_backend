@@ -12,4 +12,6 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
     void deleteByStudentId(Long id);
 
     List<Grade> findByStudentId(Long studentId);
+
+    boolean existsByStudentIdAndClassSessionId(Long studentId, Long classSessionId);
 }
