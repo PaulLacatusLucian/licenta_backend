@@ -28,6 +28,8 @@ public class ClassSessionMapper {
         dto.setSubject(session.getSubject());
         dto.setStartTime(session.getStartTime());
         dto.setEndTime(session.getEndTime());
+        dto.setScheduleDay(session.getScheduleDay());
+        dto.setClassName(session.getClassName());
 
         if (session.getTeacher() != null) {
             dto.setTeacher(teacherMapper.toDto(session.getTeacher()));
@@ -56,7 +58,8 @@ public class ClassSessionMapper {
         session.setSubject(dto.getSubject());
         session.setStartTime(dto.getStartTime());
         session.setEndTime(dto.getEndTime());
-        // teacher, absences și grades se setează separat în controller
+        session.setScheduleDay(dto.getScheduleDay());
+        session.setClassName(dto.getClassName());
         return session;
     }
 }

@@ -106,4 +106,12 @@ public class AbsenceController {
         List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtoList);
     }
+
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<AbsenceDTO>> getAbsencesForStudent(@PathVariable Long studentId) {
+        List<Absence> absences = absenceService.getAbsencesForStudent(studentId);
+        List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
 }
