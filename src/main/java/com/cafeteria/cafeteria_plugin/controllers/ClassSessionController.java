@@ -50,6 +50,9 @@ public class ClassSessionController {
     private ClassService classService;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private CatalogService catalogService;
+
 
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping
@@ -141,10 +144,12 @@ public class ClassSessionController {
             Absence absence = new Absence();
             absence.setClassSession(session);
             absence.setStudent(student);
-            absence.setTeacher(teacher); // Setează profesorul care dă absența
-
+            absence.setTeacher(teacher);
             Absence savedAbsence = absenceService.saveAbsence(absence);
             AbsenceDTO dto = absenceMapper.toDto(savedAbsence);
+
+            // Adaugă absența și în catalog
+            catalogService.addAbsenceEntry(student, session.getSubject(), false);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (Exception e) {
@@ -152,8 +157,6 @@ public class ClassSessionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Eroare la salvarea absenței.");
         }
     }
-
-
 
     @PostMapping("/session/{sessionId}/grades")
     public ResponseEntity<?> addGradeToSession(
@@ -187,6 +190,9 @@ public class ClassSessionController {
 
             Grade savedGrade = gradeService.addGrade(grade);
             GradeDTO dto = gradeMapper.toDto(savedGrade);
+
+            // Adaugă nota și în catalog
+            catalogService.addGradeEntry(student, session.getSubject(), gradeValue);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (Exception e) {
