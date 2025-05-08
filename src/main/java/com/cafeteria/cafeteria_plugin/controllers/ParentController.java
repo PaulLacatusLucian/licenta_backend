@@ -2,10 +2,7 @@ package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.dtos.*;
 import com.cafeteria.cafeteria_plugin.email.EmailService;
-import com.cafeteria.cafeteria_plugin.mappers.GradeMapper;
-import com.cafeteria.cafeteria_plugin.mappers.OrderHistoryMapper;
-import com.cafeteria.cafeteria_plugin.mappers.ParentMapper;
-import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
+import com.cafeteria.cafeteria_plugin.mappers.*;
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.models.Schedule;
 import com.cafeteria.cafeteria_plugin.models.Student;
@@ -51,6 +48,10 @@ public class ParentController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ScheduleMapper scheduleMapper;
+
 
 
     @Autowired
@@ -297,5 +298,50 @@ public class ParentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
         }
     }
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/upcoming-classes")
+    public ResponseEntity<List<ScheduleDTO>> getChildUpcomingClassesForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    List<Schedule> schedules = studentService.getUpcomingSchedules(student.getId());
+                    List<ScheduleDTO> dtos = schedules.stream()
+                            .map(scheduleMapper::toDto)
+                            .toList();
+                    return ResponseEntity.ok(dtos);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
+    }
+
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/class-schedule")
+    public ResponseEntity<?> getChildClassScheduleForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    List<Schedule> schedules = student.getStudentClass().getSchedules();
+                    List<ScheduleDTO> dtos = schedules.stream()
+                            .map(scheduleMapper::toDto)
+                            .toList();
+
+                    String className = student.getStudentClass().getName();
+
+                    return ResponseEntity.ok(
+                            Map.of(
+                                    "className", className,
+                                    "schedule", dtos
+                            )
+                    );
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of()));
+    }
+
 
 }

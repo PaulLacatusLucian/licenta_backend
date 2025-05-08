@@ -1,11 +1,12 @@
 package com.cafeteria.cafeteria_plugin.services;
 
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.models.Teacher;
-import com.cafeteria.cafeteria_plugin.models.TeacherType;
 import com.cafeteria.cafeteria_plugin.repositories.ClassRepository;
+import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
 import com.cafeteria.cafeteria_plugin.repositories.TeacherRepository;
-import com.cafeteria.cafeteria_plugin.models.EducationLevel;
+import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,13 +15,13 @@ import java.util.Optional;
 @Service
 public class ClassService {
 
-    private final ClassRepository classRepository;
-    private final TeacherRepository teacherRepository;
+    @Autowired
+    private  ClassRepository classRepository;
+    @Autowired
+    private  TeacherRepository teacherRepository;
+    @Autowired
+    private  StudentRepository studentRepository;
 
-    public ClassService(ClassRepository classRepository, TeacherRepository teacherRepository) {
-        this.classRepository = classRepository;
-        this.teacherRepository = teacherRepository;
-    }
 
     public Class addClass(Class studentClass) {
         validateClassByEducationLevel(studentClass);
@@ -102,4 +103,10 @@ public class ClassService {
         }
     }
 
+    public List<Student> getStudentsByClassId(Long id) {
+        if (!classRepository.existsById(id)) {
+            throw new IllegalArgumentException("Class not found with ID: " + id);
+        }
+        return studentRepository.findByStudentClassId(id);
+    }
 }

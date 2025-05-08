@@ -37,4 +37,8 @@ public class ClassSession {
 
     @OneToMany(mappedBy = "classSession", cascade = CascadeType.ALL)
     private List<Grade> grades; // Lista notelor acordate în această sesiune
+
+    private String scheduleDay;
+
+    private String className;
 }

@@ -98,6 +98,8 @@ public class ScheduleController {
             classSession.setTeacher(fullTeacher);
             classSession.setStartTime(LocalDateTime.of(LocalDate.now(), startTime));
             classSession.setEndTime(LocalDateTime.of(LocalDate.now(), endTime));
+            classSession.setScheduleDay(schedule.getScheduleDay());
+            classSession.setClassName(schedule.getStudentClass().getName());
             classSessionService.addClassSession(classSession);
 
             return ResponseEntity.ok(scheduleMapper.toDto(savedSchedule));

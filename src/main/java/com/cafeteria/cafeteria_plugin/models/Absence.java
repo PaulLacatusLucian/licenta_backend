@@ -18,6 +18,10 @@ public class Absence {
     @ManyToOne
     @JoinColumn(name = "class_session_id", nullable = false)
     private ClassSession classSession;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
 }
 
 

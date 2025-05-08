@@ -13,4 +13,6 @@ public class ClassSessionDTO {
     private TeacherDTO teacher;
     private List<AbsenceDTO> absences;
     private List<GradeDTO> grades;
+    private String scheduleDay;
+    private String className;
 }

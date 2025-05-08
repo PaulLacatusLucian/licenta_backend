@@ -3,11 +3,13 @@ package com.cafeteria.cafeteria_plugin.controllers;
 import com.cafeteria.cafeteria_plugin.dtos.ClassSessionDTO;
 import com.cafeteria.cafeteria_plugin.dtos.ScheduleDTO;
 import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
+import com.cafeteria.cafeteria_plugin.mappers.OrderHistoryMapper;
 import com.cafeteria.cafeteria_plugin.mappers.ScheduleMapper;
 import com.cafeteria.cafeteria_plugin.mappers.StudentMapper;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
+import com.cafeteria.cafeteria_plugin.services.MenuItemService;
 import com.cafeteria.cafeteria_plugin.services.StudentService;
 import com.cafeteria.cafeteria_plugin.services.AbsenceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,12 @@ public class StudentController {
 
     @Autowired
     private ScheduleMapper scheduleMapper;
+
+    @Autowired
+    private MenuItemService menuItemService;
+
+    @Autowired
+    private OrderHistoryMapper orderHistoryMapper;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -171,4 +179,25 @@ public class StudentController {
         }
     }
 
+    @PreAuthorize("hasRole('STUDENT')")
+    @GetMapping("/me/orders")
+    public ResponseEntity<?> getStudentOrders(
+            @RequestHeader("Authorization") String token,
+            @RequestParam(name = "month") int month,
+            @RequestParam(name = "year") int year) {
+
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Student student = studentService.findByUsername(username);
+
+        if (student == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        var orders = menuItemService.getOrderHistoryForStudent(student.getId(), month, year)
+                .stream()
+                .map(orderHistoryMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(orders);
+    }
 }
