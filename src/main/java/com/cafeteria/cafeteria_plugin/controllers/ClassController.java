@@ -1,9 +1,8 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
-import com.cafeteria.cafeteria_plugin.models.EducationLevel;
-import com.cafeteria.cafeteria_plugin.models.Teacher;
-import com.cafeteria.cafeteria_plugin.models.TeacherType;
+import com.cafeteria.cafeteria_plugin.services.CatalogService;
 import com.cafeteria.cafeteria_plugin.services.ClassService;
 import com.cafeteria.cafeteria_plugin.services.ParentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,9 @@ public class ClassController {
     @Autowired
     private ParentService parentService;
 
+    @Autowired
+    private CatalogService catalogService;
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create-primary")
     public ResponseEntity<Class> createPrimaryClass(@RequestBody Class studentClass, @RequestParam(required = false) Long teacherId) {
@@ -38,7 +40,11 @@ public class ClassController {
             studentClass.setClassTeacher(teacher);
         }
 
-        return ResponseEntity.ok(classService.addClass(studentClass));
+        Class savedClass = classService.addClass(studentClass);
+        catalogService.createCatalogForClass(savedClass);
+
+        return ResponseEntity.ok(savedClass);
+
     }
 
 
@@ -54,7 +60,11 @@ public class ClassController {
         }
 
         studentClass.setClassTeacher(teacher);
-        return ResponseEntity.ok(classService.addClass(studentClass));
+
+        Class savedClass = classService.addClass(studentClass);
+        catalogService.createCatalogForClass(savedClass);
+
+        return ResponseEntity.ok(savedClass);
     }
 
 
@@ -72,11 +82,15 @@ public class ClassController {
 
         studentClass.setEducationLevel(EducationLevel.HIGH);
         studentClass.setClassTeacher(teacher);
-        return ResponseEntity.ok(classService.addClass(studentClass));
+
+        Class savedClass = classService.addClass(studentClass);
+        catalogService.createCatalogForClass(savedClass);
+
+        return ResponseEntity.ok(savedClass);
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     @GetMapping
     public List<Class> getAllClasses() {
         return classService.getAllClasses();
@@ -122,5 +136,18 @@ public class ClassController {
     public ResponseEntity<Void> deleteClass(@PathVariable Long id) {
         classService.deleteClass(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @GetMapping("/{id}/students")
+    public ResponseEntity<?> getStudentsByClassId(@PathVariable Long id) {
+        Optional<Class> classOpt = classService.getClassById(id);
+
+        if (classOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Student> students = classService.getStudentsByClassId(id);
+        return ResponseEntity.ok(students);
     }
 }
