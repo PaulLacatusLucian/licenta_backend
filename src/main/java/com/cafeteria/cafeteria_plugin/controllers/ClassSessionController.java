@@ -141,20 +141,35 @@ public class ClassSessionController {
                         .body("Elevul nu este înscris la această sesiune.");
             }
 
+            // MODIFICARE: Verifică direct dacă absența există deja
+            boolean absenceExists = absenceService.existsByStudentIdAndClassSessionId(studentId, sessionId);
+            if (absenceExists) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Elevul are deja o absență înregistrată pentru această sesiune.");
+            }
+
             Absence absence = new Absence();
             absence.setClassSession(session);
             absence.setStudent(student);
             absence.setTeacher(teacher);
-            Absence savedAbsence = absenceService.saveAbsence(absence);
-            AbsenceDTO dto = absenceMapper.toDto(savedAbsence);
 
-            // Adaugă absența și în catalog
-            catalogService.addAbsenceEntry(student, session.getSubject(), false);
+            try {
+                // Salvăm absența pentru a obține ID-ul
+                Absence savedAbsence = absenceService.saveAbsence(absence);
+                AbsenceDTO dto = absenceMapper.toDto(savedAbsence);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+                // Transmitem ID-ul absenței la adăugarea în catalog
+                catalogService.addAbsenceEntry(student, session.getSubject(), false, savedAbsence.getId());
+
+                return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+            } catch (IllegalArgumentException e) {
+                // Această excepție este aruncată când absența există deja
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Elevul are deja o absență înregistrată pentru această sesiune.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Eroare la salvarea absenței.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Eroare la salvarea absenței: " + e.getMessage());
         }
     }
 

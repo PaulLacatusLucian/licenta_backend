@@ -22,6 +22,8 @@ public class Absence {
     @ManyToOne
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
+
+    private Boolean justified = false;
 }
 
 

@@ -3,10 +3,7 @@ package com.cafeteria.cafeteria_plugin.controllers;
 import com.cafeteria.cafeteria_plugin.dtos.*;
 import com.cafeteria.cafeteria_plugin.email.EmailService;
 import com.cafeteria.cafeteria_plugin.mappers.*;
-import com.cafeteria.cafeteria_plugin.models.Parent;
-import com.cafeteria.cafeteria_plugin.models.Schedule;
-import com.cafeteria.cafeteria_plugin.models.Student;
-import com.cafeteria.cafeteria_plugin.models.Teacher;
+import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
 import com.cafeteria.cafeteria_plugin.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +53,9 @@ public class ParentController {
 
     @Autowired
     private OrderHistoryMapper orderHistoryMapper;
+
+    @Autowired
+    private AbsenceMapper absenceMapper;
 
     @Autowired
     private GradeMapper gradeMapper;
@@ -149,6 +149,21 @@ public class ParentController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("total", 0)));
     }
 
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/detailed-absences")
+    public ResponseEntity<List<AbsenceDTO>> getDetailedChildAbsencesForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    List<Absence> absences = absenceService.getAbsencesForStudent(student.getId());
+                    List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
+                    return ResponseEntity.ok(dtoList);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me/child/grades")

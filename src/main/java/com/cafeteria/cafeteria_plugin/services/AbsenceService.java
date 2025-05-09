@@ -1,20 +1,25 @@
 package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.models.Absence;
+import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.repositories.AbsenceRepository;
+import com.cafeteria.cafeteria_plugin.repositories.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AbsenceService {
 
-    private final AbsenceRepository absenceRepository;
+    @Autowired
+    private AbsenceRepository absenceRepository;
+    @Autowired
+    private StudentRepository studentRepository;
 
-    public AbsenceService(AbsenceRepository absenceRepository) {
-        this.absenceRepository = absenceRepository;
-    }
 
     // Adăugarea unei absențe
     public Absence addAbsence(Absence absence) {
@@ -76,5 +81,27 @@ public class AbsenceService {
 
     public boolean existsByStudentIdAndClassSessionId(Long studentId, Long classSessionId) {
         return absenceRepository.existsByStudentIdAndClassSessionId(studentId, classSessionId);
+    }
+
+    public Absence justifyAbsence(Absence absence) {
+        absence.setJustified(true);
+        return absenceRepository.save(absence);
+    }
+
+    public List<Absence> getUnjustifiedAbsencesForClass(Long classId) {
+        // Obținem toți elevii din clasă
+        List<Student> studentsInClass = studentRepository.findByStudentClassId(classId);
+
+        if (studentsInClass.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Obținem ID-urile elevilor
+        List<Long> studentIds = studentsInClass.stream()
+                .map(Student::getId)
+                .collect(Collectors.toList());
+
+        // Returnăm absențele nemotivate pentru acești elevi
+        return absenceRepository.findUnjustifiedAbsencesByStudentIds(studentIds);
     }
 }

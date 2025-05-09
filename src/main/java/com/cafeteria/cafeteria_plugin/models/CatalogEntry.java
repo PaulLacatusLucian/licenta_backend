@@ -33,5 +33,7 @@ public class CatalogEntry {
     private Boolean justified; // Pentru absențe
 
     private LocalDateTime date = LocalDateTime.now();
+
+    private Long absenceId;
 }
 

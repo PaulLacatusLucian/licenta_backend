@@ -59,8 +59,7 @@ public class CatalogService {
         return catalogEntryRepository.save(entry);
     }
 
-    public CatalogEntry addAbsenceEntry(Student student, String subject, Boolean justified) {
-        // Găsim catalogul pentru clasa studentului
+    public CatalogEntry addAbsenceEntry(Student student, String subject, Boolean justified, Long absenceId) {
         Optional<Catalog> catalogOpt = catalogRepository.findByStudentClass_Id(student.getStudentClass().getId());
         if (!catalogOpt.isPresent()) {
             throw new RuntimeException("Catalogul nu a fost găsit pentru clasa: " + student.getStudentClass().getName());
@@ -73,7 +72,20 @@ public class CatalogService {
         entry.setType(EntryType.ABSENCE);
         entry.setJustified(justified);
         entry.setDate(LocalDateTime.now());
+        entry.setAbsenceId(absenceId);
 
         return catalogEntryRepository.save(entry);
+    }
+
+    public CatalogEntry updateAbsenceJustification(Long absenceId, Boolean justified) {
+        Optional<CatalogEntry> entryOpt = catalogEntryRepository.findByAbsenceId(absenceId);
+
+        if (entryOpt.isPresent()) {
+            CatalogEntry entry = entryOpt.get();
+            entry.setJustified(justified);
+            return catalogEntryRepository.save(entry);
+        } else {
+            throw new RuntimeException("Nu s-a găsit o intrare de catalog pentru absența cu ID-ul: " + absenceId);
+        }
     }
 }

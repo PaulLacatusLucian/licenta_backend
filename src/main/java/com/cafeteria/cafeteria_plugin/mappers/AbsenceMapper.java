@@ -41,6 +41,7 @@ public class AbsenceMapper {
         AbsenceDTO dto = new AbsenceDTO();
         dto.setId(absence.getId());
         dto.setClassSessionId(absence.getClassSession().getId());
+        dto.setJustified(absence.getJustified());
 
         // Adăugăm data sesiunii (nu data curentă)
         LocalDateTime sessionDate = absence.getClassSession().getStartTime();
@@ -52,6 +53,7 @@ public class AbsenceMapper {
         teacherDTO.setName(absence.getClassSession().getTeacher().getName());
         teacherDTO.setSubject(absence.getClassSession().getSubject());
         teacherDTO.setEmail(absence.getClassSession().getTeacher().getEmail());
+
 
         dto.setTeacherWhoMarkedAbsence(teacherDTO);
 

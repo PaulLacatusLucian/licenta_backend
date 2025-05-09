@@ -6,10 +6,9 @@ import com.cafeteria.cafeteria_plugin.mappers.AbsenceMapper;
 import com.cafeteria.cafeteria_plugin.models.Absence;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Student;
+import com.cafeteria.cafeteria_plugin.models.Teacher;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;
-import com.cafeteria.cafeteria_plugin.services.AbsenceService;
-import com.cafeteria.cafeteria_plugin.services.ClassSessionService;
-import com.cafeteria.cafeteria_plugin.services.StudentService;
+import com.cafeteria.cafeteria_plugin.services.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +31,10 @@ public class AbsenceController {
     private StudentService studentService;
     @Autowired
     private AbsenceMapper absenceMapper;
+    @Autowired
+    private CatalogService catalogService;
+    @Autowired
+    private TeacherService teacherService;
     @Autowired
     private JwtUtil jwtUtil;
 
@@ -114,4 +117,41 @@ public class AbsenceController {
         List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtoList);
     }
+
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PutMapping("/{id}/justify")
+    public ResponseEntity<AbsenceDTO> justifyAbsence(@PathVariable Long id) {
+        try {
+            Optional<Absence> absenceOpt = absenceService.getAbsenceById(id);
+            if (absenceOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Absence absence = absenceOpt.get();
+            Absence justifiedAbsence = absenceService.justifyAbsence(absence);
+
+            catalogService.updateAbsenceJustification(id, true);
+
+            return ResponseEntity.ok(absenceMapper.toDto(justifiedAbsence));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @GetMapping("/class/unjustified")
+    public ResponseEntity<List<AbsenceDTO>> getUnjustifiedAbsencesForClass(@RequestHeader("Authorization") String token) {
+        String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Teacher teacher = teacherService.findByUsername(username);
+
+        // Verifică dacă profesorul este diriginte
+        if (teacher.getClassAsTeacher() == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<Absence> absences = absenceService.getUnjustifiedAbsencesForClass(teacher.getClassAsTeacher().getId());
+        List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(dtoList);
+    }
+
 }

@@ -16,4 +16,6 @@ public interface AbsenceRepository extends JpaRepository<Absence, Long> {
     List<Absence> findByStudentId(Long studentId);
 
     boolean existsByStudentIdAndClassSessionId(Long id, Long id1);
-}
+
+    @Query("SELECT a FROM Absence a WHERE a.student.id IN :studentIds AND (a.justified = false OR a.justified IS NULL)")
+    List<Absence> findUnjustifiedAbsencesByStudentIds(@Param("studentIds") List<Long> studentIds);}

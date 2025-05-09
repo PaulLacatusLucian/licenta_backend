@@ -11,4 +11,5 @@ public class AbsenceDTO {
     private Long classSessionId;
     private LocalDateTime sessionDate;
     private TeacherDTO teacherWhoMarkedAbsence;
+    private Boolean justified;
 }
