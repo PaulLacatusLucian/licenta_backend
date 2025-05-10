@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -115,5 +116,60 @@ public class GradeController {
 
         List<GradeDTO> grades = gradeService.getGradesByStudent(student.getId());
         return ResponseEntity.ok(grades);
+    }
+
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    @PutMapping("/{id}/simple")
+    public ResponseEntity<GradeDTO> updateGradeSimple(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> updateData) {
+
+        try {
+            // Obține nota ca Optional<Grade>
+            Optional<Grade> gradeOptional = gradeService.findById(id);
+
+            // Verifică dacă nota există
+            if (gradeOptional.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Extrage nota din Optional
+            Grade existingGrade = gradeOptional.get();
+
+            // Actualizăm doar valorile care au fost trimise
+            if (updateData.containsKey("grade")) {
+                double gradeValue;
+
+                // Gestionare pentru diferite tipuri de date care pot veni de la frontend
+                Object gradeObj = updateData.get("grade");
+                if (gradeObj instanceof Number) {
+                    gradeValue = ((Number) gradeObj).doubleValue();
+                } else if (gradeObj instanceof String) {
+                    try {
+                        gradeValue = Double.parseDouble((String) gradeObj);
+                    } catch (NumberFormatException e) {
+                        return ResponseEntity.badRequest()
+                                .body(null); // Sau un DTO de eroare
+                    }
+                } else {
+                    return ResponseEntity.badRequest()
+                            .body(null); // Sau un DTO de eroare
+                }
+
+                existingGrade.setGrade(gradeValue);
+            }
+
+            if (updateData.containsKey("description")) {
+                existingGrade.setDescription((String) updateData.get("description"));
+            }
+
+            // Salvăm nota actualizată fără a modifica alte relații
+            Grade updated = gradeService.updateGrade(id, existingGrade);
+            return ResponseEntity.ok(gradeMapper.toDto(updated));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null); // Sau un DTO de eroare
+        }
     }
 }

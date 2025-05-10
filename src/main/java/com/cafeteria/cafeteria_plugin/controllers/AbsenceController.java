@@ -72,8 +72,8 @@ public class AbsenceController {
     }
 
 
-    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<AbsenceDTO> updateAbsence(@PathVariable Long id, @RequestBody AddAbsenceRequestDTO request) {
         ClassSession session = classSessionService.getSessionById(request.getClassSessionId());
         Student student = studentService.getStudentById(request.getStudentId());
@@ -82,6 +82,8 @@ public class AbsenceController {
         updated.setId(id);
         updated.setStudent(student);
         updated.setClassSession(session);
+
+        updated.setJustified(request.getJustified());
 
         Absence saved = absenceService.updateAbsence(id, updated);
         return ResponseEntity.ok(absenceMapper.toDto(saved));

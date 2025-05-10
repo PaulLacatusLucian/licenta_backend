@@ -1,6 +1,7 @@
 package com.cafeteria.cafeteria_plugin.services;
 
 import com.cafeteria.cafeteria_plugin.dtos.GradeDTO;
+import com.cafeteria.cafeteria_plugin.mappers.GradeMapper;
 import com.cafeteria.cafeteria_plugin.models.ClassSession;
 import com.cafeteria.cafeteria_plugin.models.Grade;
 import com.cafeteria.cafeteria_plugin.models.Student;
@@ -19,6 +20,9 @@ public class GradeService {
 
     @Autowired
     private GradeRepository gradeRepository;
+
+    @Autowired
+    private GradeMapper gradeMapper;
 
     @Autowired
     private StudentRepository studentRepository;
@@ -60,15 +64,9 @@ public class GradeService {
     }
 
     public List<GradeDTO> getGradesByStudent(Long studentId) {
-        return gradeRepository.findByStudentId(studentId)
-                .stream()
-                .map(grade -> new GradeDTO(
-                        grade.getGrade(),
-                        grade.getDescription(),
-                        grade.getClassSession().getTeacher().getName(),
-                        grade.getClassSession().getSubject(),
-                        grade.getClassSession().getStartTime()
-                ))
+        List<Grade> grades = gradeRepository.findByStudentId(studentId);
+        return grades.stream()
+                .map(gradeMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -81,4 +79,7 @@ public class GradeService {
         return gradeRepository.existsByStudentIdAndClassSessionId(studentId, classSessionId);
     }
 
+    public Optional<Grade> findById(Long id) {
+        return gradeRepository.findById(id);
+    }
 }

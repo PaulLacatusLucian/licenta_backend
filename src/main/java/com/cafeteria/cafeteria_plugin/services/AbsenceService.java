@@ -42,6 +42,7 @@ public class AbsenceService {
                 .map(existingAbsence -> {
                     existingAbsence.setClassSession(updatedAbsence.getClassSession());
                     existingAbsence.setStudent(updatedAbsence.getStudent());
+                    existingAbsence.setJustified(updatedAbsence.getJustified());
                     return absenceRepository.save(existingAbsence);
                 }).orElseThrow(() -> new IllegalArgumentException("Absence not found"));
     }
