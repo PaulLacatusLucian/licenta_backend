@@ -16,18 +16,22 @@ public class ScheduleService {
         this.scheduleRepository = scheduleRepository;
     }
 
+    // Ein Stundenplan wird hinzugefügt
     public Schedule addSchedule(Schedule schedule) {
         return scheduleRepository.save(schedule);
     }
 
+    // Alle Stundenpläne abrufen
     public List<Schedule> getAllSchedules() {
         return scheduleRepository.findAll();
     }
 
+    // Einen bestimmten Stundenplan nach ID abrufen
     public Optional<Schedule> getScheduleById(Long id) {
         return scheduleRepository.findById(id);
     }
 
+    // Einen vorhandenen Stundenplan aktualisieren
     public Schedule updateSchedule(Long id, Schedule updatedSchedule) {
         return scheduleRepository.findById(id)
                 .map(existingSchedule -> {
@@ -36,19 +40,21 @@ public class ScheduleService {
                     existingSchedule.setEndTime(updatedSchedule.getEndTime());
                     existingSchedule.setSubjects(updatedSchedule.getSubjects());
                     return scheduleRepository.save(existingSchedule);
-                }).orElseThrow(() -> new IllegalArgumentException("Schedule not found"));
+                }).orElseThrow(() -> new IllegalArgumentException("Stundenplan wurde nicht gefunden."));
     }
 
+    // Einen Stundenplan löschen
     public void deleteSchedule(Long id) {
         scheduleRepository.deleteById(id);
     }
 
+    // Stundenpläne nach Klassen-ID abrufen (inkl. Lehrerinformationen)
     public List<Schedule> getSchedulesByClassId(Long classId) {
         return scheduleRepository.findAllByClassIdWithTeacher(classId);
     }
 
+    // Stundenpläne nach Klassenname abrufen (inkl. Lehrerinformationen)
     public List<Schedule> getSchedulesByClassName(String className) {
         return scheduleRepository.findAllByClassNameWithTeacher(className);
     }
-
 }

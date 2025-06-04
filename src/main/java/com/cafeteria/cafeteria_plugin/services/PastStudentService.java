@@ -15,19 +15,23 @@ public class PastStudentService {
         this.pastStudentRepository = pastStudentRepository;
     }
 
+    // Alle ehemaligen Schüler abrufen
     public List<PastStudent> getAllPastStudents() {
         return pastStudentRepository.findAll();
     }
 
+    // Ehemaligen Schüler nach ID abrufen
     public PastStudent getPastStudentById(Long id) {
         return pastStudentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("PastStudent not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Ehemaliger Schüler mit der ID " + id + " wurde nicht gefunden."));
     }
 
+    // Ehemaligen Schüler speichern
     public PastStudent savePastStudent(PastStudent pastStudent) {
         return pastStudentRepository.save(pastStudent);
     }
 
+    // Ehemaligen Schüler löschen
     public void deletePastStudent(Long id) {
         pastStudentRepository.deleteById(id);
     }

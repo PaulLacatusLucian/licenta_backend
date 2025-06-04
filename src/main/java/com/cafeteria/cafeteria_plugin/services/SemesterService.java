@@ -15,11 +15,13 @@ public class SemesterService {
         this.semesterRepository = semesterRepository;
     }
 
+    // Aktuelles Semester abrufen (wir nehmen an, dass es nur einen Datensatz gibt)
     public Semester getCurrentSemester() {
-        return semesterRepository.findById(1L) // Presupunem că există un singur rând pentru semestru
-                .orElseThrow(() -> new IllegalStateException("Semestrul nu a fost inițializat."));
+        return semesterRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException("Das Semester wurde nicht initialisiert."));
     }
 
+    // Semester erhöhen (z. B. von 1 auf 2)
     public Semester incrementSemester() {
         Semester semester = getCurrentSemester();
         semester.setCurrentSemester(semester.getCurrentSemester() + 1);

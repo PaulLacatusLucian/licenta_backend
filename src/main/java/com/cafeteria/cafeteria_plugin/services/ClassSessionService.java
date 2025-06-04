@@ -14,39 +14,40 @@ public class ClassSessionService {
     @Autowired
     private ClassSessionRepository classSessionRepository;
 
-    // Adăugarea unei sesiuni de curs
+    // Hinzufügen einer Unterrichtseinheit
     public ClassSession addClassSession(ClassSession classSession) {
         return classSessionRepository.save(classSession);
     }
 
-    // Găsirea tuturor sesiunilor
+    // Alle Unterrichtseinheiten abrufen
     public List<ClassSession> getAllClassSessions() {
         return classSessionRepository.findAll();
     }
 
-    // Găsirea sesiunilor după profesor
+    // Unterrichtseinheiten nach Lehrer-ID abrufen
     public List<ClassSession> getSessionsByTeacher(Long teacherId) {
         return classSessionRepository.findByTeacherId(teacherId);
     }
 
-    // Găsirea sesiunilor după materie
+    // Unterrichtseinheiten nach Fach abrufen
     public List<ClassSession> getSessionsBySubject(String subject) {
         return classSessionRepository.findBySubject(subject);
     }
 
-    // Găsirea sesiunilor dintr-un interval de timp
+    // Unterrichtseinheiten innerhalb eines Zeitintervalls abrufen
     public List<ClassSession> getSessionsByTimeInterval(LocalDateTime start, LocalDateTime end) {
         return classSessionRepository.findByStartTimeBetween(start, end);
     }
 
-    // Ștergerea unei sesiuni de curs
+    // Unterrichtseinheit löschen
     public void deleteClassSession(Long id) {
         classSessionRepository.deleteById(id);
     }
 
+    // Unterrichtseinheit nach ID abrufen, mit Fehlermeldung wenn nicht gefunden
     public ClassSession getSessionById(Long sessionId) {
         return classSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Sesiunea nu a fost găsită."));
+                .orElseThrow(() -> new IllegalArgumentException("Die Unterrichtseinheit wurde nicht gefunden."));
     }
 
 }

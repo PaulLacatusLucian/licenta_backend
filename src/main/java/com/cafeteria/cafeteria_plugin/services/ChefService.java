@@ -18,44 +18,44 @@ public class ChefService {
         this.chefRepository = chefRepository;
     }
 
-    // ✅ Creare bucătar
+    //Neuer Koch wird erstellt
     public Chef createChef(Chef chef) {
         if (chefRepository.existsByEmail(chef.getEmail())) {
-            throw new IllegalArgumentException("Email-ul este deja folosit!");
+            throw new IllegalArgumentException("Die E-Mail-Adresse wird bereits verwendet!");
         }
         if (chefRepository.existsByUsername(chef.getUsername())) {
-            throw new IllegalArgumentException("Username-ul este deja folosit!");
+            throw new IllegalArgumentException("Der Benutzername wird bereits verwendet!");
         }
         return chefRepository.save(chef);
     }
 
-    // ✅ Obținere toți bucătarii
+    //Alle Köche abrufen
     public List<Chef> getAllChefs() {
         return chefRepository.findAll();
     }
 
-    // ✅ Obținere bucătar după ID
+    //Koch nach ID abrufen
     public Optional<Chef> getChefById(Long id) {
         return chefRepository.findById(id);
     }
 
-    // ✅ Ștergere bucătar după ID
+    //Koch nach ID löschen
     public boolean deleteChef(Long id) {
         if (!chefRepository.existsById(id)) {
-            throw new IllegalArgumentException("Chef-ul cu ID-ul " + id + " nu există!");
+            throw new IllegalArgumentException("Koch mit der ID " + id + " existiert nicht!");
         }
         chefRepository.deleteById(id);
         return true;
     }
 
-    // ✅ Actualizare bucătar
+    //Koch aktualisieren
     public Chef updateChef(Long id, Chef chefDetails) {
         return chefRepository.findById(id).map(existingChef -> {
             if (chefDetails.getName() != null) {
                 existingChef.setName(chefDetails.getName());
             }
 
-            // 🔐 Nu actualizăm username și password dacă nu sunt furnizate
+            // 🔐 Benutzername und Passwort werden nur aktualisiert, wenn sie angegeben wurden
             if (chefDetails.getUsername() != null) {
                 existingChef.setUsername(chefDetails.getUsername());
             }
@@ -65,6 +65,6 @@ public class ChefService {
             }
 
             return chefRepository.save(existingChef);
-        }).orElseThrow(() -> new IllegalArgumentException("Chef cu ID-ul " + id + " nu a fost găsit."));
+        }).orElseThrow(() -> new IllegalArgumentException("Koch mit der ID " + id + " wurde nicht gefunden."));
     }
 }

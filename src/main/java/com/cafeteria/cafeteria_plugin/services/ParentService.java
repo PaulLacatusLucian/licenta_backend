@@ -29,40 +29,39 @@ public class ParentService {
     @Autowired
     private UserRepository userRepository;
 
-    // ✅ Obține toți părinții
+    // Alle Eltern abrufen
     public List<Parent> getAllParents() {
         return parentRepository.findAll();
     }
 
-    // ✅ Obține un părinte după ID
+    // Elternteil nach ID abrufen
     public Parent getParentById(Long id) {
         return parentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Părintele cu ID-ul " + id + " nu a fost găsit."));
+                .orElseThrow(() -> new IllegalArgumentException("Elternteil mit der ID " + id + " wurde nicht gefunden."));
     }
 
-    // ✅ Adaugă un părinte în baza de date
+    // Elternteil zur Datenbank hinzufügen
     @Transactional
     public Parent addParent(Parent parent) {
         return parentRepository.save(parent);
     }
 
+    // Elternteil aus der Datenbank löschen (inkl. zugehörige Tokens und User-Daten)
     @Transactional
     public void deleteParent(Long id) {
         Parent parent = parentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Parent not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Elternteil mit der ID " + id + " wurde nicht gefunden."));
 
         tokenRepository.deleteAllByUser_Id(parent.getId());
-
         parentRepository.delete(parent);
-
         userRepository.deleteById(parent.getId());
     }
 
-
+    // Elternteil aktualisieren
     @Transactional
     public Parent updateParent(Long id, Parent updatedParent) {
         Parent existingParent = parentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Părintele cu ID-ul " + id + " nu a fost găsit."));
+                .orElseThrow(() -> new IllegalArgumentException("Elternteil mit der ID " + id + " wurde nicht gefunden."));
 
         existingParent.setMotherName(updatedParent.getMotherName());
         existingParent.setMotherEmail(updatedParent.getMotherEmail());
@@ -70,21 +69,22 @@ public class ParentService {
         existingParent.setFatherName(updatedParent.getFatherName());
         existingParent.setFatherEmail(updatedParent.getFatherEmail());
         existingParent.setFatherPhoneNumber(updatedParent.getFatherPhoneNumber());
-        existingParent.setProfileImage(updatedParent.getProfileImage()); // ⭐ aici
+        existingParent.setProfileImage(updatedParent.getProfileImage()); // Profilbild aktualisieren
 
         return parentRepository.save(existingParent);
     }
 
-
+    // Schüler einem Elternteil zuordnen
     @Transactional
     public Student addStudentToParent(Long parentId, Student student) {
         Parent parent = parentRepository.findById(parentId)
-                .orElseThrow(() -> new IllegalArgumentException("Părintele nu există"));
+                .orElseThrow(() -> new IllegalArgumentException("Elternteil existiert nicht."));
 
         student.setParent(parent);
         return studentRepository.save(student);
     }
 
+    // E-Mail-Adressen der Eltern einer bestimmten Klasse abrufen
     public List<String> getParentEmailsByClassId(Long classId) {
         List<Parent> parents = parentRepository.findDistinctByStudents_StudentClass_Id(classId);
 
@@ -95,15 +95,14 @@ public class ParentService {
                 .collect(Collectors.toList());
     }
 
+    // Elternteil nach Benutzername finden
     public Parent findByUsername(String username) {
         return parentRepository.findByUsername(username);
     }
 
+    // Elternteil speichern (neu oder aktualisiert)
     @Transactional
     public Parent saveParent(Parent parent) {
         return parentRepository.save(parent);
     }
-
-
-
 }

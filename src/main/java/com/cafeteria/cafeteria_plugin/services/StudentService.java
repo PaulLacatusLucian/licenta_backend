@@ -51,29 +51,31 @@ public class StudentService {
     @Autowired
     private ScheduleRepository scheduleRepository;
 
-
+    // Schüler in eine bestimmte Klasse speichern
     @Transactional
     public Student saveStudentWithClass(Student studentDetails, Long classId) {
         Class studentSchoolClass = classRepository.findById(classId)
-                .orElseThrow(() -> new IllegalArgumentException("Clasa cu ID-ul " + classId + " nu există"));
+                .orElseThrow(() -> new IllegalArgumentException("Die Klasse mit der ID " + classId + " existiert nicht"));
 
         studentDetails.setStudentClass(studentSchoolClass);
         return studentRepository.save(studentDetails);
     }
 
+    // Schüler anhand seiner ID abrufen
     public Student getStudentById(Long id) {
         return studentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Studentul cu ID-ul " + id + " nu există"));
+                .orElseThrow(() -> new IllegalArgumentException("Der Schüler mit der ID " + id + " wurde nicht gefunden"));
     }
 
+    // Abwesenheiten eines Schülers abrufen
     public List<Absence> getAbsencesByStudentId(Long studentId) {
         return absenceRepository.findByStudentId(studentId);
     }
 
-
+    // Nächste Stundenpläne abrufen (max. 3), basierend auf dem aktuellen Tag/Uhrzeit
     public List<Schedule> getUpcomingSchedules(Long studentId) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Schüler wurde nicht gefunden"));
 
         Class studentClass = student.getStudentClass();
         List<Schedule> allSchedules = scheduleRepository.findByStudentClassId(studentClass.getId());
@@ -117,53 +119,47 @@ public class StudentService {
                 .collect(Collectors.toList());
     }
 
-
-
+    // Schüler anhand seiner Eltern-ID finden
     public Optional<Student> getStudentByParentId(Long parentId) {
         return studentRepository.findByParentId(parentId);
     }
 
+    // Alle Schüler abrufen
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
     }
 
+    // Schülerdaten aktualisieren
     @Transactional
     public Student updateStudent(Long id, Student updatedStudent) {
         Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Studentul nu a fost găsit"));
+                .orElseThrow(() -> new IllegalArgumentException("Der Schüler wurde nicht gefunden"));
 
         existingStudent.setName(updatedStudent.getName());
         existingStudent.setPhoneNumber(updatedStudent.getPhoneNumber());
 
         if (updatedStudent.getStudentClass() != null && updatedStudent.getStudentClass().getId() != null) {
             Class studentClass = classService.getClassById(updatedStudent.getStudentClass().getId())
-                    .orElseThrow(() -> new RuntimeException("Class not found"));
+                    .orElseThrow(() -> new RuntimeException("Klasse wurde nicht gefunden"));
             existingStudent.setStudentClass(studentClass);
         }
 
         return studentRepository.save(existingStudent);
     }
 
-
+    // Schüler löschen (inkl. Noten, Tokens, User-Eintrag)
     @Transactional
     public void deleteStudent(Long id) {
         Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found with ID: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Schüler mit ID " + id + " wurde nicht gefunden"));
 
-        // 1. Șterge notele
         gradeRepository.deleteByStudentId(student.getId());
-
-        // 2. Șterge TOATE tokenurile asociate utilizatorului
         tokenRepository.deleteAllByUser_Id(student.getId());
-
-        // 3. Șterge Student-ul (entitate derivată)
         studentRepository.deleteById(student.getId());
-
-        // 4. Șterge User-ul
         userRepository.deleteById(student.getId());
     }
 
-
+    // Schüler in die nächste Klasse versetzen bzw. Absolventen verarbeiten
     @Transactional
     public void advanceYear() {
         List<Class> allSchoolClasses = classRepository.findAll();
@@ -179,6 +175,7 @@ public class StudentService {
         }
     }
 
+    // Schüler abschließen und in ehemalige Schülerliste einfügen
     private void graduateStudents(Class currentSchoolClass) {
         List<Student> studentsInClass = studentRepository.findByStudentClass(currentSchoolClass);
 
@@ -194,6 +191,7 @@ public class StudentService {
         }
     }
 
+    // Schüler in neue Klasse mit incrementierter Stufe verschieben
     private void moveStudentsToNextClass(Class currentSchoolClass) {
         String className = currentSchoolClass.getName();
         String numericPart = className.replaceAll("^(\\d+).*", "$1");
@@ -211,10 +209,11 @@ public class StudentService {
                 student.setStudentClass(newSchoolClass);
             }
         } catch (NumberFormatException e) {
-            throw new RuntimeException("Numele clasei nu începe cu un număr valid: " + className);
+            throw new RuntimeException("Der Klassenname beginnt nicht mit einer gültigen Zahl: " + className);
         }
     }
 
+    // Neue Klasse erstellen, wenn sie nicht existiert
     private Class createNewClass(String newClassName, Class oldSchoolClass) {
         Class newSchoolClass = new Class();
         newSchoolClass.setName(newClassName);
@@ -223,18 +222,20 @@ public class StudentService {
         return classRepository.save(newSchoolClass);
     }
 
+    // Schüler anhand Username finden
     public Student findByUsername(String username) {
         return studentRepository.findByUsername(username);
     }
 
+    // Schüler anhand seiner User-ID abrufen
     public Student getStudentByUserId(Long userId) {
         return studentRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Student not found with userId: " + userId));
+                .orElseThrow(() -> new RuntimeException("Schüler mit User-ID " + userId + " wurde nicht gefunden"));
     }
 
+    // Schülerobjekt speichern
     @Transactional
     public Student saveStudent(Student student) {
         return studentRepository.save(student);
     }
-
 }

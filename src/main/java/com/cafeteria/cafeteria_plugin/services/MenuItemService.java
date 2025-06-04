@@ -41,22 +41,22 @@ public class MenuItemService {
         this.studentRepository = studentRepository;
     }
 
-    // ✅ Adaugă un nou produs în meniu
+    // Neues Menüelement hinzufügen
     public MenuItem addMenuItem(MenuItem menuItem) {
         return menuItemRepository.save(menuItem);
     }
 
-    // ✅ Returnează toate produsele din meniu
+    // Alle Menüelemente abrufen
     public List<MenuItem> getAllMenuItems() {
         return menuItemRepository.findAll();
     }
 
-    // ✅ Returnează un produs după ID
+    // Menüelement nach ID abrufen
     public Optional<MenuItem> getMenuItemById(Long id) {
         return menuItemRepository.findById(id);
     }
 
-    // ✅ Actualizează un produs
+    // Menüelement aktualisieren
     public MenuItem updateMenuItem(Long id, MenuItem updatedMenuItem) {
         return menuItemRepository.findById(id).map(existingMenuItem -> {
             existingMenuItem.setName(updatedMenuItem.getName());
@@ -64,10 +64,10 @@ public class MenuItemService {
             existingMenuItem.setPrice(updatedMenuItem.getPrice());
             existingMenuItem.setQuantity(updatedMenuItem.getQuantity());
             return menuItemRepository.save(existingMenuItem);
-        }).orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
+        }).orElseThrow(() -> new IllegalArgumentException("Menüelement nicht gefunden."));
     }
 
-    // ✅ Șterge un produs
+    // Menüelement löschen
     public boolean deleteMenuItem(Long id) {
         if (menuItemRepository.existsById(id)) {
             menuItemRepository.deleteById(id);
@@ -76,7 +76,7 @@ public class MenuItemService {
         return false;
     }
 
-    // ✅ Actualizează imaginea unui produs
+    // Bild-URL eines Menüelements aktualisieren
     public void updateMenuItemImage(Long id, String imageUrl) {
         menuItemRepository.findById(id).ifPresent(menuItem -> {
             menuItem.setImageUrl(imageUrl);
@@ -84,42 +84,40 @@ public class MenuItemService {
         });
     }
 
-    // ✅ Istoricul comenzilor pentru un părinte
+    // Bestellverlauf für einen Elternteil abrufen
     public List<OrderHistory> getOrderHistoryForParent(Long parentId, int month, int year) {
         Parent parent = parentRepository.findById(parentId)
-                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Elternteil nicht gefunden."));
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
         return orderHistoryRepository.findAllByParentAndOrderTimeBetween(parent, start, end);
     }
 
-    // ✅ Istoricul comenzilor pentru un elev
+    // Bestellverlauf für einen Schüler abrufen
     public List<OrderHistory> getOrderHistoryForStudent(Long studentId, int month, int year) {
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Schüler nicht gefunden."));
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
         return orderHistoryRepository.findAllByStudentAndOrderTimeBetween(student, start, end);
     }
 
-    // ✅ Permite unui părinte să comande mâncare pentru un elev
+    // Elternteil bestellt Essen für Schüler
     public void purchaseMenuItem(Long parentId, Long studentId, Long menuItemId, int quantity) {
         Parent parent = parentRepository.findById(parentId)
-                .orElseThrow(() -> new IllegalArgumentException("Parent not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Elternteil nicht gefunden."));
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Schüler nicht gefunden."));
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
-                .orElseThrow(() -> new IllegalArgumentException("MenuItem not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Menüelement nicht gefunden."));
 
         if (menuItem.getQuantity() < quantity) {
-            throw new IllegalArgumentException("Not enough stock available for " + menuItem.getName());
+            throw new IllegalArgumentException("Nicht genügend Lagerbestand für " + menuItem.getName());
         }
 
-        // Scade cantitatea din stoc
         menuItem.setQuantity(menuItem.getQuantity() - quantity);
         menuItemRepository.save(menuItem);
 
-        // Creează comanda
         OrderHistory order = new OrderHistory();
         order.setMenuItemName(menuItem.getName());
         order.setPrice(menuItem.getPrice() * quantity);
@@ -131,7 +129,7 @@ public class MenuItemService {
         orderHistoryRepository.save(order);
     }
 
-    // ✅ Generează o factură pentru un elev
+    // Textbasierte Rechnung generieren
     public String generateInvoiceForStudent(Long studentId, int month, int year) {
         List<OrderHistory> orders = getOrderHistoryForStudent(studentId, month, year);
         double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
@@ -139,58 +137,46 @@ public class MenuItemService {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
 
         StringBuilder invoice = new StringBuilder();
-        invoice.append("Invoice for ").append(month).append("/").append(year).append("\n");
+        invoice.append("Rechnung für ").append(month).append("/").append(year).append("\n");
         invoice.append("====================================\n");
         for (OrderHistory order : orders) {
             invoice.append(order.getMenuItemName())
                     .append(" x ").append(order.getQuantity())
                     .append(" = $").append(order.getPrice())
-                    .append(" | Date: ").append(order.getOrderTime().format(dateTimeFormatter))
+                    .append(" | Datum: ").append(order.getOrderTime().format(dateTimeFormatter))
                     .append("\n");
         }
         invoice.append("====================================\n");
-        invoice.append("Total: $").append(total).append("\n");
+        invoice.append("Gesamt: $").append(total).append("\n");
 
         return invoice.toString();
     }
 
-    // Add these methods to your MenuItemService.java
-
-    /**
-     * Get most popular menu items based on order count
-     */
+    // Meistbestellte Artikel
     public List<Map<String, Object>> getMostPopularItems(int limit) {
         return orderHistoryRepository.findMostOrderedItems(limit);
     }
 
-    /**
-     * Get total revenue for a specific time period
-     */
+    // Gesamtumsatz für einen Zeitraum
     public double getTotalRevenueForPeriod(int month, int year) {
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
         return orderHistoryRepository.sumOrderPricesBetween(start, end);
     }
 
-    /**
-     * Get daily sales for a specific month
-     */
+    // Tagesumsatz pro Monat
     public List<Map<String, Object>> getDailySalesForMonth(int month, int year) {
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
         LocalDateTime end = start.plusMonths(1).minusSeconds(1);
         return orderHistoryRepository.findDailySalesBetween(start, end);
     }
 
-    /**
-     * Get students with the most orders
-     */
+    // Schüler mit den meisten Bestellungen
     public List<Map<String, Object>> getTopStudentsByOrderCount(int limit) {
         return orderHistoryRepository.findStudentsWithMostOrders(limit);
     }
 
-    /**
-     * Get current inventory status
-     */
+    // Lagerstatus abrufen
     public List<Map<String, Object>> getInventoryStatus() {
         List<MenuItem> items = menuItemRepository.findAll();
         return items.stream()
@@ -199,16 +185,14 @@ public class MenuItemService {
                     status.put("id", item.getId());
                     status.put("name", item.getName());
                     status.put("quantity", item.getQuantity());
-                    status.put("status", item.getQuantity() > 10 ? "In Stock" :
-                            (item.getQuantity() > 0 ? "Low Stock" : "Out of Stock"));
+                    status.put("status", item.getQuantity() > 10 ? "Auf Lager" :
+                            (item.getQuantity() > 0 ? "Niedriger Bestand" : "Nicht verfügbar"));
                     return status;
                 })
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get orders count by allergen
-     */
+    // Bestellungen nach Allergen gruppieren
     public Map<String, Long> getOrderCountByAllergen() {
         List<OrderHistory> allOrders = orderHistoryRepository.findAll();
         return allOrders.stream()
@@ -222,49 +206,40 @@ public class MenuItemService {
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 
-    /**
-     * Generate a PDF invoice for a student
-     */
+    // PDF-Rechnung generieren
     public byte[] generateInvoicePDF(Long studentId, int month, int year) {
         try {
             List<OrderHistory> orders = getOrderHistoryForStudent(studentId, month, year);
             double total = orders.stream().mapToDouble(OrderHistory::getPrice).sum();
 
-            // Get student details
             Student student = studentRepository.findById(studentId)
-                    .orElseThrow(() -> new IllegalArgumentException("Student not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("Schüler nicht gefunden."));
 
-            // Create PDF document
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Document document = new Document(PageSize.A4);
             PdfWriter.getInstance(document, outputStream);
 
-            // Open document
             document.open();
 
-            // Add title
             Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
-            Paragraph title = new Paragraph("INVOICE", titleFont);
+            Paragraph title = new Paragraph("RECHNUNG", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
-            document.add(new Paragraph(" ")); // Add space
+            document.add(new Paragraph(" "));
 
-            // Add invoice details
             Font normalFont = new Font(Font.FontFamily.HELVETICA, 12);
             Font boldFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
 
-            document.add(new Paragraph("Invoice for: " + student.getName(), boldFont));
-            document.add(new Paragraph("Month: " + month + "/" + year, normalFont));
-            document.add(new Paragraph("Date Generated: " + LocalDateTime.now().format(
+            document.add(new Paragraph("Rechnung für: " + student.getName(), boldFont));
+            document.add(new Paragraph("Monat: " + month + "/" + year, normalFont));
+            document.add(new Paragraph("Erstellt am: " + LocalDateTime.now().format(
                     DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")), normalFont));
-            document.add(new Paragraph(" ")); // Add space
+            document.add(new Paragraph(" "));
 
-            // Create table for order items
-            PdfPTable table = new PdfPTable(4); // 4 columns
+            PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
 
-            // Add table headers
-            Stream.of("Item", "Quantity", "Price", "Date")
+            Stream.of("Artikel", "Menge", "Preis", "Datum")
                     .forEach(columnTitle -> {
                         PdfPCell header = new PdfPCell();
                         header.setBackgroundColor(BaseColor.LIGHT_GRAY);
@@ -273,7 +248,6 @@ public class MenuItemService {
                         table.addCell(header);
                     });
 
-            // Add data rows
             DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm");
             for (OrderHistory order : orders) {
                 table.addCell(new Phrase(order.getMenuItemName(), normalFont));
@@ -283,25 +257,22 @@ public class MenuItemService {
             }
 
             document.add(table);
-            document.add(new Paragraph(" ")); // Add space
+            document.add(new Paragraph(" "));
 
-            // Add total
-            Paragraph totalParagraph = new Paragraph("Total: $" + total, boldFont);
+            Paragraph totalParagraph = new Paragraph("Gesamt: $" + total, boldFont);
             totalParagraph.setAlignment(Element.ALIGN_RIGHT);
             document.add(totalParagraph);
 
-            // Add footer
-            Paragraph footer = new Paragraph("Thank you for your order!", normalFont);
+            Paragraph footer = new Paragraph("Vielen Dank für Ihre Bestellung!", normalFont);
             footer.setAlignment(Element.ALIGN_CENTER);
             document.add(footer);
 
-            // Close document
             document.close();
 
             return outputStream.toByteArray();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to generate PDF invoice: " + e.getMessage());
+            throw new RuntimeException("Fehler beim Generieren der PDF-Rechnung: " + e.getMessage());
         }
     }
 }
