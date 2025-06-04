@@ -10,91 +10,154 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Zentraler Service für die Benutzerverwaltung im Schulverwaltungssystem.
+ *
+ * Diese Klasse ist verantwortlich für:
+ * - Erstellung neuer Benutzerkonten aller Typen
+ * - Validierung von Benutzerdaten
+ * - Passwort-Management
+ * - Benutzer-Authentifizierung
+ *
+ * Der Service unterstützt verschiedene Benutzertypen (Student, Parent, Teacher, Chef, Admin)
+ * und stellt sicher, dass jeder Benutzer korrekt in der entsprechenden Tabelle
+ * gespeichert wird unter Verwendung der JPA-Vererbungsstrategie.
+ *
+ * @author Paul Lacatus
+ * @version 1.0
+ * @see User
+ * @see Student
+ * @see Parent
+ * @see Teacher
+ * @see Chef
+ * @see Admin
+ * @since 2025-01-01
+ */
 @Service
-@Transactional // Stellt die Atomarität aller Methoden sicher
+@Transactional // Stellt Atomarität aller Methoden sicher
 public class UserService {
 
+    /**
+     * Repository für grundlegende Benutzeroperationen.
+     */
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Repository für schülerspezifische Operationen.
+     */
     @Autowired
     private StudentRepository studentRepository;
 
+    /**
+     * Repository für klassenspezifische Operationen.
+     */
     @Autowired
     private ClassRepository classRepository;
 
+    /**
+     * Repository für elternspezifische Operationen.
+     */
     @Autowired
     private ParentRepository parentRepository;
 
+    /**
+     * Repository für lehrerspezifische Operationen.
+     */
     @Autowired
     private TeacherRepository teacherRepository;
 
+    /**
+     * Passwort-Encoder für sichere Passwort-Verschlüsselung.
+     * Lazy-Loading verhindert zirkuläre Abhängigkeiten.
+     */
     @Autowired
     @Lazy
     private PasswordEncoder passwordEncoder;
 
     /**
-     * Erstellt einen neuen Benutzer je nach Typ (Student, Lehrer, Elternteil, etc.)
+     * Erstellt einen neuen Benutzer im System.
+     *
+     * Diese Methode führt umfassende Validierungen durch und speichert
+     * den Benutzer in der entsprechenden Tabelle basierend auf dem Benutzertyp.
+     *
+     * Validierungen:
+     * - Überprüfung auf null-Werte für kritische Felder
+     * - Eindeutigkeitsprüfung für Benutzername und Email
+     * - Typspezifische Validierung
+     *
+     * @param user Der zu erstellende Benutzer (muss gültigen Typ haben)
+     * @return Der gespeicherte Benutzer mit generierter ID
+     * @throws IllegalArgumentException Falls Validierung fehlschlägt
+     * @throws RuntimeException Falls Benutzername oder Email bereits existiert
      */
     public User createUser(User user) {
-        // Grundvalidierung
+        // Grundlegende Validierungen
         if (user == null || user.getUsername() == null || user.getPassword() == null || user.getEmail() == null) {
-            throw new IllegalArgumentException("Benutzername, E-Mail und Passwort sind erforderlich.");
+            throw new IllegalArgumentException("Benutzername, Email und Passwort sind erforderlich");
         }
 
-        // Überprüfen, ob Benutzername oder E-Mail bereits existiert
+        // Eindeutigkeitsprüfungen
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Benutzername ist bereits vergeben.");
+            throw new RuntimeException("Benutzername existiert bereits");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("E-Mail-Adresse wird bereits verwendet.");
+            throw new RuntimeException("Email bereits verwendet");
         }
 
-        // Speichern des Benutzers je nach Typ
+        // Typspezifische Speicherung basierend auf Benutzertyp
         return switch (user.getUserType()) {
             case STUDENT -> {
                 if (!(user instanceof Student student)) {
-                    throw new IllegalArgumentException("Benutzertyp ist nicht vom Typ Student.");
+                    throw new IllegalArgumentException("Benutzertyp ist nicht Student");
                 }
                 yield studentRepository.save(student);
             }
             case PARENT -> {
                 if (!(user instanceof Parent parent)) {
-                    throw new IllegalArgumentException("Benutzertyp ist nicht vom Typ Eltern.");
+                    throw new IllegalArgumentException("Benutzertyp ist nicht Parent");
                 }
                 yield parentRepository.save(parent);
             }
             case TEACHER -> {
                 if (!(user instanceof Teacher teacher)) {
-                    throw new IllegalArgumentException("Benutzertyp ist nicht vom Typ Lehrer.");
+                    throw new IllegalArgumentException("Benutzertyp ist nicht Teacher");
                 }
                 yield teacherRepository.save(teacher);
             }
             case ADMIN -> {
                 if (!(user instanceof Admin admin)) {
-                    throw new IllegalArgumentException("Benutzertyp ist nicht vom Typ Admin.");
+                    throw new IllegalArgumentException("Benutzertyp ist nicht Admin");
                 }
                 yield userRepository.save(admin);
             }
             case CHEF -> {
                 if (!(user instanceof Chef chef)) {
-                    throw new IllegalArgumentException("Benutzertyp ist nicht vom Typ Koch.");
+                    throw new IllegalArgumentException("Benutzertyp ist nicht Chef");
                 }
                 yield userRepository.save(chef);
             }
-            default -> throw new IllegalArgumentException("Ungültiger Benutzertyp.");
+            default -> throw new IllegalArgumentException("Ungültiger Benutzertyp");
         };
     }
 
     /**
-     * Findet einen Benutzer anhand seines Benutzernamens
+     * Sucht einen Benutzer anhand des Benutzernamens.
+     *
+     * @param username Der zu suchende Benutzername
+     * @return Optional mit dem gefundenen Benutzer oder leer falls nicht gefunden
      */
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
     /**
-     * Erzwingt das Aktualisieren des Passworts für einen Benutzer
+     * Aktualisiert das Passwort eines Benutzers ohne weitere Validierungen.
+     *
+     * Diese Methode wird hauptsächlich für Passwort-Reset-Funktionalitäten
+     * verwendet, wo die Validierung bereits durch Token-Verifikation erfolgt ist.
+     *
+     * @param user Der Benutzer mit dem neuen (bereits verschlüsselten) Passwort
      */
     public void forceUpdatePassword(User user) {
         userRepository.save(user);

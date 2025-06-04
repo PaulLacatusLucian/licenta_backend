@@ -21,10 +21,40 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * REST-Controller für alle elternbezogenen Operationen.
+ * <p>
+ * Diese Klasse stellt HTTP-Endpunkte für die Verwaltung von Eltern bereit
+ * und ermöglicht sowohl administrative Operationen als auch elternspezifische
+ * Self-Service-Funktionen.
+ * <p>
+ * Hauptfunktionen:
+ * - CRUD-Operationen für Eltern (Admin)
+ * - Self-Service für angemeldete Eltern
+ * - Einsicht in Kinder-Daten (Noten, Abwesenheiten, Stundenplan)
+ * - Cafeteria-Bestellungen für Kinder
+ * - Kommunikation mit Lehrern
+ * - Profilbild-Upload
+ * <p>
+ * Sicherheit:
+ * - Rollenbasierte Zugriffskontrolle
+ * - JWT-Token-Validierung
+ * - Datenfilterung nach Eltern-Kind-Beziehung
+ *
+ * @author Paul Lacatus
+ * @version 1.0
+ * @see ParentService
+ * @see Parent
+ * @see ParentDTO
+ * @since 2025-01-01
+ */
 @RestController
 @RequestMapping("/parents")
 public class ParentController {
 
+    /**
+     * Verzeichnis für Datei-Uploads aus der Konfiguration.
+     */
     @Value("${image.upload.dir}")
     private String uploadDir;
 
@@ -49,13 +79,8 @@ public class ParentController {
     @Autowired
     private ScheduleMapper scheduleMapper;
 
-
-
     @Autowired
     private OrderHistoryMapper orderHistoryMapper;
-
-    @Autowired
-    private AbsenceMapper absenceMapper;
 
     @Autowired
     private GradeMapper gradeMapper;
@@ -67,9 +92,18 @@ public class ParentController {
     private StudentMapper studentMapper;
 
     @Autowired
+    private AbsenceMapper absenceMapper;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
-
+    /**
+     * Ruft alle Eltern im System ab.
+     * <p>
+     * Nur Administratoren haben Zugriff auf die vollständige Elternliste.
+     *
+     * @return ResponseEntity mit Liste aller Eltern als DTOs
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ParentDTO>> getAllParents() {
@@ -80,7 +114,14 @@ public class ParentController {
         return ResponseEntity.ok(parentDTOs);
     }
 
-
+    /**
+     * Ruft einen spezifischen Elternteil anhand seiner ID ab.
+     * <p>
+     * Zugänglich für den Elternteil selbst und Administratoren.
+     *
+     * @param id Eindeutige ID des Elternteils
+     * @return ResponseEntity mit den Elterndaten als DTO
+     */
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ParentDTO> getParentById(@PathVariable Long id) {
@@ -88,7 +129,15 @@ public class ParentController {
         return ResponseEntity.ok(parentMapper.toDto(parent));
     }
 
-
+    /**
+     * Aktualisiert die Daten eines existierenden Elternteils.
+     * <p>
+     * Zugänglich für den Elternteil selbst und Administratoren.
+     *
+     * @param id        ID des zu aktualisierenden Elternteils
+     * @param parentDTO Eltern-DTO mit neuen Daten
+     * @return ResponseEntity mit dem aktualisierten Elternteil als DTO
+     */
     @PreAuthorize("hasRole('PARENT') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ParentDTO> updateParent(@PathVariable Long id, @RequestBody ParentDTO parentDTO) {
@@ -96,7 +145,15 @@ public class ParentController {
         return ResponseEntity.ok(parentMapper.toDto(updatedParent));
     }
 
-
+    /**
+     * Löscht einen Elternteil vollständig aus dem System.
+     * <p>
+     * Nur Administratoren können Eltern löschen.
+     * Führt eine sichere Löschung mit Bereinigung aller Referenzen durch.
+     *
+     * @param id ID des zu löschenden Elternteils
+     * @return ResponseEntity mit No-Content-Status bei Erfolg
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteParent(@PathVariable Long id) {
@@ -104,7 +161,15 @@ public class ParentController {
         return ResponseEntity.noContent().build();
     }
 
-
+    /**
+     * Ruft die Daten des dem angemeldeten Elternteil zugeordneten Kindes ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht der Daten ihres Kindes.
+     * Zugänglich auch für Lehrer und Administratoren mit entsprechenden Tokens.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit den Kinderdaten als DTO oder Not-Found
+     */
     @PreAuthorize("hasRole('PARENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/me/child")
     public ResponseEntity<?> getStudentForParent(@RequestHeader("Authorization") String token) {
@@ -115,10 +180,18 @@ public class ParentController {
         return studentService.getStudentByParentId(parent.getId())
                 .map(student -> ResponseEntity.ok(studentMapper.toDTO(student)))
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StudentDTO()));
-
     }
 
-
+    /**
+     * Fügt einen Schüler zu einem Eltern-Account hinzu.
+     * <p>
+     * Nur Administratoren können diese Zuordnung vornehmen.
+     * Wird typischerweise bei der Registrierung neuer Schüler verwendet.
+     *
+     * @param token   JWT-Authorization-Header
+     * @param student Schüler-Objekt, das hinzugefügt werden soll
+     * @return ResponseEntity mit dem hinzugefügten Schüler oder Fehlermeldung
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/me/add-student")
     public ResponseEntity<?> addStudentToParent(@RequestHeader("Authorization") String token, @RequestBody Student student) {
@@ -134,6 +207,14 @@ public class ParentController {
         }
     }
 
+    /**
+     * Ruft die Gesamtanzahl der Abwesenheiten des Kindes ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht der Abwesenheitsstatistik ihres Kindes.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Map containing "total" als Schlüssel
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me/child/absences")
     public ResponseEntity<?> getChildAbsencesForParent(@RequestHeader("Authorization") String token) {
@@ -147,6 +228,29 @@ public class ParentController {
                     return ResponseEntity.ok(Map.of("total", total));
                 })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("total", 0)));
+    }
+
+    /**
+     * Ruft alle Noten des Kindes ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht der Noten ihres Kindes.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Liste der Noten als DTOs
+     */
+    @PreAuthorize("hasRole('PARENT')")
+    @GetMapping("/me/child/grades")
+    public ResponseEntity<?> getChildGradesForParent(@RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String username = jwtUtil.extractUsername(jwt);
+        Parent parent = parentService.findByUsername(username);
+
+        return studentService.getStudentByParentId(parent.getId())
+                .map(student -> {
+                    List<GradeDTO> grades = gradeService.getGradesByStudent(student.getId());
+                    return ResponseEntity.ok(grades);
+                })
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
     }
 
     @PreAuthorize("hasRole('PARENT')")
@@ -165,23 +269,16 @@ public class ParentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('PARENT')")
-    @GetMapping("/me/child/grades")
-    public ResponseEntity<?> getChildGradesForParent(@RequestHeader("Authorization") String token) {
-        String jwt = token.replace("Bearer ", "");
-        String username = jwtUtil.extractUsername(jwt);
-        Parent parent = parentService.findByUsername(username);
-
-        return studentService.getStudentByParentId(parent.getId())
-                .map(student -> {
-                    List<GradeDTO> grades = gradeService.getGradesByStudent(student.getId());
-                    return ResponseEntity.ok(grades);
-                })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
-    }
-
-
-
+    /**
+     * Ruft die Bestellhistorie des Kindes für einen bestimmten Zeitraum ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht der Cafeteria-Bestellungen ihres Kindes.
+     *
+     * @param token JWT-Authorization-Header
+     * @param month Monat für den Bericht (1-12)
+     * @param year  Jahr für den Bericht
+     * @return ResponseEntity mit Liste der Bestellungen als DTOs
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me/child/orders")
     public ResponseEntity<?> getChildOrdersForParent(
@@ -203,6 +300,15 @@ public class ParentController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
     }
 
+    /**
+     * Ruft die Gesamtanzahl der Abwesenheiten aller Kinder ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern mit mehreren Kindern.
+     * Summiert die Abwesenheiten aller zugeordneten Kinder.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Map containing "total" als Schlüssel
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/child/total-absences")
     public ResponseEntity<Map<String, Integer>> getTotalAbsencesForChildren(@RequestHeader("Authorization") String token) {
@@ -219,6 +325,15 @@ public class ParentController {
         return ResponseEntity.ok(Map.of("total", total));
     }
 
+    /**
+     * Ruft alle Lehrer des Kindes ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht der Lehrer ihres Kindes.
+     * Analysiert den Stundenplan und sammelt alle unterrichtenden Lehrer.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Liste der Lehrer als Brief-DTOs
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me/child/teachers")
     public ResponseEntity<List<TeacherBriefDTO>> getTeachersForMyChild(@RequestHeader("Authorization") String token) {
@@ -246,6 +361,16 @@ public class ParentController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
     }
 
+    /**
+     * Sendet eine Nachricht an einen Lehrer.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Kommunikation mit Lehrern ihres Kindes.
+     * Verwendet den Email-Service für die Zustellung.
+     *
+     * @param request DTO mit Lehrer-Email, Betreff und Nachrichteninhalt
+     * @param token   JWT-Authorization-Header
+     * @return ResponseEntity mit Erfolgs- oder Fehlerstatus
+     */
     @PostMapping("/parents/me/send-message")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<Void> sendMessageToTeacher(@RequestBody EmailMessageDTO request, @RequestHeader("Authorization") String token) {
@@ -267,6 +392,14 @@ public class ParentController {
         }
     }
 
+    /**
+     * Ruft das eigene Profil des angemeldeten Elternteils ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht ihrer eigenen Daten.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit den Elterndaten als DTO
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me")
     public ResponseEntity<ParentDTO> getMyProfile(@RequestHeader("Authorization") String token) {
@@ -278,6 +411,16 @@ public class ParentController {
         return ResponseEntity.ok(parentMapper.toDto(parent));
     }
 
+    /**
+     * Lädt ein Profilbild für den angemeldeten Elternteil hoch.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zum Upload ihres Profilbilds.
+     * Unterstützt gängige Bildformate und speichert das Bild im konfigurierten Verzeichnis.
+     *
+     * @param token JWT-Authorization-Header
+     * @param file  Hochzuladende Bilddatei
+     * @return ResponseEntity mit der generierten Bild-URL als JSON
+     */
     @PreAuthorize("hasRole('PARENT')")
     @PostMapping("/me/profile-image")
     public ResponseEntity<String> uploadParentProfileImage(
@@ -285,14 +428,14 @@ public class ParentController {
             @RequestParam("profileImage") MultipartFile file) {
         try {
             if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file uploaded");
+                return ResponseEntity.badRequest().body("Keine Datei hochgeladen");
             }
 
             String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
             Parent parent = parentService.findByUsername(username);
 
             if (parent == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Parent not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Elternteil nicht gefunden");
             }
 
             File uploadDirectory = new File(uploadDir);
@@ -310,10 +453,20 @@ public class ParentController {
 
             return ResponseEntity.ok("{\"imageUrl\": \"" + imageUrl + "\"}");
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Fehler beim Hochladen der Datei: " + e.getMessage());
         }
     }
 
+    /**
+     * Ruft die nächsten anstehenden Unterrichtsstunden des Kindes ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht des Stundenplans ihres Kindes.
+     * Gibt die nächsten 3 anstehenden Stunden zurück.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Liste der nächsten Unterrichtsstunden
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me/child/upcoming-classes")
     public ResponseEntity<List<ScheduleDTO>> getChildUpcomingClassesForParent(@RequestHeader("Authorization") String token) {
@@ -332,6 +485,15 @@ public class ParentController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
     }
 
+    /**
+     * Ruft den vollständigen Stundenplan des Kindes ab.
+     * <p>
+     * Self-Service-Endpunkt für Eltern zur Einsicht des kompletten wöchentlichen
+     * Stundenplans ihres Kindes mit Klasseninformationen.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Map containing Klassenname und Stundenplan
+     */
     @PreAuthorize("hasRole('PARENT')")
     @GetMapping("/me/child/class-schedule")
     public ResponseEntity<?> getChildClassScheduleForParent(@RequestHeader("Authorization") String token) {
@@ -357,6 +519,4 @@ public class ParentController {
                 })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of()));
     }
-
-
 }

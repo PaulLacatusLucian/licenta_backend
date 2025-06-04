@@ -27,10 +27,40 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * REST-Controller für alle schülerbezogenen Operationen.
+ * <p>
+ * Diese Klasse stellt HTTP-Endpunkte für die Verwaltung von Schülern bereit
+ * und ermöglicht sowohl administrative Operationen als auch schülerspezifische
+ * Self-Service-Funktionen.
+ * <p>
+ * Hauptfunktionen:
+ * - CRUD-Operationen für Schüler (Admin/Lehrer)
+ * - Self-Service für angemeldete Schüler
+ * - Abwesenheitsverwaltung und -anzeige
+ * - Stundenplan- und Terminanzeige
+ * - Profilbild-Upload
+ * - Cafeteria-Bestellhistorie
+ * <p>
+ * Sicherheit:
+ * - Rollenbasierte Zugriffskontrolle
+ * - JWT-Token-Validierung
+ * - Datenfilterung nach Benutzerkontext
+ *
+ * @author Paul Lacatus
+ * @version 1.0
+ * @see StudentService
+ * @see Student
+ * @see StudentDTO
+ * @since 2025-01-01
+ */
 @RestController
 @RequestMapping("/students")
 public class StudentController {
 
+    /**
+     * Verzeichnis für Datei-Uploads aus der Konfiguration.
+     */
     @Value("${image.upload.dir}")
     private String uploadDir;
 
@@ -55,7 +85,16 @@ public class StudentController {
     @Autowired
     private JwtUtil jwtUtil;
 
-
+    /**
+     * Erstellt einen neuen Schüler und ordnet ihn einer Klasse zu.
+     * <p>
+     * Nur Lehrer und Administratoren können neue Schüler erstellen.
+     * Der Schüler wird automatisch der angegebenen Klasse zugeordnet.
+     *
+     * @param studentDetails Schülerdaten für die Erstellung
+     * @param classId        ID der Klasse, der der Schüler zugeordnet werden soll
+     * @return ResponseEntity mit dem erstellten Schüler als DTO
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/class/{classId}")
     public ResponseEntity<StudentDTO> createStudent(@RequestBody Student studentDetails, @PathVariable Long classId) {
@@ -64,7 +103,14 @@ public class StudentController {
         return ResponseEntity.ok(dto);
     }
 
-
+    /**
+     * Ruft einen spezifischen Schüler anhand seiner ID ab.
+     * <p>
+     * Zugänglich für Schüler (eigene Daten), Lehrer und Administratoren.
+     *
+     * @param id Eindeutige ID des Schülers
+     * @return ResponseEntity mit den Schülerdaten als DTO
+     */
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
@@ -73,7 +119,14 @@ public class StudentController {
         return ResponseEntity.ok(dto);
     }
 
-
+    /**
+     * Ruft alle Schüler im System ab.
+     * <p>
+     * Nur für Lehrer und Administratoren zugänglich.
+     * Gibt eine vollständige Liste aller registrierten Schüler zurück.
+     *
+     * @return ResponseEntity mit Liste aller Schüler als DTOs
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<StudentDTO>> getAllStudents() {
@@ -83,7 +136,16 @@ public class StudentController {
         return ResponseEntity.ok(studentDTOs);
     }
 
-
+    /**
+     * Aktualisiert die Daten eines existierenden Schülers.
+     * <p>
+     * Zugänglich für den Schüler selbst, Lehrer und Administratoren.
+     * Ermöglicht die Änderung von Basisdaten und Klassenzuordnung.
+     *
+     * @param id             ID des zu aktualisierenden Schülers
+     * @param updatedStudent Schüler-Objekt mit neuen Daten
+     * @return ResponseEntity mit dem aktualisierten Schüler als DTO
+     */
     @PreAuthorize("hasRole('STUDENT') or hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable Long id, @RequestBody Student updatedStudent) {
@@ -92,7 +154,15 @@ public class StudentController {
         return ResponseEntity.ok(dto);
     }
 
-
+    /**
+     * Löscht einen Schüler vollständig aus dem System.
+     * <p>
+     * Nur Administratoren können Schüler löschen.
+     * Führt eine sichere Löschung mit Bereinigung aller Referenzen durch.
+     *
+     * @param id ID des zu löschenden Schülers
+     * @return ResponseEntity mit No-Content-Status bei Erfolg
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
@@ -100,7 +170,15 @@ public class StudentController {
         return ResponseEntity.noContent().build();
     }
 
-
+    /**
+     * Ruft die Daten des aktuell angemeldeten Schülers ab.
+     * <p>
+     * Self-Service-Endpunkt für Schüler, um ihre eigenen Daten einzusehen.
+     * Verwendet JWT-Token zur Identifikation des Schülers.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit den Schülerdaten als DTO
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me")
     public ResponseEntity<StudentDTO> getCurrentStudent(@RequestHeader("Authorization") String token) {
@@ -115,7 +193,14 @@ public class StudentController {
         return ResponseEntity.ok(studentMapper.toDTO(student));
     }
 
-
+    /**
+     * Ruft die Gesamtanzahl der Abwesenheiten des aktuellen Schülers ab.
+     * <p>
+     * Self-Service-Endpunkt für Schüler zur Einsicht ihrer Abwesenheitsstatistik.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Map containing "total" als Schlüssel
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/total-absences")
     public ResponseEntity<Map<String, Integer>> getTotalAbsencesForCurrentStudent(@RequestHeader("Authorization") String token) {
@@ -129,7 +214,15 @@ public class StudentController {
         return ResponseEntity.ok(Map.of("total", total));
     }
 
-
+    /**
+     * Ruft die nächsten anstehenden Unterrichtsstunden des Schülers ab.
+     * <p>
+     * Self-Service-Endpunkt, der eine intelligente Analyse des Stundenplans
+     * durchführt und die nächsten 3 anstehenden Stunden zurückgibt.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Liste der nächsten Unterrichtsstunden
+     */
     @GetMapping("/me/upcoming-classes")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<ScheduleDTO>> getUpcomingClassesForCurrentStudent(@RequestHeader("Authorization") String token) {
@@ -143,6 +236,16 @@ public class StudentController {
         return ResponseEntity.ok(dtos);
     }
 
+    /**
+     * Lädt ein Profilbild für den aktuellen Schüler hoch.
+     * <p>
+     * Self-Service-Endpunkt für Schüler zum Upload ihres Profilbilds.
+     * Unterstützt gängige Bildformate und speichert das Bild im konfigurierten Verzeichnis.
+     *
+     * @param token JWT-Authorization-Header
+     * @param file  Hochzuladende Bilddatei
+     * @return ResponseEntity mit der generierten Bild-URL als JSON
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @PostMapping("/me/profile-image")
     public ResponseEntity<String> uploadStudentProfileImage(
@@ -150,14 +253,14 @@ public class StudentController {
             @RequestParam("profileImage") MultipartFile file) {
         try {
             if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("No file uploaded");
+                return ResponseEntity.badRequest().body("Keine Datei hochgeladen");
             }
 
             String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
             Student student = studentService.findByUsername(username);
 
             if (student == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Student not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Schüler nicht gefunden");
             }
 
             File uploadDirectory = new File(uploadDir);
@@ -175,10 +278,22 @@ public class StudentController {
 
             return ResponseEntity.ok("{\"imageUrl\": \"" + imageUrl + "\"}");
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Fehler beim Hochladen der Datei: " + e.getMessage());
         }
     }
 
+    /**
+     * Ruft die Bestellhistorie des aktuellen Schülers ab.
+     * <p>
+     * Self-Service-Endpunkt für Schüler zur Einsicht ihrer Cafeteria-Bestellungen
+     * für einen bestimmten Monat und Jahr.
+     *
+     * @param token JWT-Authorization-Header
+     * @param month Monat für den Bericht (1-12)
+     * @param year  Jahr für den Bericht
+     * @return ResponseEntity mit Liste der Bestellungen als DTOs
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/orders")
     public ResponseEntity<?> getStudentOrders(

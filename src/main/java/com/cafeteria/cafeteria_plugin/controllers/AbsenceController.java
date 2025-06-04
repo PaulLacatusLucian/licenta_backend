@@ -19,26 +19,89 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * REST-Controller für alle abwesenheitsbezogenen Operationen.
+ * <p>
+ * Diese Klasse stellt HTTP-Endpunkte für die Verwaltung von Schülerabwesenheiten bereit
+ * und ermöglicht sowohl administrative Operationen als auch schüler- und lehrerspezifische
+ * Funktionen zur Abwesenheitsverwaltung.
+ * <p>
+ * Hauptfunktionen:
+ * - CRUD-Operationen für Abwesenheiten (Lehrer/Admin)
+ * - Abwesenheitserfassung in Unterrichtsstunden
+ * - Entschuldigungsverwaltung für Abwesenheiten
+ * - Self-Service für Schüler zur Einsicht eigener Abwesenheiten
+ * - Klassenspezifische Abwesenheitsübersicht für Klassenlehrer
+ * - Integration mit dem Katalog-System
+ * <p>
+ * Sicherheit:
+ * - Rollenbasierte Zugriffskontrolle
+ * - JWT-Token-Validierung
+ * - Kontextabhängige Datenfilterung
+ *
+ * @author Paul Lacatus
+ * @version 1.0
+ * @see AbsenceService
+ * @see Absence
+ * @see AbsenceDTO
+ * @since 2025-01-01
+ */
 @RestController
 @RequestMapping("/absences")
 public class AbsenceController {
 
+    /**
+     * Service für Abwesenheitsoperationen.
+     */
     @Autowired
     private AbsenceService absenceService;
+
+    /**
+     * Service für Unterrichtsstunden-Operationen.
+     */
     @Autowired
     private ClassSessionService classSessionService;
+
+    /**
+     * Service für Schüleroperationen.
+     */
     @Autowired
     private StudentService studentService;
+
+    /**
+     * Mapper für Abwesenheits-DTOs.
+     */
     @Autowired
     private AbsenceMapper absenceMapper;
+
+    /**
+     * Service für Katalogoperationen.
+     */
     @Autowired
     private CatalogService catalogService;
+
+    /**
+     * Service für Lehreroperationen.
+     */
     @Autowired
     private TeacherService teacherService;
+
+    /**
+     * Utility für JWT-Token-Verarbeitung.
+     */
     @Autowired
     private JwtUtil jwtUtil;
 
-
+    /**
+     * Fügt eine Abwesenheit zu einer bestimmten Unterrichtsstunde hinzu.
+     * <p>
+     * Nur Lehrer und Administratoren können Abwesenheiten erfassen.
+     * Die Abwesenheit wird automatisch im Katalog vermerkt.
+     *
+     * @param sessionId ID der Unterrichtsstunde
+     * @param request   DTO mit Schüler-ID und weiteren Abwesenheitsdaten
+     * @return ResponseEntity mit der erstellten Abwesenheit als DTO
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping("/session/{sessionId}")
     public ResponseEntity<AbsenceDTO> addAbsenceToSession(@PathVariable Long sessionId, @RequestBody AddAbsenceRequestDTO request) {
@@ -53,7 +116,14 @@ public class AbsenceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(absenceMapper.toDto(saved));
     }
 
-
+    /**
+     * Ruft alle Abwesenheiten im System ab.
+     * <p>
+     * Nur für Lehrer und Administratoren zugänglich.
+     * Gibt eine vollständige Liste aller erfassten Abwesenheiten zurück.
+     *
+     * @return ResponseEntity mit Liste aller Abwesenheiten als DTOs
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<AbsenceDTO>> getAllAbsences() {
@@ -62,7 +132,14 @@ public class AbsenceController {
         return ResponseEntity.ok(dtos);
     }
 
-
+    /**
+     * Ruft eine spezifische Abwesenheit anhand ihrer ID ab.
+     * <p>
+     * Nur für Lehrer und Administratoren zugänglich.
+     *
+     * @param id Eindeutige ID der Abwesenheit
+     * @return ResponseEntity mit der Abwesenheit als DTO oder 404 falls nicht gefunden
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<AbsenceDTO> getAbsenceById(@PathVariable Long id) {
@@ -71,7 +148,16 @@ public class AbsenceController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
+    /**
+     * Aktualisiert eine bestehende Abwesenheit.
+     * <p>
+     * Ermöglicht die Änderung von Abwesenheitsdaten, insbesondere
+     * des Entschuldigungsstatus und der Zuordnung zu Stunden/Schülern.
+     *
+     * @param id      ID der zu aktualisierenden Abwesenheit
+     * @param request DTO mit neuen Abwesenheitsdaten
+     * @return ResponseEntity mit der aktualisierten Abwesenheit als DTO
+     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<AbsenceDTO> updateAbsence(@PathVariable Long id, @RequestBody AddAbsenceRequestDTO request) {
@@ -89,7 +175,15 @@ public class AbsenceController {
         return ResponseEntity.ok(absenceMapper.toDto(saved));
     }
 
-
+    /**
+     * Löscht eine Abwesenheit vollständig aus dem System.
+     * <p>
+     * Nur Lehrer und Administratoren können Abwesenheiten löschen.
+     * Führt eine sichere Löschung mit Bereinigung aller Referenzen durch.
+     *
+     * @param id ID der zu löschenden Abwesenheit
+     * @return ResponseEntity mit No-Content-Status bei Erfolg
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAbsence(@PathVariable Long id) {
@@ -97,7 +191,15 @@ public class AbsenceController {
         return ResponseEntity.noContent().build();
     }
 
-
+    /**
+     * Ruft alle Abwesenheiten des aktuell angemeldeten Schülers ab.
+     * <p>
+     * Self-Service-Endpunkt für Schüler zur Einsicht ihrer eigenen Abwesenheiten.
+     * Verwendet JWT-Token zur Identifikation des Schülers.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Liste der Schülerabwesenheiten als DTOs
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me")
     public ResponseEntity<List<AbsenceDTO>> getAbsencesForCurrentStudent(@RequestHeader("Authorization") String token) {
@@ -112,6 +214,15 @@ public class AbsenceController {
         return ResponseEntity.ok(dtoList);
     }
 
+    /**
+     * Ruft alle Abwesenheiten eines bestimmten Schülers ab.
+     * <p>
+     * Nur für Lehrer und Administratoren zugänglich.
+     * Ermöglicht die Einsicht in die Abwesenheitshistorie eines spezifischen Schülers.
+     *
+     * @param studentId ID des Schülers
+     * @return ResponseEntity mit Liste der Schülerabwesenheiten als DTOs
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @GetMapping("/student/{studentId}")
     public ResponseEntity<List<AbsenceDTO>> getAbsencesForStudent(@PathVariable Long studentId) {
@@ -120,6 +231,15 @@ public class AbsenceController {
         return ResponseEntity.ok(dtoList);
     }
 
+    /**
+     * Entschuldigt eine bestehende Abwesenheit.
+     * <p>
+     * Nur Lehrer und Administratoren können Abwesenheiten entschuldigen.
+     * Die Entschuldigung wird sowohl in der Abwesenheit als auch im Katalog vermerkt.
+     *
+     * @param id ID der zu entschuldigenden Abwesenheit
+     * @return ResponseEntity mit der aktualisierten Abwesenheit als DTO
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}/justify")
     public ResponseEntity<AbsenceDTO> justifyAbsence(@PathVariable Long id) {
@@ -140,6 +260,17 @@ public class AbsenceController {
         }
     }
 
+    /**
+     * Ruft alle unentschuldigten Abwesenheiten für die Klasse des angemeldeten Lehrers ab.
+     * <p>
+     * Nur für Klassenlehrer zugänglich. Der Endpunkt überprüft, ob der angemeldete
+     * Lehrer als Klassenlehrer einer Klasse zugeordnet ist und gibt dann alle
+     * unentschuldigten Abwesenheiten dieser Klasse zurück.
+     *
+     * @param token JWT-Authorization-Header
+     * @return ResponseEntity mit Liste der unentschuldigten Abwesenheiten als DTOs
+     *         oder 403 Forbidden falls der Lehrer kein Klassenlehrer ist
+     */
     @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/class/unjustified")
     public ResponseEntity<List<AbsenceDTO>> getUnjustifiedAbsencesForClass(@RequestHeader("Authorization") String token) {
@@ -155,5 +286,4 @@ public class AbsenceController {
         List<AbsenceDTO> dtoList = absences.stream().map(absenceMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(dtoList);
     }
-
 }

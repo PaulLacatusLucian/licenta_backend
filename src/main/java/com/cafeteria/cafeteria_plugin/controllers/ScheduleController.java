@@ -24,32 +24,114 @@ import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
 import java.util.*;
 
+/**
+ * REST-Controller für die Verwaltung von Stundenplänen und Unterrichtsplänen.
+ * <p>
+ * Diese Klasse stellt HTTP-Endpunkte für die umfassende Verwaltung von
+ * Stundenplänen bereit und ermöglicht die Erstellung, Bearbeitung und
+ * Abfrage von Unterrichtsplänen für verschiedene Klassen und Bildungsebenen.
+ * Sie unterstützt sowohl die administrative Stundenplanverwaltung als auch
+ * die personalisierte Stundenplaneinsicht für Schüler.
+ * <p>
+ * Hauptfunktionen:
+ * - CRUD-Operationen für Stundenplaneinträge
+ * - Bildungsebenen-spezifische Lehrervalidierung
+ * - Automatische Unterrichtsstunden-Erstellung bei Stundenplanerstellung
+ * - Tages- und wöchentliche Stundenplanabfragen
+ * - JWT-basierte personalisierte Stundenplaneinsicht für Schüler
+ * - Zeitvalidierung und Konfliktprüfung
+ * - Mehrsprachige Tagesunterstützung (Englisch-Rumänisch-Übersetzung)
+ * <p>
+ * Bildungsebenen-Regeln:
+ * - Grundschule (PRIMARY): Erfordert Erzieher als Klassenlehrer
+ * - Mittel-/Oberschule: Erfordert reguläre Fachlehrer
+ * - Automatische Lehrerzuordnung basierend auf Bildungsebene
+ * - Validierung der Lehrer-Klassen-Zuordnung
+ * <p>
+ * Sicherheit:
+ * - Rollenbasierte Zugriffskontrolle für verschiedene Operationen
+ * - Lehrer und Administratoren können Stundenpläne verwalten
+ * - Schüler können nur ihre eigenen Stundenpläne einsehen
+ * - JWT-Authentifizierung für personalisierte Abfragen
+ * - Sichere Datenvalidierung bei Erstellung und Aktualisierung
+ *
+ * @author Paul Lacatus
+ * @version 1.0
+ * @see ScheduleService
+ * @see Schedule
+ * @see ClassSession
+ * @see Teacher
+ * @see Student
+ * @since 2025-01-01
+ */
 @RestController
 @RequestMapping("/schedules")
 public class ScheduleController {
 
+    /**
+     * Service für Stundenplan-Operationen und -Verwaltung.
+     */
     @Autowired
     private ScheduleService scheduleService;
 
+    /**
+     * Service für Unterrichtsstunden-Operationen.
+     */
     @Autowired
     private ClassSessionService classSessionService;
 
+    /**
+     * Mapper für Transformation von Schedule-Entitäten in DTOs.
+     */
     @Autowired
     private ScheduleMapper scheduleMapper;
 
+    /**
+     * Service für Lehreroperationen und -validierung.
+     */
     @Autowired
     private TeacherService teacherService;
 
+    /**
+     * Service für Schüleroperationen.
+     */
     @Autowired
     private StudentService studentService;
 
+    /**
+     * Hilfsprogramm für JWT-Token-Verwaltung.
+     */
     @Autowired
     private JwtUtil jwtUtil;
 
+    /**
+     * Service für Klassenoperationen und -validierung.
+     */
     @Autowired
     private ClassService classService;
 
-
+    /**
+     * Fügt einen neuen Stundenplaneintrag hinzu mit automatischer Unterrichtsstunden-Erstellung.
+     * <p>
+     * Nur für Lehrer und Administratoren zugänglich.
+     * Erstellt einen neuen Stundenplaneintrag mit umfassender Validierung
+     * der Bildungsebenen-Regeln und automatischer Zuordnung entsprechender Lehrer.
+     * Generiert automatisch eine korrespondierende Unterrichtsstunde für
+     * die spätere Anwesenheits- und Notenverwaltung.
+     * <p>
+     * Bildungsebenen-Logik:
+     * - PRIMARY (Grundschule): Automatische Zuordnung des Klassenerziehers
+     * - MIDDLE/HIGH: Manuelle Lehrerauswahl erforderlich
+     * - Validierung der Lehrer-Typ-Kompatibilität
+     * <p>
+     * Zeitvalidierung:
+     * - Parsing von Start- und Endzeiten im Format "H:mm"
+     * - Validierung dass Endzeit nach Startzeit liegt
+     * - Automatische ClassSession-Erstellung mit korrekten Zeitstempeln
+     *
+     * @param schedule Stundenplan-Objekt mit allen erforderlichen Daten
+     * @return ResponseEntity mit erstelltem Stundenplan oder Fehler bei ungültigen Daten
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ScheduleDTO> addSchedule(@RequestBody Schedule schedule) {
@@ -60,7 +142,7 @@ public class ScheduleController {
 
             com.cafeteria.cafeteria_plugin.models.Class fullClass =
                     classService.getClassById(schedule.getStudentClass().getId())
-                            .orElseThrow(() -> new IllegalArgumentException("Clasa nu a fost găsită"));
+                            .orElseThrow(() -> new IllegalArgumentException("Klasse wurde nicht gefunden"));
 
             schedule.setStudentClass(fullClass);
 
@@ -105,12 +187,21 @@ public class ScheduleController {
             return ResponseEntity.ok(scheduleMapper.toDto(savedSchedule));
 
         } catch (Exception e) {
-            System.out.println("Error processing schedule: " + e.getMessage());
+            System.out.println("Fehler bei der Stundenplan-Verarbeitung: " + e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
-
+    /**
+     * Ruft alle Stundenpläne im System ab.
+     * <p>
+     * Öffentlich zugängliche Methode für administrative Übersichten.
+     * Gibt eine vollständige Liste aller registrierten Stundenpläne
+     * zurück, einschließlich aller Klassen, Lehrer und Fächer.
+     * Nützlich für systemweite Stundenplananalysen und Berichte.
+     *
+     * @return ResponseEntity mit der Liste aller Stundenpläne im System
+     */
     @GetMapping
     public ResponseEntity<List<ScheduleDTO>> getAllSchedules() {
         List<ScheduleDTO> dtos = scheduleService.getAllSchedules().stream()
@@ -119,7 +210,16 @@ public class ScheduleController {
         return ResponseEntity.ok(dtos);
     }
 
-
+    /**
+     * Ruft einen spezifischen Stundenplan anhand seiner ID ab.
+     * <p>
+     * Ermöglicht den Abruf detaillierter Informationen zu einem
+     * einzelnen Stundenplaneintrag einschließlich aller zugeordneten
+     * Lehrer, Fächer und Zeitinformationen.
+     *
+     * @param id Eindeutige ID des Stundenplans
+     * @return ResponseEntity mit Stundenplan-Details oder 404 falls nicht gefunden
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ScheduleDTO> getScheduleById(@PathVariable Long id) {
         return scheduleService.getScheduleById(id)
@@ -128,14 +228,35 @@ public class ScheduleController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
+    /**
+     * Aktualisiert einen existierenden Stundenplan.
+     * <p>
+     * Nur für Lehrer und Administratoren zugänglich.
+     * Ermöglicht die Änderung aller Stundenplan-Attribute einschließlich
+     * Zeiten, Lehrer, Fächer und Klassenzuordnungen.
+     * Führt die gleichen Validierungen durch wie bei der Erstellung.
+     *
+     * @param id       ID des zu aktualisierenden Stundenplans
+     * @param schedule Stundenplan-Objekt mit neuen Daten
+     * @return ResponseEntity mit aktualisiertem Stundenplan
+     */
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Schedule> updateSchedule(@PathVariable Long id, @RequestBody Schedule schedule) {
         return ResponseEntity.ok(scheduleService.updateSchedule(id, schedule));
     }
 
-
+    /**
+     * Löscht einen Stundenplan vollständig aus dem System.
+     * <p>
+     * Nur für Administratoren zugänglich.
+     * Entfernt den Stundenplan und alle zugehörigen Referenzen
+     * aus dem System. Kann Auswirkungen auf verknüpfte
+     * Unterrichtsstunden haben.
+     *
+     * @param id ID des zu löschenden Stundenplans
+     * @return ResponseEntity mit No-Content-Status bei Erfolg
+     */
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(@PathVariable Long id) {
@@ -143,7 +264,16 @@ public class ScheduleController {
         return ResponseEntity.noContent().build();
     }
 
-
+    /**
+     * Ruft alle Stundenpläne für eine spezifische Klasse ab.
+     * <p>
+     * Gibt den kompletten Wochenstundenplan für eine bestimmte
+     * Klasse zurück, einschließlich aller Fächer, Lehrer und Zeiten.
+     * Nützlich für Klassenübersichten und Stundenplan-Darstellungen.
+     *
+     * @param classId ID der Klasse, deren Stundenplan abgerufen werden soll
+     * @return ResponseEntity mit der Liste aller Stundenpläne der Klasse
+     */
     @GetMapping("/class/{classId}")
     public ResponseEntity<List<ScheduleDTO>> getSchedulesByClassId(@PathVariable Long classId) {
         List<ScheduleDTO> dtos = scheduleService.getSchedulesByClassId(classId).stream()
@@ -152,7 +282,17 @@ public class ScheduleController {
         return ResponseEntity.ok(dtos);
     }
 
-
+    /**
+     * Ruft den heutigen Stundenplan für eine spezifische Klasse ab.
+     * <p>
+     * Filtert die Stundenpläne einer Klasse nach dem aktuellen Tag
+     * und gibt nur die heute stattfindenden Unterrichtsstunden zurück.
+     * Verwendet automatische Tagesbestimmung und Mehrsprachen-Übersetzung
+     * von Englisch zu Rumänisch für Tagesbezeichnungen.
+     *
+     * @param classId ID der Klasse, deren heutiger Stundenplan abgerufen werden soll
+     * @return ResponseEntity mit der Liste der heutigen Unterrichtsstunden
+     */
     @GetMapping("/class/{classId}/today")
     public ResponseEntity<List<ScheduleDTO>> getSchedulesForToday(@PathVariable Long classId) {
         String englishCurrentDay = LocalDate.now()
@@ -171,7 +311,17 @@ public class ScheduleController {
         return ResponseEntity.ok(dtos);
     }
 
-
+    /**
+     * Ruft den morgigen Stundenplan für eine spezifische Klasse ab.
+     * <p>
+     * Filtert die Stundenpläne einer Klasse nach dem morgigen Tag
+     * und gibt nur die morgen stattfindenden Unterrichtsstunden zurück.
+     * Verwendet Klassennamen anstatt ID für flexiblere Abfragen
+     * und automatische Tagesberechnung mit Sprach-Übersetzung.
+     *
+     * @param className Name der Klasse, deren morgiger Stundenplan abgerufen werden soll
+     * @return ResponseEntity mit der Liste der morgigen Unterrichtsstunden
+     */
     @GetMapping("/class/{className}/tomorrow")
     public ResponseEntity<List<ScheduleDTO>> getSchedulesForTomorrow(@PathVariable String className) {
         String englishNextDay = LocalDate.now()
@@ -193,7 +343,17 @@ public class ScheduleController {
         return ResponseEntity.ok(dtos);
     }
 
-
+    /**
+     * Ruft den wöchentlichen Stundenplan für den angemeldeten Schüler ab.
+     * <p>
+     * Nur für Schüler mit STUDENT-Rolle zugänglich.
+     * Ermöglicht es Schülern, ihren kompletten Wochenstundenplan
+     * einzusehen. Der Schüler wird über den JWT-Token identifiziert
+     * und der Stundenplan seiner Klasse automatisch abgerufen.
+     *
+     * @param token JWT-Authentifizierungs-Token des Schülers
+     * @return ResponseEntity mit dem wöchentlichen Stundenplan oder 404 falls Schüler nicht gefunden
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/weekly")
     public ResponseEntity<List<ScheduleDTO>> getWeeklyScheduleForStudent(@RequestHeader("Authorization") String token) {
@@ -214,7 +374,24 @@ public class ScheduleController {
         return ResponseEntity.ok(schedule);
     }
 
-
+    /**
+     * Ruft den heutigen Stundenplan für den angemeldeten Schüler ab.
+     * <p>
+     * Nur für Schüler mit STUDENT-Rolle zugänglich.
+     * Ermöglicht es Schülern, ihren heutigen Stundenplan einzusehen.
+     * Der Schüler wird über den JWT-Token identifiziert und nur
+     * die heute stattfindenden Unterrichtsstunden seiner Klasse
+     * werden zurückgegeben.
+     * <p>
+     * Funktionalität:
+     * - Automatische Schüleridentifikation über JWT
+     * - Tagesberechnung und Sprachübersetzung
+     * - Filterung nach aktuellem Tag
+     * - Personalisierte Stundenplaneinsicht
+     *
+     * @param token JWT-Authentifizierungs-Token des Schülers
+     * @return ResponseEntity mit dem heutigen Stundenplan oder 404 falls Schüler nicht gefunden
+     */
     @PreAuthorize("hasRole('STUDENT')")
     @GetMapping("/me/today")
     public ResponseEntity<List<ScheduleDTO>> getTodayScheduleForStudent(@RequestHeader("Authorization") String token) {
@@ -241,7 +418,14 @@ public class ScheduleController {
         return ResponseEntity.ok(schedule);
     }
 
-
+    /**
+     * Übersetzungstabelle für Tagesbezeichnungen von Englisch zu Rumänisch.
+     * <p>
+     * Statische Zuordnung zur Konvertierung der Java-Tagesbezeichnungen
+     * (die in englischer Sprache geliefert werden) zu den im System
+     * verwendeten rumänischen Tagesbezeichnungen. Wird für die
+     * tagesbasierten Stundenplanfilterungen verwendet.
+     */
     private static final Map<String, String> DAY_TRANSLATION = new HashMap<>() {{
         put("Monday", "Luni");
         put("Tuesday", "Marți");

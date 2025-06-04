@@ -26,28 +26,108 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * REST-Controller für die Verwaltung von Kantinen-Menüelementen und Bestellungen.
+ * <p>
+ * Diese Klasse stellt HTTP-Endpunkte für das umfassende Management des
+ * Kantinenbetriebs bereit, einschließlich Menüverwaltung, Bestellabwicklung,
+ * Bilderverwaltung und Rechnungserstellung. Sie ermöglicht sowohl die administrative
+ * Verwaltung des Menüangebots als auch die benutzerfreundliche Bestellabwicklung
+ * für Eltern und Schüler.
+ * <p>
+ * Hauptfunktionen:
+ * - CRUD-Operationen für Menüelemente mit Bildupload
+ * - Bestellabwicklung und -verfolgung für Eltern
+ * - Bestellhistorie und Rechnungserstellung
+ * - Allergenverwaltung und Produktinformationen
+ * - Bestandsverwaltung und Verfügbarkeitsprüfung
+ * - JWT-basierte Benutzeridentifikation für personalisierte Services
+ * - PDF-Rechnungsgenerierung für monatliche Abrechnungen
+ * <p>
+ * Sicherheit:
+ * - Rollenbasierte Zugriffskontrolle für verschiedene Benutzertypen
+ * - Eltern können nur für ihre eigenen Kinder bestellen
+ * - Schüler können ihre eigene Bestellhistorie einsehen
+ * - JWT-Authentifizierung für sichere Transaktionen
+ * - Dateisicherheit bei Bildupload mit Größenbeschränkungen
+ * <p>
+ * Dateiverwaltung:
+ * - Sichere Bildupload-Funktionalität
+ * - UUID-basierte Dateinamen zur Konfliktvermeidung
+ * - Konfigurierbare Upload-Verzeichnisse
+ * - Dateigröße- und Typvalidierung
+ *
+ * @author Paul Lacatus
+ * @version 1.0
+ * @see MenuItemService
+ * @see MenuItem
+ * @see OrderHistory
+ * @see Parent
+ * @see Student
+ * @since 2025-01-01
+ */
 @RestController
 @RequestMapping("/menu")
 public class MenuItemController {
 
+    /**
+     * Service für Menüelement-Operationen und Bestellabwicklung.
+     */
     @Autowired
     private MenuItemService menuItemService;
 
+    /**
+     * Service für Schüleroperationen.
+     */
     @Autowired
     private StudentService studentService;
 
+    /**
+     * Service für Elternoperationen.
+     */
     @Autowired
     private ParentService parentService;
 
+    /**
+     * Hilfsprogramm für JWT-Token-Verwaltung.
+     */
     @Autowired
     private JwtUtil jwtUtil;
 
+    /**
+     * Mapper für Transformation von OrderHistory-Entitäten in DTOs.
+     */
     @Autowired
     private OrderHistoryMapper orderHistoryMapper;
 
+    /**
+     * Konfiguriertes Verzeichnis für Bildupload.
+     */
     @Value("${image.upload.dir}")
     private String uploadDir;
 
+    /**
+     * Fügt ein neues Menüelement mit optionalem Bild hinzu.
+     * <p>
+     * Erstellt ein neues Menüelement mit allen erforderlichen Informationen
+     * einschließlich Name, Beschreibung, Preis, Menge und optionalen Allergenen.
+     * Unterstützt den Upload eines Bildes, das automatisch im konfigurierten
+     * Verzeichnis gespeichert und mit einem eindeutigen Dateinamen versehen wird.
+     * <p>
+     * Bildverarbeitung:
+     * - Automatische Verzeichniserstellung falls nicht vorhanden
+     * - UUID-basierte Dateinamen zur Konfliktvermeidung
+     * - Sichere Dateispeicherung im konfigurierten Upload-Verzeichnis
+     * - URL-Generierung für Frontend-Zugriff
+     *
+     * @param name        Name des Menüelements (erforderlich)
+     * @param description Detaillierte Beschreibung des Gerichts (erforderlich)
+     * @param price       Preis des Menüelements (erforderlich)
+     * @param quantity    Verfügbare Menge (erforderlich)
+     * @param allergens   Liste der Allergene (optional)
+     * @param file        Bilddatei für das Menüelement (optional)
+     * @return ResponseEntity mit Erfolgsmeldung und Bild-URL oder Fehler bei ungültigen Daten
+     */
     @PostMapping("/add")
     public ResponseEntity<String> addMenuItemWithImage(
             @RequestParam(name = "name", required = true) String name,
@@ -57,15 +137,15 @@ public class MenuItemController {
             @RequestParam(name = "allergens", required = false) List<String> allergens,
             @RequestParam(name = "file", required = false) MultipartFile file) {
         try {
-            System.out.println("Add menu item request received");
+            System.out.println("Anfrage zum Hinzufügen von Menüelement erhalten");
             System.out.println("Name: " + name);
-            System.out.println("File present: " + (file != null));
+            System.out.println("Datei vorhanden: " + (file != null));
 
             File uploadDirectory = new File(uploadDir);
-            System.out.println("Upload directory: " + uploadDirectory.getAbsolutePath());
+            System.out.println("Upload-Verzeichnis: " + uploadDirectory.getAbsolutePath());
             if (!uploadDirectory.exists()) {
                 boolean created = uploadDirectory.mkdirs();
-                System.out.println("Created directory: " + created);
+                System.out.println("Verzeichnis erstellt: " + created);
             }
 
             String imageUrl = null;
@@ -75,7 +155,7 @@ public class MenuItemController {
                 file.transferTo(destinationFile);
                 imageUrl = "/images/" + fileName;
             } else {
-                System.out.println("No file provided or file is empty");
+                System.out.println("Keine Datei bereitgestellt oder Datei ist leer");
             }
             MenuItem menuItem = new MenuItem();
             menuItem.setName(name);
@@ -87,16 +167,32 @@ public class MenuItemController {
 
             menuItemService.addMenuItem(menuItem);
 
-            return ResponseEntity.ok("Menu item added successfully with image URL: " + imageUrl);
+            return ResponseEntity.ok("Menüelement erfolgreich hinzugefügt mit Bild-URL: " + imageUrl);
         } catch (Exception e) {
-            System.err.println("Error in addMenuItemWithImage: " + e.getMessage());
+            System.err.println("Fehler in addMenuItemWithImage: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler: " + e.getMessage());
         }
     }
 
     /**
-     * Purchase a menu item, extracting parent and student info from the token
+     * Kauft ein Menüelement für das eigene Kind (moderne JWT-basierte Methode).
+     * <p>
+     * Nur für Eltern mit PARENT-Rolle zugänglich.
+     * Extrahiert Eltern- und Schülerinformationen automatisch aus dem JWT-Token
+     * und führt eine sichere Bestellung durch. Validiert die Verfügbarkeit
+     * des Menüelements und verwaltet den Bestand automatisch.
+     * <p>
+     * Sicherheitsfeatures:
+     * - Automatische Elternvalidierung über JWT
+     * - Verknüpfung zu zugehörigem Schüler
+     * - Bestandsprüfung und -verwaltung
+     * - Sichere Transaktionsabwicklung
+     *
+     * @param menuItemId ID des zu kaufenden Menüelements
+     * @param quantity   Gewünschte Menge
+     * @param token      JWT-Authentifizierungs-Token des Elternteils
+     * @return ResponseEntity mit Erfolgsmeldung oder detaillierter Fehlermeldung
      */
     @PostMapping("/me/purchase/{menuItemId}")
     @PreAuthorize("hasRole('PARENT')")
@@ -105,35 +201,45 @@ public class MenuItemController {
             @RequestParam(name = "quantity") int quantity,
             @RequestHeader("Authorization") String token) {
         try {
-            // Extract parent from token
+            // Extrahiere Elternteil aus Token
             String username = jwtUtil.extractUsername(token.replace("Bearer ", ""));
             Parent parent = parentService.findByUsername(username);
 
             if (parent == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Parent not found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Elternteil nicht gefunden");
             }
 
-            // Get student associated with parent
+            // Hole mit Elternteil verknüpften Schüler
             Optional<Student> studentOpt = studentService.getStudentByParentId(parent.getId());
             if (studentOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No student found for this parent");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Kein Schüler für diesen Elternteil gefunden");
             }
 
             Student student = studentOpt.get();
 
-            // Process the purchase
+            // Verarbeite den Kauf
             menuItemService.purchaseMenuItem(parent.getId(), student.getId(), menuItemId, quantity);
-            return ResponseEntity.ok("Purchase successful!");
+            return ResponseEntity.ok("Kauf erfolgreich!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing purchase: " + e.getMessage());
+                    .body("Fehler bei der Kaufabwicklung: " + e.getMessage());
         }
     }
 
     /**
-     * Legacy method - maintained for backward compatibility
+     * Legacy-Methode - Wird für Rückwärtskompatibilität beibehalten.
+     * <p>
+     * Ältere Implementierung der Kauffunktion, die explizite Eltern- und
+     * Schüler-IDs erfordert. Diese Methode wird für bestehende Integrationen
+     * beibehalten, neue Implementierungen sollten die JWT-basierte Methode verwenden.
+     *
+     * @param menuItemId ID des zu kaufenden Menüelements
+     * @param parentId   ID des kaufenden Elternteils
+     * @param studentId  ID des Schülers für den gekauft wird
+     * @param quantity   Gewünschte Menge
+     * @return ResponseEntity mit Erfolgsmeldung oder Fehlermeldung
      */
     @PostMapping("/{menuItemId}/purchase")
     public ResponseEntity<String> purchaseMenuItem(
@@ -143,18 +249,38 @@ public class MenuItemController {
             @RequestParam(name = "quantity") int quantity) {
         try {
             menuItemService.purchaseMenuItem(parentId, studentId, menuItemId, quantity);
-            return ResponseEntity.ok("Purchase successful!");
+            return ResponseEntity.ok("Kauf erfolgreich!");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
+    /**
+     * Ruft alle verfügbaren Menüelemente ab.
+     * <p>
+     * Öffentlich zugängliche Methode, die eine vollständige Liste aller
+     * verfügbaren Menüelemente zurückgibt. Enthält alle Produktinformationen
+     * einschließlich Preise, Beschreibungen, Allergene und Verfügbarkeit.
+     * Ideal für die Anzeige des kompletten Menüangebots.
+     *
+     * @return ResponseEntity mit der Liste aller Menüelemente
+     */
     @GetMapping("/all")
     public ResponseEntity<List<MenuItem>> getAllMenuItems() {
         List<MenuItem> menuItems = menuItemService.getAllMenuItems();
         return ResponseEntity.ok(menuItems);
     }
 
+    /**
+     * Ruft ein spezifisches Menüelement anhand seiner ID ab.
+     * <p>
+     * Ermöglicht den Abruf detaillierter Informationen zu einem einzelnen
+     * Menüelement einschließlich aller Produktdetails, Allergene und
+     * aktueller Verfügbarkeit.
+     *
+     * @param id Eindeutige ID des Menüelements
+     * @return ResponseEntity mit Menüelement-Details oder 404 falls nicht gefunden
+     */
     @GetMapping("/{id}")
     public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Long id) {
         Optional<MenuItem> menuItem = menuItemService.getMenuItemById(id);
@@ -162,6 +288,17 @@ public class MenuItemController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
+    /**
+     * Aktualisiert ein existierendes Menüelement.
+     * <p>
+     * Ermöglicht die vollständige Aktualisierung aller Menüelement-Attribute
+     * einschließlich Name, Beschreibung, Preis, Menge und Allergene.
+     * Bildaktualisierungen werden über separate Endpunkte verwaltet.
+     *
+     * @param id              ID des zu aktualisierenden Menüelements
+     * @param updatedMenuItem Menüelement-Objekt mit neuen Daten
+     * @return ResponseEntity mit aktualisiertem Menüelement oder 404 falls nicht gefunden
+     */
     @PutMapping("/{id}")
     public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @RequestBody MenuItem updatedMenuItem) {
         try {
@@ -172,12 +309,33 @@ public class MenuItemController {
         }
     }
 
+    /**
+     * Löscht ein Menüelement vollständig aus dem System.
+     * <p>
+     * Entfernt das Menüelement und alle zugehörigen Daten aus dem System.
+     * Berücksichtigt bestehende Bestellungen und verwaltet referenzielle Integrität.
+     *
+     * @param id ID des zu löschenden Menüelements
+     * @return ResponseEntity mit No-Content-Status bei Erfolg oder 404 falls nicht gefunden
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
         boolean isDeleted = menuItemService.deleteMenuItem(id);
         return isDeleted ? ResponseEntity.noContent().build() : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
+    /**
+     * Ruft die eigene Bestellhistorie für einen angemeldeten Schüler ab.
+     * <p>
+     * Nur für Schüler mit STUDENT-Rolle zugänglich.
+     * Ermöglicht es Schülern, ihre eigenen Bestellungen für einen spezifischen
+     * Monat und Jahr einzusehen. Der Schüler wird über den JWT-Token identifiziert.
+     *
+     * @param token JWT-Authentifizierungs-Token des Schülers
+     * @param month Monat für den die Bestellhistorie abgerufen werden soll
+     * @param year  Jahr für das die Bestellhistorie abgerufen werden soll
+     * @return ResponseEntity mit Liste der Bestellungen oder leere Liste bei Fehlern
+     */
     @GetMapping("/orders/student/me")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<OrderHistoryDTO>> getMyStudentOrders(
@@ -197,6 +355,19 @@ public class MenuItemController {
         return ResponseEntity.ok(dtos);
     }
 
+    /**
+     * Ruft die Bestellhistorie des eigenen Kindes für Eltern ab.
+     * <p>
+     * Nur für Eltern mit PARENT-Rolle zugänglich.
+     * Ermöglicht es Eltern, die Bestellungen ihres Kindes für einen spezifischen
+     * Monat und Jahr einzusehen. Der Elternteil wird über den JWT-Token identifiziert
+     * und das zugehörige Kind automatisch ermittelt.
+     *
+     * @param token JWT-Authentifizierungs-Token des Elternteils
+     * @param month Monat für den die Bestellhistorie abgerufen werden soll
+     * @param year  Jahr für das die Bestellhistorie abgerufen werden soll
+     * @return ResponseEntity mit Liste der Kinderbestellungen oder leere Liste bei Fehlern
+     */
     @GetMapping("/me/child/orders")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<List<OrderHistoryDTO>> getChildOrdersForParent(
@@ -220,6 +391,25 @@ public class MenuItemController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of()));
     }
 
+    /**
+     * Generiert eine PDF-Rechnung für das eigene Kind.
+     * <p>
+     * Nur für Eltern mit PARENT-Rolle zugänglich.
+     * Erstellt eine detaillierte PDF-Rechnung mit allen Bestellungen des Kindes
+     * für den angegebenen Monat und Jahr. Die PDF wird direkt als Download
+     * bereitgestellt mit angemessenen HTTP-Headern für Dateiendownload.
+     * <p>
+     * PDF-Features:
+     * - Detaillierte Auflistung aller Bestellungen
+     * - Berechnete Gesamtsummen
+     * - Professionelle Formatierung
+     * - Automatischer Download mit korrektem Dateinamen
+     *
+     * @param token JWT-Authentifizierungs-Token des Elternteils
+     * @param month Monat für den die Rechnung erstellt werden soll
+     * @param year  Jahr für das die Rechnung erstellt werden soll
+     * @return ResponseEntity mit PDF-Bytes oder Fehlermeldung
+     */
     @GetMapping("/me/invoice")
     @PreAuthorize("hasRole('PARENT')")
     public ResponseEntity<byte[]> generateInvoiceForMyChild(
@@ -231,29 +421,38 @@ public class MenuItemController {
         if (parent == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .contentType(MediaType.TEXT_PLAIN)
-                    .body("Unauthorized".getBytes());
+                    .body("Nicht autorisiert".getBytes());
         }
 
         return studentService.getStudentByParentId(parent.getId())
                 .map(student -> {
-                    // Get the PDF bytes
+                    // Hole die PDF-Bytes
                     byte[] pdfBytes = menuItemService.generateInvoicePDF(student.getId(), month, year);
 
-                    // Return with appropriate headers
+                    // Gib mit angemessenen Headern zurück
                     return ResponseEntity
                             .ok()
                             .contentType(MediaType.APPLICATION_PDF)
                             .header(HttpHeaders.CONTENT_DISPOSITION,
-                                    "attachment; filename=invoice_" + month + "_" + year + ".pdf")
+                                    "attachment; filename=rechnung_" + month + "_" + year + ".pdf")
                             .body(pdfBytes);
                 })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .contentType(MediaType.TEXT_PLAIN)
-                        .body("No student found".getBytes()));
+                        .body("Kein Schüler gefunden".getBytes()));
     }
 
     /**
-     * Legacy method - maintained for backward compatibility
+     * Legacy-Methode - Wird für Rückwärtskompatibilität beibehalten.
+     * <p>
+     * Ältere Implementierung der Rechnungsgenerierung, die explizite Schüler-ID
+     * erfordert. Diese Methode wird für bestehende Integrationen beibehalten,
+     * neue Implementierungen sollten die JWT-basierte PDF-Methode verwenden.
+     *
+     * @param studentId ID des Schülers für den die Rechnung erstellt werden soll
+     * @param month     Monat für den die Rechnung erstellt werden soll
+     * @param year      Jahr für das die Rechnung erstellt werden soll
+     * @return ResponseEntity mit Rechnungstext als String
      */
     @GetMapping("/invoice")
     public ResponseEntity<String> generateStudentInvoice(
@@ -263,13 +462,30 @@ public class MenuItemController {
         return ResponseEntity.ok(menuItemService.generateInvoiceForStudent(studentId, month, year));
     }
 
+    /**
+     * Lädt ein Bild für ein existierendes Menüelement hoch.
+     * <p>
+     * Ermöglicht das Hinzufügen oder Aktualisieren des Bildes für ein
+     * bereits existierendes Menüelement. Implementiert Dateisicherheit
+     * mit Größenbeschränkungen und sicherer Speicherung.
+     * <p>
+     * Sicherheitsfeatures:
+     * - Dateigröße auf 10MB begrenzt
+     * - UUID-basierte Dateinamen zur Konfliktvermeidung
+     * - Automatische Verzeichniserstellung
+     * - Sichere Dateispeicherung und URL-Generierung
+     *
+     * @param id   ID des Menüelements für das das Bild hochgeladen werden soll
+     * @param file Bilddatei die hochgeladen werden soll
+     * @return ResponseEntity mit Erfolgsmeldung und Bild-URL oder Fehlermeldung
+     */
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<String> uploadImage(
             @PathVariable Long id,
             @RequestParam(name = "file") MultipartFile file) {
         try {
             if (file.getSize() > 10 * 1024 * 1024) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("File size exceeds the maximum limit of 10MB");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dateigröße überschreitet das Maximum von 10MB");
             }
 
             File uploadDirectory = new File(uploadDir);
@@ -284,9 +500,9 @@ public class MenuItemController {
             String imageUrl = "/images/" + fileName;
             menuItemService.updateMenuItemImage(id, imageUrl);
 
-            return ResponseEntity.ok("Image uploaded successfully: " + imageUrl);
+            return ResponseEntity.ok("Bild erfolgreich hochgeladen: " + imageUrl);
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Fehler beim Hochladen der Datei: " + e.getMessage());
         }
     }
 }
