@@ -9,12 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class StudentMapper {
 
-    private final TeacherMapper teacherMapper;
-
     @Autowired
-    public StudentMapper(TeacherMapper teacherMapper) {
-        this.teacherMapper = teacherMapper;
-    }
+    private TeacherMapper teacherMapper;
 
     public StudentDTO toDTO(Student student) {
         StudentDTO dto = new StudentDTO();

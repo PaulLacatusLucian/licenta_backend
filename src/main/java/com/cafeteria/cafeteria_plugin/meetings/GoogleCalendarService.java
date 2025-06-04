@@ -52,10 +52,10 @@ public class GoogleCalendarService {
 
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("summary", summary);
-        eventData.put("description", "Ședință cu părinții");
+        eventData.put("description", "Elternbesprechung");
 
         Map<String, String> startObj = Map.of(
-                "dateTime",formattedStart,
+                "dateTime", formattedStart,
                 "timeZone", "Europe/Bucharest"
         );
 
@@ -67,14 +67,12 @@ public class GoogleCalendarService {
         eventData.put("start", startObj);
         eventData.put("end", endObj);
 
-        // Participanți
         List<Map<String, String>> attendees = new ArrayList<>();
         for (String email : attendeeEmails) {
             attendees.add(Map.of("email", email));
         }
         eventData.put("attendees", attendees);
 
-        // Link Meet
         Map<String, Object> conferenceData = new HashMap<>();
         Map<String, String> createRequest = new HashMap<>();
         createRequest.put("requestId", UUID.randomUUID().toString());

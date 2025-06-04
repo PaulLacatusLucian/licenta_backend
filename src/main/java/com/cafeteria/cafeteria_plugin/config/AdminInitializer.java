@@ -35,9 +35,9 @@ public class AdminInitializer implements CommandLineRunner {
             admin.setUserType(UserType.ADMIN);
 
             adminRepository.save(admin);
-            System.out.println("✅ Admin default creat: " + defaultUsername + " / admin123!");
+            System.out.println("Standard-Admin wurde erstellt: " + defaultUsername + " / admin123!");
         } else {
-            System.out.println("✅ Admin default deja există.");
+            System.out.println("Standard-Admin existiert bereits.");
         }
     }
 }

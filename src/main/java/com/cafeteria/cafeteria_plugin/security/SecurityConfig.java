@@ -39,7 +39,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        logger.info("Configuring security filter chain");
+        logger.info("Sicherheits-Filterkette wird konfiguriert...");
 
         http
                 .cors()
@@ -50,13 +50,12 @@ public class SecurityConfig {
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/auth/**")).permitAll()
                                 .requestMatchers(AntPathRequestMatcher.antMatcher("/images/**")).permitAll()
-//                        .requestMatchers(AntPathRequestMatcher.antMatcher("/classes/**")).permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
-        logger.info("Security filter chain configured successfully");
+        logger.info("Sicherheits-Filterkette erfolgreich konfiguriert.");
         return http.build();
     }
 }

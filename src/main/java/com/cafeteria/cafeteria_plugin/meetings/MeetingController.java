@@ -24,7 +24,7 @@ public class MeetingController {
         ZonedDateTime end = request.getEndDateTime() != null ? request.getEndDateTime() : start.plusMinutes(30);
 
         return calendarService.createMeeting(
-                "Ședință cu părinții - " + request.getClassName(),
+                "Elternbesprechung - " + request.getClassName(),
                 start,
                 end,
                 request.getParentEmails()

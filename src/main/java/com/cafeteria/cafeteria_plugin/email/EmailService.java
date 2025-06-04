@@ -19,11 +19,11 @@ public class EmailService {
     public void sendResetPasswordEmail(String to, String username, String resetLink) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(to);
-        message.setSubject("Schimbare parolă - Cafeteria System");
-        message.setText("Bună, " + username + ",\n\n"
-                + "Contul tău a fost creat. Pentru a-ți seta parola, accesează linkul de mai jos:\n\n"
+        message.setSubject("Passwort zurücksetzen – Cafeteria System");
+        message.setText("Hallo, " + username + ",\n\n"
+                + "Dein Konto wurde erstellt. Um dein Passwort festzulegen, klicke bitte auf den folgenden Link:\n\n"
                 + resetLink + "\n\n"
-                + "Mulțumim!");
+                + "Vielen Dank!");
         mailSender.send(message);
     }
 
@@ -43,7 +43,7 @@ public class EmailService {
         helper.setSubject(subject);
         helper.setText(content, false);
 
-        helper.setFrom("no-reply@school.edu", "Parent Message via School Portal");
+        helper.setFrom("no-reply@school.edu", "Nachricht von Elternteil über das Schulportal");
         helper.setReplyTo(parentEmail);
 
         mailSender.send(message);

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 
-@Data  // Aceasta include deja getterele
+@Data
 @Entity
 public class Grade {
     @Id

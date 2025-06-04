@@ -17,18 +17,18 @@ public class Schedule {
 
     @ManyToOne
     @JoinColumn(name = "class_id")
-    @JsonBackReference // Evită bucla de serializare
+    @JsonBackReference
     @ToString.Exclude
     private Class studentClass;
 
-    private String scheduleDay; // Ziua săptămânii (ex: Luni, Marți, etc.)
-    private String startTime; // Ora de început
-    private String endTime; // Ora de sfârșit
+    private String scheduleDay;
+    private String startTime;
+    private String endTime;
 
     @ElementCollection
-    private List<String> subjects; // Materiile din ziua respectivă
+    private List<String> subjects;
 
     @ManyToOne
-    @JoinColumn(name = "teacher_id") // Creates a foreign key column in Schedule for teacher reference
-    private Teacher teacher; // Adăugați referința către Teacher
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
 }

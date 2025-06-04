@@ -26,15 +26,15 @@ public class PasswordResetController {
         PasswordResetToken resetToken = passwordResetService.validateToken(token);
 
         if (resetToken == null) {
-            return "reset-password-expired";  // ➤ token invalid sau expirat
+            return "reset-password-expired";
         }
 
         if (resetToken.isUsed()) {
-            return "reset-password-already-used";  // ➤ token deja folosit
+            return "reset-password-already-used";
         }
 
         model.addAttribute("token", token);
-        return "reset-password-form";  // ➤ token valid => form de schimbare parolă
+        return "reset-password-form";
     }
 
     @PostMapping("/reset-password")

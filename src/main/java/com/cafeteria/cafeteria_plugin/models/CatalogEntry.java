@@ -24,13 +24,13 @@ public class CatalogEntry {
     private Student student;
 
     @Enumerated(EnumType.STRING)
-    private EntryType type; // GRADE sau ABSENCE
+    private EntryType type;
 
     private String subject;
 
-    private Double gradeValue; // Pentru note
+    private Double gradeValue;
 
-    private Boolean justified; // Pentru absențe
+    private Boolean justified;
 
     private LocalDateTime date = LocalDateTime.now();
 

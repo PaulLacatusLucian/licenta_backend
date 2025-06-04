@@ -34,7 +34,6 @@ public class JwtFilter extends OncePerRequestFilter {
         System.out.println("📌 Incoming Request: " + requestURI);
         System.out.println("🔍 Authorization Header: " + authHeader);
 
-        // Only these specific endpoints should bypass authentication
         if (requestURI.equals("/auth/login") ||
                 requestURI.equals("/auth/register-admin") ||
                 requestURI.startsWith("/h2-console/")) {
@@ -42,7 +41,6 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Continue with token validation for all other endpoints
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             String username = jwtUtil.extractUsername(token);

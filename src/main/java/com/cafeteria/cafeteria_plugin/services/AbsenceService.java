@@ -17,26 +17,26 @@ public class AbsenceService {
 
     @Autowired
     private AbsenceRepository absenceRepository;
+
     @Autowired
     private StudentRepository studentRepository;
 
-
-    // Adăugarea unei absențe
+    // Neue Abwesenheit speichern
     public Absence addAbsence(Absence absence) {
         return absenceRepository.save(absence);
     }
 
-    // Obținerea tuturor absențelor
+    // Alle Abwesenheiten abrufen
     public List<Absence> getAllAbsences() {
         return absenceRepository.findAll();
     }
 
-    // Obținerea unei absențe după ID
+    // Abwesenheit nach ID abrufen
     public Optional<Absence> getAbsenceById(Long id) {
         return absenceRepository.findById(id);
     }
 
-    // Actualizarea unei absențe
+    // Abwesenheit aktualisieren
     public Absence updateAbsence(Long id, Absence updatedAbsence) {
         return absenceRepository.findById(id)
                 .map(existingAbsence -> {
@@ -44,65 +44,65 @@ public class AbsenceService {
                     existingAbsence.setStudent(updatedAbsence.getStudent());
                     existingAbsence.setJustified(updatedAbsence.getJustified());
                     return absenceRepository.save(existingAbsence);
-                }).orElseThrow(() -> new IllegalArgumentException("Absence not found"));
+                }).orElseThrow(() -> new IllegalArgumentException("Abwesenheit nicht gefunden."));
     }
 
-    // Ștergerea unei absențe
+    // Abwesenheit löschen
     public void deleteAbsence(Long id) {
         absenceRepository.deleteById(id);
     }
 
-    // Calcularea numărului total de absențe pentru un student
+    // Gesamtanzahl der Abwesenheiten eines Schülers abrufen
     public int getTotalAbsencesForStudent(Long studentId) {
         return absenceRepository.countByStudentId(studentId);
     }
 
-    // Validare și salvare absență
+    // Abwesenheit mit Validierung speichern
     public Absence saveAbsence(Absence absence) {
         if (absence.getStudent() == null || absence.getClassSession() == null) {
-            throw new IllegalArgumentException("Student and Class Session are required fields.");
+            throw new IllegalArgumentException("Schüler und Unterrichtseinheit sind Pflichtfelder.");
         }
 
-        // Dacă vrei, poți păstra această verificare (dacă vrei să eviți duplicate)
         boolean exists = absenceRepository.existsByStudentIdAndClassSessionId(
                 absence.getStudent().getId(),
                 absence.getClassSession().getId()
         );
 
         if (exists) {
-            throw new IllegalArgumentException("Absence already exists for this student in this class session.");
+            throw new IllegalArgumentException("Für diesen Schüler in dieser Unterrichtseinheit existiert bereits eine Abwesenheit.");
         }
 
         return absenceRepository.save(absence);
     }
 
+    // Abwesenheiten eines bestimmten Schülers abrufen
     public List<Absence> getAbsencesForStudent(Long studentId) {
         return absenceRepository.findByStudentId(studentId);
     }
 
+    // Prüfen, ob eine Abwesenheit für eine bestimmte Sitzung existiert
     public boolean existsByStudentIdAndClassSessionId(Long studentId, Long classSessionId) {
         return absenceRepository.existsByStudentIdAndClassSessionId(studentId, classSessionId);
     }
 
+    // Abwesenheit als entschuldigt markieren
     public Absence justifyAbsence(Absence absence) {
         absence.setJustified(true);
         return absenceRepository.save(absence);
     }
 
+    // Unentschuldigte Abwesenheiten für eine bestimmte Klasse abrufen
     public List<Absence> getUnjustifiedAbsencesForClass(Long classId) {
-        // Obținem toți elevii din clasă
         List<Student> studentsInClass = studentRepository.findByStudentClassId(classId);
 
         if (studentsInClass.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // Obținem ID-urile elevilor
         List<Long> studentIds = studentsInClass.stream()
                 .map(Student::getId)
                 .collect(Collectors.toList());
 
-        // Returnăm absențele nemotivate pentru acești elevi
         return absenceRepository.findUnjustifiedAbsencesByStudentIds(studentIds);
     }
 }

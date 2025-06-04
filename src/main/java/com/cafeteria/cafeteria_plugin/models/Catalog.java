@@ -21,5 +21,4 @@ public class Catalog {
     @OneToMany(mappedBy = "catalog", cascade = CascadeType.ALL)
     private List<CatalogEntry> entries = new ArrayList<>();
 
-    // Getteri și setteri
 }

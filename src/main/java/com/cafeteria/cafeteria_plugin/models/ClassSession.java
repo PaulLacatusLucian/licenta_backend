@@ -22,21 +22,21 @@ public class ClassSession {
     @ManyToOne
     @JoinColumn(name = "teacher_id", nullable = false)
     @JsonIgnore
-    private Teacher teacher; // Profesorul care ține sesiunea
+    private Teacher teacher;
 
     @Column(nullable = false)
-    private LocalDateTime startTime; // Ora de început
+    private LocalDateTime startTime;
 
     @Column(nullable = false)
-    private LocalDateTime endTime; // Ora de sfârșit
+    private LocalDateTime endTime;
 
     @OneToMany(mappedBy = "classSession", cascade = CascadeType.ALL)
     @JsonManagedReference
     @JsonIgnore
-    private List<Absence> absences; // Lista absențelor pentru această sesiune
+    private List<Absence> absences;
 
     @OneToMany(mappedBy = "classSession", cascade = CascadeType.ALL)
-    private List<Grade> grades; // Lista notelor acordate în această sesiune
+    private List<Grade> grades;
 
     private String scheduleDay;
 

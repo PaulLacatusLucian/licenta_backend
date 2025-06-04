@@ -23,7 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
             resourceLocation += "/";
         }
 
-        System.out.println("Configuring image resource handler with location: " + resourceLocation);
+        System.out.println("Bilder-Resource-Handler wird konfiguriert mit Pfad: " + resourceLocation);
 
         registry.addResourceHandler("/images/**")
                 .addResourceLocations(resourceLocation);

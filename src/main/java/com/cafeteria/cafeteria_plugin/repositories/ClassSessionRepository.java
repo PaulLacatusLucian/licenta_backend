@@ -10,13 +10,10 @@ import java.util.List;
 @Repository
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {
 
-    // Găsirea sesiunilor după profesor
     List<ClassSession> findByTeacherId(Long teacherId);
 
-    // Găsirea sesiunilor pentru o anumită materie
     List<ClassSession> findBySubject(String subject);
 
-    // Găsirea sesiunilor dintr-un interval de timp
     List<ClassSession> findByStartTimeBetween(LocalDateTime start, LocalDateTime end);
 
     List<ClassSession> findByTeacher_Id(Long teacherId);

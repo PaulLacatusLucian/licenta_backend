@@ -11,7 +11,7 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY = "MySuperSecretKeyForJwtMySuperSecretKeyForJwt"; // Min 32 caractere
+    private static final String SECRET_KEY = "MySuperSecretKeyForJwtMySuperSecretKeyForJwt";
     private static final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 oră
 
     private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
@@ -19,7 +19,7 @@ public class JwtUtil {
     public String generateToken(String username, UserType userType) {
         return Jwts.builder()
                 .setSubject(username)
-                .claim("userType", userType.name()) // ✅ Adăugăm `UserType` în token
+                .claim("userType", userType.name())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -34,7 +34,7 @@ public class JwtUtil {
     public UserType extractUserType(String token) {
         String userTypeName = Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().get("userType", String.class);
-        return UserType.valueOf(userTypeName); // ✅ Convertim String în `UserType`
+        return UserType.valueOf(userTypeName);
     }
 
     public boolean isTokenValid(String token, String username) {

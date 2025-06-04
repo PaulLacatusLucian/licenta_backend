@@ -10,5 +10,4 @@ public class TeacherDTO {
     private String name;
     private String subject;
     private boolean hasClassAssigned;
-
 }

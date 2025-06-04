@@ -12,5 +12,5 @@ public class Semester {
     private Long id;
 
     @Column(nullable = false)
-    private Integer currentSemester = 1; // Semestrul curent (default: 1)
+    private Integer currentSemester = 1;
 }

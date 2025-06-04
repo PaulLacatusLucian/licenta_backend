@@ -18,10 +18,10 @@ public class OrderHistory {
     private LocalDateTime orderTime;
 
     @ManyToOne
-    @JoinColumn(name = "parent_id", nullable = false) // Părintele care face comanda
+    @JoinColumn(name = "parent_id", nullable = false)
     private Parent parent;
 
     @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false) // Elevul care primește comanda
+    @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 }
