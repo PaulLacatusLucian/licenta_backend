@@ -205,10 +205,12 @@ public class UserController {
             // Token für Passwort-Reset erstellen
             PasswordResetToken studentToken = passwordResetService.createTokenForUser(student);
             String studentResetLink = "http://localhost:8080/auth/reset-password?token=" + studentToken.getToken();
+            emailService.sendResetPasswordEmail(student.getEmail(), student.getUsername(), studentResetLink);
 
             if (student.getParent() != null) {
                 PasswordResetToken parentToken = passwordResetService.createTokenForUser(student.getParent());
                 String parentResetLink = "http://localhost:8080/auth/reset-password?token=" + parentToken.getToken();
+                emailService.sendResetPasswordEmail(student.getParent().getEmail(), student.getParent().getFatherName(), parentResetLink);
             }
 
             return ResponseEntity.ok(Map.of("message", "Schüler und Eltern erfolgreich erstellt!"));
@@ -244,6 +246,7 @@ public class UserController {
             userService.createUser(teacher);
             PasswordResetToken token = passwordResetService.createTokenForUser(teacher);
             String resetLink = "http://localhost:8080/auth/reset-password?token=" + token.getToken();
+            emailService.sendResetPasswordEmail(teacher.getEmail(), teacher.getUsername(), resetLink);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Lehrer erfolgreich erstellt!",
@@ -324,6 +327,7 @@ public class UserController {
             userService.createUser(chef);
             PasswordResetToken token = passwordResetService.createTokenForUser(chef);
             String resetLink = "http://localhost:8080/auth/reset-password?token=" + token.getToken();
+            emailService.sendResetPasswordEmail(chef.getEmail(), chef.getUsername(), resetLink);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Koch erfolgreich registriert!",

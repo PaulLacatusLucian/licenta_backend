@@ -120,7 +120,7 @@ public class SecurityConfig {
                 // URL-basierte Zugriffskontrolle konfigurieren
                 .authorizeHttpRequests(auth -> auth
                         // H2-Datenbank-Console für Entwicklung freigeben
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+//                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
 
                         // Authentifizierungs-Endpunkte öffentlich zugänglich
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/auth/**")).permitAll()
