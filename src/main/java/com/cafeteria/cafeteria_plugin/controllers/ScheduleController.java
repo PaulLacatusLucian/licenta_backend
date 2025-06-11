@@ -435,4 +435,94 @@ public class ScheduleController {
         put("Saturday", "Sâmbătă");
         put("Sunday", "Duminică");
     }};
+
+    /**
+     * Öffentlicher Endpunkt für die Wear OS-App – der heutige Zeitplan
+     */
+    @GetMapping("/public/class/{className}/today")
+    public ResponseEntity<List<ScheduleDTO>> getPublicSchedulesForToday(@PathVariable String className) {
+        String englishCurrentDay = LocalDate.now()
+                .getDayOfWeek()
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        String romanianCurrentDay = DAY_TRANSLATION.getOrDefault(englishCurrentDay, "");
+
+        className = className.toUpperCase();
+
+        List<Schedule> allSchedules = scheduleService.getSchedulesByClassName(className);
+
+        List<Schedule> schedulesForToday = allSchedules.stream()
+                .filter(schedule -> schedule.getScheduleDay().equalsIgnoreCase(romanianCurrentDay))
+                .toList();
+
+        List<ScheduleDTO> dtos = schedulesForToday.stream()
+                .map(scheduleMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
+    }
+
+    /**
+     * Öffentlicher Endpunkt für die Wear OS-App – der Zeitplan für morgen
+     */
+    @GetMapping("/public/class/{className}/tomorrow")
+    public ResponseEntity<List<ScheduleDTO>> getPublicSchedulesForTomorrow(@PathVariable String className) {
+        String englishNextDay = LocalDate.now()
+                .plusDays(1)
+                .getDayOfWeek()
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+        String romanianNextDay = DAY_TRANSLATION.getOrDefault(englishNextDay, "");
+
+        className = className.toUpperCase();
+
+        List<Schedule> allSchedules = scheduleService.getSchedulesByClassName(className);
+
+        List<Schedule> schedulesForNextDay = allSchedules.stream()
+                .filter(schedule -> schedule.getScheduleDay().equalsIgnoreCase(romanianNextDay))
+                .toList();
+
+        List<ScheduleDTO> dtos = schedulesForNextDay.stream()
+                .map(scheduleMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
+    }
+
+    /**
+     * Öffentlicher Endpunkt für die Wear OS-App – Zeitplan für einen bestimmten Tag
+     */
+    @GetMapping("/public/class/{className}/day/{dayName}")
+    public ResponseEntity<List<ScheduleDTO>> getPublicSchedulesForDay(
+            @PathVariable String className,
+            @PathVariable String dayName) {
+
+        String normalizedDay = dayName;
+
+        List<String> validRomanianDays = Arrays.asList("Luni", "Marți", "Miercuri", "Joi", "Vineri");
+        boolean isValidDay = validRomanianDays.stream()
+                .anyMatch(day -> day.equalsIgnoreCase(dayName));
+
+        if (!isValidDay) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        normalizedDay = validRomanianDays.stream()
+                .filter(day -> day.equalsIgnoreCase(dayName))
+                .findFirst()
+                .orElse(dayName);
+
+        className = className.toUpperCase();
+
+        List<Schedule> allSchedules = scheduleService.getSchedulesByClassName(className);
+
+        final String finalDay = normalizedDay;
+        List<Schedule> schedulesForDay = allSchedules.stream()
+                .filter(schedule -> schedule.getScheduleDay().equalsIgnoreCase(finalDay))
+                .toList();
+
+        List<ScheduleDTO> dtos = schedulesForDay.stream()
+                .map(scheduleMapper::toDto)
+                .toList();
+
+        return ResponseEntity.ok(dtos);
+    }
 }
