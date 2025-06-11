@@ -9,25 +9,12 @@ import java.time.ZonedDateTime;
 
 /**
  * REST Controller für Meeting-Management und Google Calendar-Integration.
- * <p>
- * Diese Klasse stellt RESTful API-Endpunkte für die automatische Erstellung
- * und Verwaltung von Schul-Meetings bereit. Sie ermöglicht autorisierten
- * Benutzern (Lehrern und Administratoren) die nahtlose Integration mit
- * Google Calendar und die automatische Generierung von Video-Konferenz-Links.
- * <p>
- * Hauptfunktionalitäten:
- * - RESTful Meeting-Erstellung mit Google Calendar-Integration
- * - Automatische Google Meet-Link-Generierung für Video-Konferenzen
- * - Bulk-Einladungen für Eltern-Gruppen und Klassenlisten
- * - Rollenbasierte Zugriffskontrolle für Meeting-Management
- * - Flexible Zeitplanung mit Standard-Werten für schnelle Event-Erstellung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see GoogleCalendarService
  * @see MeetingRequest
  * @see org.springframework.security.access.prepost.PreAuthorize
- * @since 2025-01-01
+ * @since 2025-04-09
  */
 @RestController
 @RequestMapping("/meetings")
@@ -44,12 +31,6 @@ public class MeetingController {
 
     /**
      * Erstellt ein neues Meeting mit Google Calendar-Integration und automatischen Einladungen.
-     * <p>
-     * Dieser API-Endpunkt ermöglicht autorisierten Benutzern die Erstellung von
-     * Schul-Meetings mit automatischer Google Calendar-Integration und Google Meet-
-     * Video-Konferenz-Generierung. Er ist optimiert für Bulk-Einladungen und
-     * flexible Zeitplanung.
-     *
      * @param request MeetingRequest mit Meeting-Details und Teilnehmer-Listen
      * @param token JWT Authorization-Token für Benutzer-Authentifizierung und Autorisierung
      * @return Google Meet-Link als String für direkte Video-Konferenz-Teilnahme

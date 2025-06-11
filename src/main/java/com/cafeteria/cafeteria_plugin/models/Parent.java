@@ -8,17 +8,6 @@ import java.util.List;
 
 /**
  * Modellklasse für Eltern im Schulverwaltungssystem.
- *
- * Diese Klasse erweitert die abstrakte User-Klasse und repräsentiert die Eltern
- * oder Erziehungsberechtigten von Schülern. Sie ermöglicht die Verwaltung
- * sowohl von Mutter- als auch Vaterinformationen in einem einzigen Account.
- *
- * Funktionalitäten für Eltern:
- * - Einsicht in Noten und Anwesenheit ihrer Kinder
- * - Kommunikation mit Lehrern
- * - Cafeteria-Bestellungen für ihre Kinder
- * - Terminvereinbarungen und Elterngespräche
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see User

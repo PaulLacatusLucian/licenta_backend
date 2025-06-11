@@ -8,20 +8,10 @@ import java.util.List;
 
 /**
  * Zentraler Service für die Verwaltung ehemaliger Schüler im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Verwaltung von Daten ehemaliger Schüler (Absolventen)
- * - CRUD-Operationen für ehemalige Schüler
- * - Archivierung von Schülerdaten nach dem Abschluss
- * - Abruf von Alumni-Informationen
- *
- * Der Service stellt sicher, dass Daten von Absolventen ordnungsgemäß
- * archiviert und verwaltet werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see PastStudent
- * @since 2025-01-01
+ * @since 2025-01-15
  */
 @Service
 public class PastStudentService {

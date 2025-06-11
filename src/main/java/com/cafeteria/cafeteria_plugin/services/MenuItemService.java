@@ -24,28 +24,13 @@ import java.util.stream.Stream;
 
 /**
  * Umfassender Service für das Cafeteria-Management im Schulverwaltungssystem.
- * <p>
- * Diese Klasse verwaltet alle Aspekte der Schul-Cafeteria:
- * - Menüverwaltung (CRUD-Operationen für Speisen und Getränke)
- * - Bestellsystem (Eltern bestellen für ihre Kinder)
- * - Lagerverwaltung (Bestandskontrolle und Verfügbarkeit)
- * - Rechnungsstellung (PDF-Generierung und Abrechnungen)
- * - Analytik (Verkaufsstatistiken und Berichte)
- * <p>
- * Hauptfunktionen:
- * - Vollständige Menüverwaltung mit Bildern und Allergenen
- * - Sichere Bestellabwicklung mit Bestandsvalidierung
- * - Automatische PDF-Rechnungsgenerierung
- * - Umfassende Verkaufs- und Popularitätsanalysen
- * - Integration mit Eltern- und Schülerdaten
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see MenuItem
  * @see OrderHistory
  * @see Parent
  * @see Student
- * @since 2025-01-01
+ * @since 2024-11-28
  */
 @Service
 public class MenuItemService {

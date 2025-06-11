@@ -10,20 +10,10 @@ import java.util.Optional;
 
 /**
  * Zentraler Service für die Köcheverwaltung im Cafeteria-System.
- *
- * Diese Klasse ist verantwortlich für:
- * - Erstellung und Verwaltung von Köche-Konten
- * - Validierung von Köche-Daten
- * - CRUD-Operationen für Köche
- * - Geschäftslogik für Köche-Verwaltung
- *
- * Der Service stellt sicher, dass alle Köche korrekt verwaltet werden
- * mit entsprechenden Validierungen und Eindeutigkeitsprüfungen.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Chef
- * @since 2025-01-01
+ * @since 2025-01-31
  */
 @Service
 public class ChefService {

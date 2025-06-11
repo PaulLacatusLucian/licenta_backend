@@ -10,34 +10,12 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für lehrerspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Lehrer bereit. Lehrer sind zentrale Akteure im
- * Schulsystem und unterrichten verschiedene Fächer oder führen Klassen
- * als Klassenbetreuer.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Lehrer
- * - Namens- und fachbasierte Lehrersuche
- * - Klassenlehrer-spezifische Abfragen
- * - Benutzername-basierte Authentifizierung
- * - Typ-spezifische Lehrer-Filterung (Educator vs. Teacher)
- * <p>
- * Besondere Merkmale:
- * - Unterscheidung zwischen Educators (Primarstufe) und Teachers (Sekundarstufe)
- * - Komplexe Join-Queries für Klassenlehrer-Ermittlung
- * - Optimierte Abfragen für häufige Zugriffsmuster
- * - Unterstützung für verschiedene Lehrertypen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Teacher
- * @see TeacherType
  * @see Class
- * @see Subject
- * @see Schedule
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-12-18
  */
 public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 

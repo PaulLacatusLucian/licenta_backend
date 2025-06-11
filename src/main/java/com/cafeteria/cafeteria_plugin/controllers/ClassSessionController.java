@@ -51,7 +51,7 @@ import java.util.stream.Collectors;
  * @see ClassSession
  * @see Grade
  * @see Absence
- * @since 2025-01-01
+ * @since 2025-01-19
  */
 @RestController
 @RequestMapping("/class-sessions")

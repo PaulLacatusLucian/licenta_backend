@@ -37,7 +37,7 @@ import java.util.List;
  * @version 1.0
  * @see CatalogService
  * @see CatalogEntry
- * @since 2025-01-01
+ * @since 2025-05-08
  */
 @RestController
 @RequestMapping("/catalog")

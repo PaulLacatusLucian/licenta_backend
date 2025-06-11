@@ -13,23 +13,12 @@ import java.util.Optional;
 
 /**
  * Zentraler Service für die Klassenverwaltung im Schulverwaltungssystem.
- * <p>
- * Diese Klasse ist verantwortlich für:
- * - Erstellung und Verwaltung von Schulklassen
- * - Validierung von Klassendaten nach Bildungsebene
- * - Zuweisung von Lehrern zu Klassen
- * - Verwaltung von Schülern in Klassen
- * <p>
- * Der Service stellt sicher, dass Klassen korrekt nach ihren
- * Bildungsebenen (Grundschule, Mittelschule, Gymnasium) validiert
- * und verwaltet werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Class
  * @see EducationLevel
  * @see Teacher
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Service
 public class ClassService {

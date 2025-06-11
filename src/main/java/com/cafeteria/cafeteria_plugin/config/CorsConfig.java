@@ -20,7 +20,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author Paul Lacatus
  * @version 1.0
  * @see WebMvcConfigurer
- * @since 2025-01-01
+ * @since 2024-12-02
  */
 @Configuration
 public class CorsConfig {

@@ -7,32 +7,11 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für klassenspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Schulklassen bereit. Klassen sind zentrale Entitäten
- * im Schulsystem und verbinden Schüler, Lehrer, Stundenpläne und Kataloge.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Schulklassen
- * - Lehrerspezifische Klassensuche
- * - Namensbasierte Klassensuche
- * - Klassenverwaltung und -organisation
- * - Jahresübergang und Klassenarchivierung
- * <p>
- * Besondere Merkmale:
- * - Ein-zu-Eins-Beziehung zwischen Klassenlehrer und Klasse
- * - Eindeutige Klassennamen pro Schuljahr
- * - Optimierte Abfragen für häufige Zugriffe
- * - Unterstützung für Klassenlehrer-Verwaltung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Class
- * @see Teacher
- * @see Student
- * @see Schedule
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 public interface ClassRepository extends JpaRepository<Class, Long> {
 

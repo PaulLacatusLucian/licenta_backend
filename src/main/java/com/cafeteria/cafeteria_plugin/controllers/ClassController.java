@@ -39,7 +39,7 @@ import java.util.Optional;
  * @see ClassService
  * @see Class
  * @see EducationLevel
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @RestController
 @RequestMapping("/classes")

@@ -5,22 +5,6 @@ import lombok.Data;
 
 /**
  * Modellklasse für Abwesenheiten im Schulverwaltungssystem.
- *
- * Diese Klasse repräsentiert eine registrierte Abwesenheit eines Schülers
- * während einer spezifischen Klassensitzung. Sie ermöglicht die Verfolgung
- * der Anwesenheit und unterstützt die Kommunikation zwischen Schule und Eltern.
- *
- * Merkmale einer Abwesenheit:
- * - Verknüpfung zu einer spezifischen Klassensitzung
- * - Identifikation des abwesenden Schülers
- * - Lehrer, der die Abwesenheit registriert hat
- * - Automatische Zeitstempelung durch Klassensitzung
- *
- * Geschäftslogik:
- * - Ein Schüler kann nur einmal pro Klassensitzung als abwesend markiert werden
- * - Abwesende Schüler können keine Noten in derselben Sitzung erhalten
- * - Nur Lehrer können Abwesenheiten registrieren
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Student

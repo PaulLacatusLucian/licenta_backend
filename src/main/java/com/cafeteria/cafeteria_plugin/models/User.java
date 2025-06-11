@@ -7,18 +7,6 @@ import lombok.*;
 
 /**
  * Abstrakte Basisklasse für alle Benutzertypen im System.
- * <p>
- * Diese Klasse definiert die gemeinsamen Eigenschaften und Verhaltensweisen
- * aller Benutzer im Schulverwaltungssystem. Sie verwendet JPA-Vererbung
- * mit der JOINED-Strategie, um verschiedene Benutzertypen zu unterstützen.
- * <p>
- * Unterstützte Benutzertypen:
- * - STUDENT: Schüler im System
- * - PARENT: Eltern der Schüler
- * - TEACHER: Lehrer und Erzieher
- * - CHEF: Küchenpersonal für Cafeteria
- * - ADMIN: Systemadministratoren
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Student

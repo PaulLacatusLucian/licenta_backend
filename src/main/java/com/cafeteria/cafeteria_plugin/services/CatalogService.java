@@ -14,22 +14,12 @@ import java.util.Optional;
 
 /**
  * Zentraler Service für die Katalogverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Erstellung und Verwaltung von Klassenkatalogen
- * - Hinzufügung von Noten und Abwesenheiten zum Katalog
- * - Abruf von Katalogeinträgen für Klassen und Schüler
- * - Verwaltung und Aktualisierung von Katalogdaten
- *
- * Der Service stellt sicher, dass alle schulischen Leistungen und
- * Abwesenheiten korrekt im Katalog erfasst und verwaltet werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Catalog
  * @see CatalogEntry
  * @see EntryType
- * @since 2025-01-01
+ * @since 2025-05-08
  */
 @Service
 public class CatalogService {

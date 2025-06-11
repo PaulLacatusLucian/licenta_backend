@@ -9,20 +9,10 @@ import java.util.Optional;
 
 /**
  * Zentraler Service für die Stundenplanverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Erstellung und Verwaltung von Stundenplänen
- * - Abruf von Stundenplänen nach verschiedenen Kriterien
- * - Verwaltung der zeitlichen Strukturen des Unterrichts
- * - Zuordnung von Lehrern, Fächern und Klassen zu Zeitslots
- *
- * Der Service stellt sicher, dass alle Stundenpläne korrekt verwaltet
- * und die schulischen Zeitstrukturen eingehalten werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Schedule
- * @since 2025-01-01
+ * @since 2024-12-29
  */
 @Service
 public class ScheduleService {

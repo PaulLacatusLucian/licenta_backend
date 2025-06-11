@@ -12,17 +12,6 @@ import java.util.Optional;
 
 /**
  * Zentraler Service für die Benutzerverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Erstellung neuer Benutzerkonten aller Typen
- * - Validierung von Benutzerdaten
- * - Passwort-Management
- * - Benutzer-Authentifizierung
- *
- * Der Service unterstützt verschiedene Benutzertypen (Student, Parent, Teacher, Chef, Admin)
- * und stellt sicher, dass jeder Benutzer korrekt in der entsprechenden Tabelle
- * gespeichert wird unter Verwendung der JPA-Vererbungsstrategie.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see User
@@ -31,7 +20,7 @@ import java.util.Optional;
  * @see Teacher
  * @see Chef
  * @see Admin
- * @since 2025-01-01
+ * @since 2024-11-28
  */
 @Service
 @Transactional // Stellt Atomarität aller Methoden sicher

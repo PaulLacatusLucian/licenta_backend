@@ -8,34 +8,18 @@ import java.util.List;
 
 /**
  * Data Transfer Object für Meeting-Erstellungsanfragen mit Google Calendar-Integration.
- * <p>
- * Diese Klasse kapselt alle erforderlichen Informationen für die Erstellung
- * von Schul-Meetings und stellt eine strukturierte Schnittstelle für
- * REST API-Kommunikation bereit. Sie unterstützt flexible Zeitplanung,
- * Bulk-Teilnehmer-Management und automatische Meeting-Konfiguration.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see MeetingController
  * @see GoogleCalendarService
  * @see com.fasterxml.jackson.annotation.JsonFormat
- * @since 2025-01-01
+ * @since 2025-04-09
  */
 @Data
 public class MeetingRequest {
 
     /**
      * Name der Schulklasse für organisatorische Zuordnung.
-     * <p>
-     * Eindeutige Identifikation der Klasse, für die das Meeting erstellt wird.
-     * Wird verwendet für Meeting-Titel-Generierung und organisatorische
-     * Zuordnung in Calendar-Systemen.
-     * <p>
-     * Verwendung:
-     * - Meeting-Titel-Generierung: "Ședință cu părinții - [className]"
-     * - Organisatorische Kategorisierung in Calendar-Ansichten
-     * - Filtering und Suche in Meeting-Übersichten
-     * - Integration mit Klassenverwaltungs-Systemen
      */
     private String className;
 

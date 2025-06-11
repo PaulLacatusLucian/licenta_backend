@@ -5,31 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Repository-Interface für küchenpersonalspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Küchenpersonal (Köche) bereit. Köche sind für die
- * Verwaltung des Cafeteria-Menüs und der Speisenzubereitung verantwortlich.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Küchenpersonal
- * - Eindeutigkeitsprüfungen für Benutzerdaten
- * - Validierung bei Registrierungsprozessen
- * - Sichere Authentifizierung und Autorisierung
- * - Küchenpersonal-Lifecycle-Management
- * <p>
- * Besondere Merkmale:
- * - Eindeutigkeitsprüfung für kritische Felder
- * - Optimierte Existenzprüfungen ohne Volldatensatz-Load
- * - Unterstützung für Bulk-Validierungen
- * - Sichere Benutzerregistrierung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Chef
- * @see User
- * @see MenuItem
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 public interface ChefRepository extends JpaRepository<Chef, Long> {
 

@@ -8,45 +8,12 @@ import java.time.LocalDateTime;
 
 /**
  * Entitätsklasse für Passwort-Reset-Tokens mit sicherer Benutzerverknüpfung.
- * <p>
- * Diese JPA-Entität repräsentiert einen Passwort-Reset-Token in der Datenbank
- * und implementiert das komplette Sicherheitsmodell für die sichere
- * Passwort-Zurücksetzung im Schulsystem. Sie gewährleistet durch ihre
- * Datenstruktur und Constraints die Integrität und Sicherheit des
- * Authentifizierungsprozesses.
- * <p>
- * Sicherheitsmerkmale:
- * - Eindeutige Token-Strings zur Verhinderung von Kollisionen
- * - Zeitbasierte Ablaufmechanismen für begrenzte Gültigkeit
- * - Einmalige Verwendung durch Used-Flag-Implementierung
- * - Sichere Benutzerverknüpfung mit referenzieller Integrität
- * - Automatische Lifecycle-Verwaltung durch JPA-Cascade-Operationen
- * <p>
- * Datenbankdesign:
- * - Auto-inkrementierende Primärschlüssel für eindeutige Identifikation
- * - Unique-Constraint auf Token-String verhindert Duplikate
- * - NOT NULL-Constraints gewährleisten Datenintegrität
- * - OneToOne-Beziehung mit Benutzer für exakte Zuordnung
- * - Optimistische Sperrung durch JPA für Concurrent-Access-Sicherheit
- * <p>
- * Business Logic:
- * - Automatische Ablaufprüfung durch isExpired()-Methode
- * - Statusverfolgung durch Used-Flag für Einmalverwendung
- * - Kaskadierte Operationen für konsistente Datenverwaltung
- * - Waisenentfernung für saubere Datenbank-Hygiene
- * <p>
- * Integration:
- * - Zentrale Verwendung in PasswordResetService für Token-Management
- * - Unterstützung für PasswordResetController Web-Workflows
- * - Repository-Pattern-Integration für Datenzugriff
- * - Lombok-basierte Code-Generierung für sauberen Code
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see User
  * @see PasswordResetService
  * @see PasswordResetTokenRepository
- * @since 2025-01-01
+ * @since 2025-03-13
  */
 @Entity
 @Data

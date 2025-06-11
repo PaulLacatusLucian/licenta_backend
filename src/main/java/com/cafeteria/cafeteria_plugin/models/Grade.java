@@ -7,22 +7,6 @@ import lombok.Getter;
 
 /**
  * Modellklasse für Noten im Schulverwaltungssystem.
- * <p>
- * Diese Klasse repräsentiert eine einzelne Note, die einem Schüler
- * während einer Klassensitzung vergeben wurde. Sie verbindet Schüler,
- * Lehrer, Fach und Bewertung miteinander.
- * <p>
- * Merkmale einer Note:
- * - Numerischer Wert (typischerweise 1-10 im rumänischen System)
- * - Optionale Beschreibung/Kommentar
- * - Verknüpfung zu einer spezifischen Klassensitzung
- * - Zuordnung zu einem Schüler
- * <p>
- * Geschäftslogik:
- * - Ein Schüler kann nur eine Note pro Klassensitzung erhalten
- * - Noten können nur von Lehrern vergeben werden
- * - Abwesende Schüler können keine Noten erhalten
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Student

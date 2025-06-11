@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
  * @version 1.0
  * @see CommandLineRunner
  * @see Admin
- * @since 2025-01-01
+ * @since 2025-04-03
  */
 @Component
 public class AdminInitializer implements CommandLineRunner {

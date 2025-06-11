@@ -15,32 +15,12 @@ import java.util.*;
 
 /**
  * Service-Klasse für Google Calendar API-Integration und Meeting-Management.
- * <p>
- * Diese Klasse implementiert die Geschäftslogik für die Integration mit Google Calendar
- * und ermöglicht die automatische Erstellung von Meetings für Schul-Events wie
- * Elternabende, Lehrer-Konferenzen und administrative Termine. Sie kapselt die
- * komplexe OAuth2-Authentifizierung und Calendar API-Kommunikation.
- * <p>
- * Hauptfunktionalitäten:
- * - OAuth2 Token-Management für sichere Google API-Zugriffe
- * - Automatische Calendar-Event-Erstellung mit Google Meet-Integration
- * - Bulk-Einladungen für Eltern-Gruppen und Klassenlisten
- * - Zeitzone-bewusste Terminplanung für internationale Nutzer
- * - Robuste Fehlerbehandlung für API-Ausfälle und Netzwerkprobleme
- * <p>
- * Google Calendar API-Integration:
- * - Vollständige OAuth2-Authentifizierung mit Refresh Token-Support
- * - Automatische Access Token-Erneuerung ohne Benutzerinteraktion
- * - Native Google Meet-Integration für Video-Konferenzen
- * - Kalenderereignis-Management mit erweiterten Konfigurationsoptionen
- * - Multi-Teilnehmer-Unterstützung für Gruppen-Events
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see GoogleCalendarProperties
  * @see MeetingController
  * @see com.google.api.client.auth.oauth2.TokenResponse
- * @since 2025-01-01
+ * @since 2025-04-09
  */
 @Service
 public class GoogleCalendarService {
@@ -107,48 +87,6 @@ public class GoogleCalendarService {
 
     /**
      * Erstellt automatisch ein Google Calendar-Event mit Google Meet-Integration.
-     * <p>
-     * Diese Methode implementiert die Kernfunktionalität für die Erstellung
-     * von Schul-Meetings und automatisiert den gesamten Prozess von der
-     * Kalendererstellung bis zur Teilnehmer-Benachrichtigung.
-     * <p>
-     * Event-Erstellungsworkflow:
-     * - OAuth2-Authentifizierung mit automatischer Token-Erneuerung
-     * - Strukturierte Event-Daten-Aufbereitung für Google Calendar API
-     * - Automatische Google Meet-Link-Generierung für Video-Konferenzen
-     * - Bulk-Teilnehmer-Einladungen mit E-Mail-Benachrichtigungen
-     * - Timezone-bewusste Zeitplanung für korrekte Darstellung
-     * <p>
-     * Google Meet-Integration:
-     * - Automatische Konferenzraum-Erstellung für jedes Event
-     * - Eindeutige Meeting-Links für sichere Teilnahme
-     * - Integration mit Google's Video-Konferenz-Infrastruktur
-     * - Dial-in-Nummern und Meeting-IDs für Telefon-Teilnahme
-     * <p>
-     * Teilnehmer-Management:
-     * - Automatische E-Mail-Einladungen an alle Teilnehmer
-     * - Kalender-Integration für alle eingeladenen Benutzer
-     * - RSVP-Tracking für Anwesenheitsplanung
-     * - Erinnerungs-Konfiguration für rechtzeitige Teilnahme
-     * <p>
-     * Zeitzone-Behandlung:
-     * - Explizite Europe/Bucharest-Timezone für rumänische Schulen
-     * - ISO-formatierte Zeitstempel für internationale Kompatibilität
-     * - Automatische Umrechnung für Teilnehmer in anderen Zeitzonen
-     * - Daylight Saving Time-bewusste Planung
-     * <p>
-     * Fehlerbehandlung und Robustheit:
-     * - Retry-Logik für transiente Netzwerkfehler
-     * - Graceful Degradation bei Google Meet-Ausfällen
-     * - Ausführliche Error-Logging für Debugging
-     * - Rollback-Mechanismen für fehlgeschlagene Event-Erstellung
-     * <p>
-     * API-Parameter-Optimierung:
-     * - conferenceDataVersion=1 für Google Meet-Funktionalität
-     * - sendUpdates=all für automatische Teilnehmer-Benachrichtigungen
-     * - Optimierte Request-Struktur für minimale API-Latenz
-     * - Bulk-Operations für Performance bei vielen Teilnehmern
-     *
      * @param summary Aussagekräftiger Titel für das Meeting (z.B. "Elternabend Klasse 10A")
      * @param start Startzeitpunkt als ZonedDateTime mit korrekter Timezone
      * @param end Endzeitpunkt als ZonedDateTime mit korrekter Timezone

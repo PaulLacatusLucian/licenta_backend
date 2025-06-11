@@ -13,32 +13,13 @@ import java.util.Map;
 
 /**
  * Repository-Interface für bestellhistorienspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Cafeteria-Bestellungen bereit. Die Bestellhistorie
- * verwaltet alle Transaktionen zwischen Eltern, Schülern und dem Cafeteria-System.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Bestellungen
- * - Zeitraumbasierte Bestellungsabfragen
- * - Statistische Auswertungen und Berichte
- * - Eltern- und schülerspezifische Historien
- * - Verkaufsanalysen und Geschäftsintelligenz
- * <p>
- * Besondere Merkmale:
- * - Komplexe Aggregations-Queries für Statistiken
- * - Zeitraumbasierte Filterung für Berichte
- * - Optimierte Abfragen für Dashboard-Darstellungen
- * - Unterstützung für Geschäftsanalysen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see OrderHistory
  * @see Parent
  * @see Student
- * @see MenuItem
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-11-28
  */
 public interface OrderHistoryRepository extends JpaRepository<OrderHistory, Long> {
 

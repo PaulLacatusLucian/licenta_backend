@@ -19,28 +19,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Zentrale Spring Security-Konfiguration für das Schulverwaltungssystem.
- * <p>
- * Diese Klasse definiert die Sicherheitsrichtlinien und -mechanismen
- * für die gesamte Anwendung. Sie konfiguriert JWT-basierte Authentifizierung,
- * rollenbasierte Autorisierung und definiert öffentliche sowie geschützte Endpunkte.
- * <p>
- * Sicherheitsmerkmale:
- * - JWT-basierte stateless Authentifizierung
- * - BCrypt-Passwort-Verschlüsselung mit Strength 10
- * - Method-Level Security mit @PreAuthorize
- * - CORS-Unterstützung für Frontend-Integration
- * - H2-Console-Zugang für Entwicklung
- * <p>
- * Zugriffskontrolle:
- * - Öffentliche Endpunkte: /auth/**, /h2-console/**, /images/**
- * - Alle anderen Endpunkte erfordern Authentifizierung
- * - Rollenbasierte Autorisierung über Method-Level Security
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see JwtFilter
  * @see UserDetailsServiceImpl
- * @since 2025-01-01
+ * @since 2025-03-12
  */
 @Configuration
 @EnableWebSecurity

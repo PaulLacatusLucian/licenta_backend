@@ -44,7 +44,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
  * @version 1.0
  * @see PastStudentService
  * @see PastStudent
- * @since 2025-01-01
+ * @since 2025-01-15
  */
 @RestController
 @RequestMapping("/api/past-students")

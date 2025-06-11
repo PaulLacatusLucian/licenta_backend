@@ -8,79 +8,19 @@ import org.springframework.stereotype.Component;
 
 /**
  * Mapper-Komponente für die Konvertierung zwischen OrderHistory-Entitäten und OrderHistoryDTO-Objekten.
- * <p>
- * Diese Klasse implementiert das Mapper-Pattern für Cafeteria-Bestellhistorie und stellt
- * spezialisierte Konvertierungsfunktionen zwischen der OrderHistory-Domain-Entität und
- * dem entsprechenden Data Transfer Object bereit. Sie aggregiert komplexe Benutzer-
- * und Transaktionsdaten für umfassende Bestellübersichten.
- * <p>
- * Hauptfunktionalitäten:
- * - Entity-zu-DTO-Konvertierung mit Benutzer-Aggregation
- * - Vollständige Transaktionsdaten-Darstellung
- * - Integration von Eltern- und Schüler-Informationen
- * - Optimierte DTO-Struktur für Finanz- und Statistik-Berichte
- * - Null-sichere Verarbeitung für optionale Beziehungen
- * <p>
- * Technische Eigenschaften:
- * - Spring Component für automatische Dependency Injection
- * - Stateless Design für Thread-Safety
- * - Direkte Benutzer-DTO-Erstellung ohne zusätzliche Mapper
- * - Performance-optimierte Konvertierung für Listen-Operationen
- * - Integration mit Finanz- und Berichtssystemen
- * <p>
- * Verwendungsszenarien:
- * - Eltern-Portale für Ausgaben-Übersichten und Abrechnungen
- * - Schüler-Dashboards für Essenshistorie
- * - Administrative Berichte über Cafeteria-Umsätze
- * - API-Endpunkte für Bestellhistorie-Abfragen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see OrderHistory
  * @see OrderHistoryDTO
  * @see StudentDTO
  * @see ParentDTO
- * @since 2025-01-01
+ * @since 2025-04-01
  */
 @Component
 public class OrderHistoryMapper {
 
     /**
      * Konvertiert eine OrderHistory-Entität zu einem umfassenden OrderHistoryDTO.
-     * <p>
-     * Diese Methode erstellt eine vollständige DTO-Darstellung einer Cafeteria-Bestellung
-     * und aggregiert alle relevanten Benutzer- und Transaktionsdaten. Sie ist optimiert
-     * für Finanzberichte, Eltern-Portale und administrative Übersichten.
-     * <p>
-     * Aggregierte Transaktionsdaten:
-     * - Basis-Bestellinformationen (ID, Artikel, Preis, Menge)
-     * - Zeitstempel für chronologische Einordnung
-     * - Vollständige Schüler-Informationen (Empfänger)
-     * - Vollständige Eltern-Informationen (Besteller/Zahler)
-     * <p>
-     * Student-DTO-Aggregation:
-     * - Grundlegende Identifikation und Kontaktdaten
-     * - Klassen-Kontext für organisatorische Zuordnung
-     * - Klassenlehrer-Informationen für vollständigen Schulkontext
-     * - Optimiert für Lieferung und Empfänger-Identifikation
-     * <p>
-     * Parent-DTO-Aggregation:
-     * - Vollständige Kontaktinformationen beider Elternteile
-     * - Dual-Email-System für flexible Kommunikation
-     * - Rechnungsrelevante Informationen
-     * - Optimiert für Finanz-Management und Kommunikation
-     * <p>
-     * Geschäftslogik-Unterscheidung:
-     * - Student: Tatsächlicher Empfänger der Bestellung
-     * - Parent: Besteller und Zahlungspflichtiger
-     * - Diese Trennung ermöglicht flexible Familien-Strukturen
-     * <p>
-     * Performance-Überlegungen:
-     * - Direkte DTO-Erstellung ohne verschachtelte Mapper-Aufrufe
-     * - Null-sichere Verarbeitung für Robustheit
-     * - Einmalige Entitäts-Navigation für alle erforderlichen Daten
-     * - Optimiert für Bulk-Operationen in Listen-Konvertierungen
-     *
      * @param order OrderHistory-Entität mit vollständigen Benutzer-Beziehungen
      * @return OrderHistoryDTO mit aggregierten Benutzer- und Transaktionsdaten
      * @throws IllegalArgumentException wenn order null ist

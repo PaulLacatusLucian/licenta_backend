@@ -9,32 +9,12 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für katalogeintragspeziﬁsche Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Katalogeinträge bereit. Katalogeinträge repräsentieren
- * sowohl Noten als auch Fehlzeiten im digitalen Klassenbuch-System.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Katalogeinträge
- * - Katalog- und schülerspezifische Suchen
- * - Typbasierte Filterung (Noten vs. Fehlzeiten)
- * - Effiziente Abfragen für Klassenbuch-Darstellung
- * - Fachspezifische Eintragssuche
- * <p>
- * Besondere Merkmale:
- * - Polymorphe Handhabung von Noten und Fehlzeiten
- * - Optimierte Abfragen für UI-Performance
- * - Flexible Filterung nach verschiedenen Kriterien
- * - Unterstützung für Batch-Operationen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see CatalogEntry
- * @see Catalog
- * @see Student
  * @see EntryType
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-03-08
  */
 public interface CatalogEntryRepository extends JpaRepository<CatalogEntry, Long> {
 

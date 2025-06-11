@@ -10,24 +10,6 @@ import java.util.List;
 
 /**
  * Modellklasse für Klassensitzungen im Schulverwaltungssystem.
- * <p>
- * Diese Klasse repräsentiert eine einzelne Unterrichtsstunde oder -sitzung,
- * die von einem Lehrer für ein bestimmtes Fach durchgeführt wird.
- * Sie dient als zentraler Punkt für die Verwaltung von Noten und Anwesenheit.
- * <p>
- * Eine Klassensitzung umfasst:
- * - Zeitraum (Start- und Endzeit)
- * - Unterrichtsfach
- * - Leitender Lehrer
- * - Zugehörige Klasse
- * - Alle Noten, die während der Sitzung vergeben wurden
- * - Alle Abwesenheiten, die registriert wurden
- * <p>
- * Verwendung:
- * - Automatische Generierung aus Stundenplänen
- * - Manuelle Erstellung für spontane Sitzungen
- * - Grundlage für Noten- und Anwesenheitsverwaltung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Teacher

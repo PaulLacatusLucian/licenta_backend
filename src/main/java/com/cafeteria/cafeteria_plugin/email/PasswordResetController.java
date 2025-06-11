@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.*;
  * @see PasswordResetToken
  * @see UserService
  * @see PasswordEncoder
- * @since 2025-01-01
+ * @since 2025-03-12
  */
 @Controller
 @RequestMapping("/auth")
@@ -69,28 +69,6 @@ public class PasswordResetController {
 
     /**
      * Zeigt das Passwort-Reset-Formular für einen gültigen Token an.
-     * <p>
-     * Diese GET-Methode wird aufgerufen, wenn ein Benutzer auf einen
-     * Passwort-Reset-Link klickt. Sie validiert den übergebenen Token
-     * und zeigt bei Gültigkeit das entsprechende Formular zur
-     * Passwort-Eingabe an.
-     * <p>
-     * Token-Validierung:
-     * - Überprüfung der Token-Existenz und Gültigkeit
-     * - Kontrolle des Ablaufdatums
-     * - Verifikation, ob Token bereits verwendet wurde
-     * - Weiterleitung zu entsprechenden Fehlerseiten bei Problemen
-     * <p>
-     * View-Routing:
-     * - "reset-password-form": Bei gültigem, ungenutztem Token
-     * - "reset-password-expired": Bei abgelaufenem oder ungültigem Token
-     * - "reset-password-already-used": Bei bereits verwendetem Token
-     * <p>
-     * Sicherheitsaspekte:
-     * - Verhindert Zugriff mit ungültigen Tokens
-     * - Schutz vor Mehrfachverwendung von Tokens
-     * - Zeitbasierte Token-Validierung
-     *
      * @param token Token-String aus dem Passwort-Reset-Link
      * @param model Spring Model für View-Datenübertragung
      * @return View-Name basierend auf Token-Validierungsergebnis
@@ -113,31 +91,6 @@ public class PasswordResetController {
 
     /**
      * Verarbeitet die Passwort-Zurücksetzung nach Formular-Übermittlung.
-     * <p>
-     * Diese POST-Methode wird aufgerufen, wenn ein Benutzer das
-     * Passwort-Reset-Formular mit seinem neuen Passwort absendet.
-     * Sie führt die finale Token-Validierung durch und aktualisiert
-     * das Benutzerpasswort sicher.
-     * <p>
-     * Verarbeitungsschritte:
-     * 1. Erneute Token-Validierung für Sicherheit
-     * 2. Überprüfung auf bereits verwendete Tokens
-     * 3. Sichere Passwort-Verschlüsselung mit PasswordEncoder
-     * 4. Benutzer-Update in der Datenbank
-     * 5. Token-Markierung als verwendet
-     * 6. Weiterleitung zur Erfolgsseite
-     * <p>
-     * Sicherheitsmaßnahmen:
-     * - Doppelte Token-Validierung (GET und POST)
-     * - Sichere Passwort-Hashing mit modernen Algorithmen
-     * - Automatische Token-Deaktivierung nach Verwendung
-     * - Erzwungene Passwort-Aktualisierung ohne weitere Validierung
-     * <p>
-     * Fehlerbehandlung:
-     * - Graceful Handling von abgelaufenen Tokens
-     * - Schutz vor mehrfacher Passwort-Zurücksetzung
-     * - Benutzerfreundliche Fehlermeldungen
-     *
      * @param token       Token-String zur finalen Validierung
      * @param newPassword Neues Passwort vom Benutzer eingegeben
      * @param model       Spring Model für View-Datenübertragung

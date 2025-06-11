@@ -6,19 +6,6 @@ import lombok.*;
 
 /**
  * Modellklasse für Lehrer und Erzieher im Schulverwaltungssystem.
- *
- * Diese Klasse erweitert die abstrakte User-Klasse und repräsentiert pädagogisches Personal
- * mit unterschiedlichen Rollen und Verantwortlichkeiten:
- *
- * - EDUCATOR: Erzieher für Grundschulklassen (0-4)
- * - TEACHER: Fachlehrer für Mittel- und Oberschule (5-12)
- *
- * Ein Lehrer kann:
- * - Ein oder mehrere Fächer unterrichten
- * - Als Klassenlehrer fungieren
- * - Noten vergeben und Anwesenheit verwalten
- * - Stundenpläne haben und Klassensitzungen leiten
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see User

@@ -11,21 +11,6 @@ import java.util.List;
 
 /**
  * Modellklasse für Schulklassen im Verwaltungssystem.
- * <p>
- * Diese Klasse repräsentiert eine Schulklasse mit allen zugehörigen Informationen
- * wie Klassenlehrer, Schüler, Stundenpläne und Bildungsebene.
- * <p>
- * Bildungsebenen:
- * - PRIMARY (0-4): Grundschule mit Erziehern
- * - MIDDLE (5-8): Mittelschule mit Fachlehrern
- * - HIGH (9-12): Oberschule mit Spezialisierungen
- * <p>
- * Eine Klasse kann:
- * - Einen zugewiesenen Klassenlehrer haben
- * - Multiple Stundenpläne für verschiedene Fächer haben
- * - Eine Spezialisierung haben (nur Oberschule)
- * - Mehrere Schüler enthalten
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Teacher

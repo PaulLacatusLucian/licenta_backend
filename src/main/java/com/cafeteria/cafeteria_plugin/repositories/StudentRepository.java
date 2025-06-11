@@ -14,31 +14,12 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für schülerspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Schüler bereit. Sie enthält custom Queries für
- * komplexe Abfragen und Operationen, die über Standard-CRUD hinausgehen.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Schüler
- * - Eltern-Kind-Beziehungsmanagement
- * - Klassenbasierte Schülersuche
- * - Jahresübergang und Klassenverwaltung
- * - Sichere Löschoperationen mit Referenzbereinigung
- * <p>
- * Besondere Merkmale:
- * - Transaktionale Operationen für Datenintegrität
- * - Custom Queries für komplexe Geschäftslogik
- * - Effiziente Bulk-Operationen
- * - Benutzernambasierte Authentifizierung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Student
  * @see Class
- * @see Parent
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-12-18
  */
 @Repository
 public interface StudentRepository extends JpaRepository<Student, Long> {

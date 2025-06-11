@@ -9,26 +9,6 @@ import java.time.LocalDateTime;
 
 /**
  * Modellklasse für einzelne Einträge im Klassenkatalog.
- *
- * Diese Klasse repräsentiert einen spezifischen Eintrag im digitalen Klassenkatalog,
- * der entweder eine Note oder eine Abwesenheit eines Schülers dokumentiert.
- * Jeder Eintrag ist mit einem Schüler, einem Fach und einem Zeitstempel verknüpft.
- *
- * Eintragtypen:
- * - GRADE: Nummerische Bewertung mit optionalem Wert
- * - ABSENCE: Abwesenheitsregistrierung mit Begründungsstatus
- *
- * Verwendung:
- * - Automatische Erstellung bei Notenvergabe durch Lehrer
- * - Automatische Erstellung bei Abwesenheitsregistrierung
- * - Grundlage für Leistungsberichte und Zeugnisse
- * - Historische Verfolgung der Schülerleistung
- *
- * Datenintegrität:
- * - Bidirektionale Beziehung zum Catalog
- * - Eindeutige Zuordnung zu Schüler und Fach
- * - Automatische Zeitstempelung bei Erstellung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Catalog

@@ -10,28 +10,6 @@ import jakarta.persistence.Id;
 
 /**
  * Modellklasse für Absolventen und ehemalige Schüler des Schulsystems.
- * <p>
- * Diese Klasse speichert grundlegende Informationen über Schüler, die
- * das Schulsystem verlassen haben, entweder durch Abschluss oder andere
- * Umstände. Sie dient als Archiv für historische Daten und Alumni-Verwaltung.
- * <p>
- * Entstehung von PastStudent-Einträgen:
- * - Automatisch beim Jahresübergang für Schüler der 12. Klasse
- * - Manuell bei vorzeitigem Schulwechsel oder -abbruch
- * - Bei Systemumstellungen oder Datenmigration
- * <p>
- * Unterschied zu aktiven Schülern:
- * - Keine Benutzerkonten oder Anmeldedaten
- * - Reduzierte Datenmenge (nur Name und Profil)
- * - Keine aktive Teilnahme am Schulsystem
- * - Primär für Archivierung und statistische Zwecke
- * <p>
- * Verwendungszwecke:
- * - Alumni-Verwaltung und -kontakt
- * - Statistische Auswertungen über Abschlussraten
- * - Historische Nachverfolgung von Bildungswegen
- * - Compliance mit Datenschutzbestimmungen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Student

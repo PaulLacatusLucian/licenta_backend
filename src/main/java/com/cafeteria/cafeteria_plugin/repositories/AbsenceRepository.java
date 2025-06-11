@@ -10,31 +10,11 @@ import java.util.List;
 
 /**
  * Repository-Interface für fehlzeitenspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Schülerfehlzeiten bereit. Sie enthält custom Queries
- * für komplexe Abfragen und Statistiken über Anwesenheit und Fehlzeiten.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Fehlzeiten
- * - Schülerspezifische Fehlzeitensuche
- * - Fehlzeitenstatistiken und -zählung
- * - Unterrichtsstunden-Fehlzeiten-Validierung
- * - Duplikatsprüfung für Fehlzeiten
- * <p>
- * Besondere Merkmale:
- * - Custom Queries für Aggregationsoperationen
- * - Effiziente Zähloperationen ohne Vollständiges Laden
- * - Existenzprüfungen für Geschäftslogik-Validierung
- * - Optimierte Abfragen für Statistiken
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Absence
- * @see Student
- * @see ClassSession
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Repository
 public interface AbsenceRepository extends JpaRepository<Absence, Long> {

@@ -17,21 +17,11 @@ import java.util.stream.Collectors;
 
 /**
  * Zentraler Service für die Notenverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Erstellung und Verwaltung von Schülernoten
- * - Validierung von Notendaten
- * - Abruf von Noten nach verschiedenen Kriterien
- * - Umwandlung zwischen Entitäten und DTOs
- *
- * Der Service stellt sicher, dass alle Noten korrekt erfasst,
- * validiert und verwaltet werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Grade
  * @see GradeDTO
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Service
 public class GradeService {

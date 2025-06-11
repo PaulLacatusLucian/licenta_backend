@@ -14,20 +14,10 @@ import java.util.stream.Collectors;
 
 /**
  * Zentraler Service für die Abwesenheitsverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Verwaltung von Schülerabwesenheiten
- * - Validierung von Abwesenheitsdaten
- * - Berechnung von Abwesenheitsstatistiken
- * - CRUD-Operationen für Abwesenheiten
- *
- * Der Service stellt sicher, dass Abwesenheiten korrekt erfasst und
- * verwaltet werden, mit entsprechenden Validierungen und Geschäftslogik.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Absence
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Service
 public class AbsenceService {

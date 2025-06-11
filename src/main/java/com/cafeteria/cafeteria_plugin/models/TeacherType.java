@@ -5,20 +5,6 @@ import com.cafeteria.cafeteria_plugin.models.Teacher;
 
 /**
  * Enumeration für die verschiedenen Lehrertypen im Schulsystem.
- *
- * Diese Enumeration unterscheidet zwischen den zwei Haupttypen
- * von pädagogischem Personal und bestimmt ihre Zuständigkeiten
- * und Berechtigungen im System.
- *
- * Die Typen entsprechen den verschiedenen Bildungsebenen:
- * - EDUCATOR für Grundschulbildung
- * - TEACHER für weiterführende Bildung
- *
- * Geschäftsregeln:
- * - EDUCATOR kann nur PRIMARY-Klassen leiten
- * - TEACHER kann nur MIDDLE/HIGH-Klassen leiten
- * - Bestimmt verfügbare Funktionen und Berechtigungen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Teacher

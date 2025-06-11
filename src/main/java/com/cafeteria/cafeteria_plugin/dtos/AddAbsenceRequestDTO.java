@@ -34,7 +34,7 @@ import lombok.Data;
  * @see AbsenceDTO
  * @see com.cafeteria.cafeteria_plugin.models.Absence
  * @see com.cafeteria.cafeteria_plugin.controllers.AbsenceController
- * @since 2025-01-01
+ * @since 2025-03-13
  */
 @Data
 public class AddAbsenceRequestDTO {

@@ -8,28 +8,11 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für grundlegende Benutzeroperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt CRUD-Operationen
- * für die abstrakte User-Klasse bereit. Sie dient als Basis für alle
- * benutzerbezogenen Datenbankoperationen im Schulverwaltungssystem.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen (Create, Read, Update, Delete)
- * - Benutzername-basierte Suche für Authentifizierung
- * - Email-basierte Suche für Passwort-Reset
- * - Eindeutigkeitsprüfungen für Benutzername und Email
- * <p>
- * Verwendung:
- * - Authentifizierung und Login-Prozesse
- * - Benutzerregistrierung mit Duplikatsprüfung
- * - Passwort-Reset-Funktionalitäten
- * - Administrative Benutzerverwaltung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see User
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2024-11-28
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {

@@ -39,7 +39,7 @@ import java.time.LocalDateTime;
  * @see com.cafeteria.cafeteria_plugin.models.Grade
  * @see com.cafeteria.cafeteria_plugin.models.ClassSession
  * @see com.cafeteria.cafeteria_plugin.models.Teacher
- * @since 2025-01-01
+ * @since 2025-01-31
  */
 @Data
 @AllArgsConstructor

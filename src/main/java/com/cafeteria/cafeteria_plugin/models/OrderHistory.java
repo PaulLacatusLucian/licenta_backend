@@ -7,29 +7,6 @@ import java.time.LocalDateTime;
 
 /**
  * Modellklasse für die Bestellhistorie der Schul-Cafeteria.
- * <p>
- * Diese Klasse dokumentiert jede einzelne Bestellung, die über das
- * Cafeteria-System aufgegeben wurde. Sie dient als Grundlage für
- * Rechnungsstellung, Umsatzanalysen und Kundenhistorie.
- * <p>
- * Eine Bestellhistorie erfasst:
- * - Details des bestellten Produkts (Name, Preis, Menge)
- * - Zeitpunkt der Bestellung
- * - Bestellenden Elternteil (Zahler)
- * - Begünstigten Schüler (Empfänger)
- * <p>
- * Geschäftslogik:
- * - Eltern bestellen und bezahlen für ihre Kinder
- * - Produktinformationen werden zum Bestellzeitpunkt gespeichert
- * - Ermöglicht Preisnachverfolgung bei Produktänderungen
- * - Basis für monatliche Rechnungsstellung
- * <p>
- * Verwendung:
- * - Automatische Erstellung bei jeder Cafeteria-Bestellung
- * - Grundlage für PDF-Rechnungsgenerierung
- * - Verkaufsstatistiken und Popularitätsanalysen
- * - Kundenhistorie für Eltern und Administratoren
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see MenuItem

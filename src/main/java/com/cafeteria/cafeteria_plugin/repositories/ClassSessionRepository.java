@@ -9,34 +9,11 @@ import java.util.List;
 
 /**
  * Repository-Interface für unterrichtsstundenspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Unterrichtsstunden bereit. ClassSessions repräsentieren
- * konkrete Unterrichtseinheiten und verbinden Lehrer, Fächer, Zeiten und
- * Bewertungen (Noten/Fehlzeiten).
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Unterrichtsstunden
- * - Lehrerspezifische Stundensuche
- * - Fachbasierte Stundenfilterung
- * - Zeitraumbasierte Abfragen
- * - Effiziente Kalender- und Stundenplan-Queries
- * <p>
- * Besondere Merkmale:
- * - Zeitbasierte Abfragen für Stundenplan-Management
- * - Mehrfache Zugriffswege für flexible Abfragen
- * - Optimierte Performance für häufige UI-Operationen
- * - Unterstützung für Batch-Operationen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see ClassSession
- * @see Teacher
- * @see Subject
- * @see Grade
- * @see Absence
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-01-18
  */
 @Repository
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {

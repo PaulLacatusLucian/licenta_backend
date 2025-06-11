@@ -9,33 +9,12 @@ import java.util.List;
 
 /**
  * Repository-Interface für stundenplanspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Stundenpläne bereit. Schedules definieren die
- * regelmäßigen Unterrichtszeiten und verbinden Klassen, Lehrer und Fächer
- * in einem strukturierten Wochenschema.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Stundenpläne
- * - Klassenspezifische Stundenplan-Abfragen
- * - Lehrerspezifische Unterrichtsübersichten
- * - Namensbasierte Klassensuche
- * - Effiziente Join-Operationen für UI-Performance
- * <p>
- * Besondere Merkmale:
- * - Optimierte Queries mit Eager Loading für Teacher-Daten
- * - Flexible Abfragemöglichkeiten über ID und Namen
- * - Unterstützung für Stundenplan-Generierung
- * - Integration mit ClassSession-System
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Schedule
  * @see Class
- * @see Teacher
- * @see ClassSession
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-12-18
  */
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 

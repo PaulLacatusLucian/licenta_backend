@@ -16,25 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Umfassender Service für die Lehrerverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse verwaltet alle lehrerbezogenen Operationen und stellt
- * sicher, dass die Geschäftslogik für verschiedene Lehrertypen
- * (EDUCATOR für Grundschule, TEACHER für höhere Klassen) korrekt
- * implementiert wird.
- *
- * Hauptfunktionen:
- * - CRUD-Operationen für Lehrer
- * - Validation von Lehrertyp-zu-Bildungsebene-Zuordnungen
- * - Verwaltung von Lehrer-Klassen-Beziehungen
- * - Stundenplan- und Sitzungsverwaltung
- * - Schülerzuordnung basierend auf Unterrichtsfächern
- *
- * Geschäftsregeln:
- * - EDUCATOR nur für PRIMARY-Klassen (0-4)
- * - TEACHER nur für MIDDLE/HIGH-Klassen (5-12)
- * - Ein Lehrer kann mehrere Klassen unterrichten
- * - Sichere Löschung mit Referenzbereinigung
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Teacher
@@ -42,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @see EducationLevel
  * @see Schedule
  * @see ClassSession
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Service
 public class TeacherService {

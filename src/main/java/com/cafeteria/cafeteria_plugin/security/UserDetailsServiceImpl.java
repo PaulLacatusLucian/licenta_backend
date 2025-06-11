@@ -9,39 +9,13 @@ import org.springframework.stereotype.Service;
 
 /**
  * Implementierung des Spring Security UserDetailsService für das Schulsystem.
- * <p>
- * Diese Klasse stellt die Brücke zwischen dem benutzerdefinierten User-System
- * und Spring Security dar. Sie lädt Benutzerinformationen aus der Datenbank
- * und konvertiert sie in das von Spring Security erwartete UserDetails-Format
- * für Authentifizierung und Autorisierung.
- * <p>
- * Die Implementierung unterstützt:
- * - Polymorphe Benutzertypen (Student, Parent, Teacher, Chef, Admin)
- * - Rollenbasierte Autorisierung mit automatischer Rollenpräfix-Generierung
- * - Sichere Passwort-Validierung durch Spring Security
- * - Einheitliche Authentifizierung für alle Benutzertypen
- * - Integration mit JWT-Token-System
- * <p>
- * Technische Details:
- * - Implementiert UserDetailsService-Interface von Spring Security
- * - Konvertiert User-Entitäten zu Spring Security UserDetails
- * - Unterstützt rollenbasierte Berechtigungen (ROLE_STUDENT, ROLE_TEACHER, etc.)
- * - Thread-safe durch stateless Design
- * - Performance-optimiert durch direkte Repository-Abfragen
- * <p>
- * Sicherheitsaspekte:
- * - Sichere Benutzersuche ohne Preisgabe von Systemdetails
- * - Automatische Rollenzuordnung basierend auf Benutzertyp
- * - Schutz vor Username-Enumeration durch generische Fehlermeldungen
- * - Integration mit Spring Security's Passwort-Encoder
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see UserDetailsService
  * @see User
  * @see UserRepository
  * @see org.springframework.security.core.userdetails.UserDetails
- * @since 2025-01-01
+ * @since 2025-03-12
  */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {

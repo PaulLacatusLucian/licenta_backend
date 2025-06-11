@@ -9,28 +9,6 @@ import java.util.List;
 
 /**
  * Modellklasse für Stundenplaneinträge im Schulverwaltungssystem.
- * <p>
- * Diese Klasse repräsentiert einen einzelnen Eintrag im Wochenstundenplan
- * einer Klasse. Sie definiert, wann welcher Lehrer welche Fächer für eine
- * bestimmte Klasse unterrichtet.
- * <p>
- * Ein Stundenplaneintrag umfasst:
- * - Zeitraum (Wochentag, Start- und Endzeit)
- * - Zugeordnete Klasse
- * - Unterrichtende Lehrkraft
- * - Liste der Fächer, die in diesem Zeitslot unterrichtet werden
- * <p>
- * Verwendung:
- * - Grundlage für die Generierung von Klassensitzungen
- * - Anzeige von Wochenstundenplänen für Schüler und Lehrer
- * - Planung und Organisation des Schulbetriebs
- * - Konfliktprüfung bei Terminplanung
- * <p>
- * Geschäftslogik:
- * - Ein Eintrag kann mehrere Fächer umfassen (z.B. Doppelstunden)
- * - Verschiedene Lehrer können für verschiedene Fächer zuständig sein
- * - Automatische Validierung von Zeitkonflikten
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Class

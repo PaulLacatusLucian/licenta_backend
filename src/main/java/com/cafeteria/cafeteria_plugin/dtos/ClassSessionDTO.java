@@ -39,7 +39,7 @@ import java.util.List;
  * @see TeacherDTO
  * @see AbsenceDTO
  * @see GradeDTO
- * @since 2025-01-01
+ * @since 2025-03-13
  */
 @Data
 public class ClassSessionDTO {

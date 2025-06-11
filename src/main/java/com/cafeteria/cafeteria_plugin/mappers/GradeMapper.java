@@ -8,32 +8,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * Mapper-Komponente für die Konvertierung zwischen Grade-Entitäten und GradeDTO-Objekten.
- * <p>
- * Diese Klasse implementiert das Mapper-Pattern für Noten und stellt spezialisierte
- * Konvertierungsfunktionen zwischen der Grade-Domain-Entität und dem entsprechenden
- * Data Transfer Object bereit. Sie extrahiert und aggregiert Kontextinformationen
- * aus verknüpften Entitäten für umfassende Noten-Darstellungen.
- * <p>
- * Hauptfunktionalitäten:
- * - Entity-zu-DTO-Konvertierung mit Kontext-Aggregation
- * - Optimierte DTO-Struktur für Frontend-Darstellungen
- * - Integration von Lehrer-, Fach- und Zeit-Informationen
- * - Performance-optimierte Konvertierung ohne zusätzliche DB-Abfragen
- * - Hilfs-Methoden für Student-DTO-Erstellung
- * <p>
- * Technische Eigenschaften:
- * - Spring Component für automatische Dependency Injection
- * - Stateless Design für Thread-Safety
- * - Flache DTO-Struktur für bessere Performance
- * - Null-sichere Verarbeitung für optionale Beziehungen
- * - Integration mit anderen Mapper-Komponenten
- * <p>
- * Verwendungsszenarien:
- * - Schüler- und Eltern-Portale für Notenübersichten
- * - Lehrer-Tools für Bewertungshistorie
- * - Zeugnis-Generierung und Berichtssysteme
- * - API-Endpunkte für Noten-Abfragen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Grade
@@ -47,35 +21,6 @@ public class GradeMapper {
 
     /**
      * Konvertiert eine Grade-Entität zu einem kontextreichen GradeDTO.
-     * <p>
-     * Diese Methode erstellt eine optimierte DTO-Darstellung einer Note
-     * und extrahiert alle relevanten Kontextinformationen aus verknüpften
-     * Entitäten. Die flache DTO-Struktur verbessert die Performance und
-     * vereinfacht die Frontend-Integration.
-     * <p>
-     * Extrahierte Kontextinformationen:
-     * - Numerische Bewertung und Beschreibung
-     * - Lehrer-Name des bewertenden Lehrers
-     * - Fach der bewerteten Leistung
-     * - Zeitstempel der Unterrichtsstunde (nicht der Notenerstellung)
-     * <p>
-     * Performance-Optimierungen:
-     * - Direkte Wert-Extraktion ohne DTO-Verschachtelung
-     * - Minimaler Memory-Footprint durch primitive/String-Felder
-     * - Keine zirkulären Referenzen für JSON-Serialisierung
-     * - Einmalige Entitäts-Navigation ohne Lazy-Loading-Probleme
-     * <p>
-     * Geschäftslogik:
-     * - Verwendung der ClassSession-Informationen für Kontext
-     * - Zeitstempel basiert auf Unterrichtsstunde, nicht Erstellungszeit
-     * - Lehrer-Information vom Fachlehrer der Stunde
-     * <p>
-     * Verwendung in verschiedenen Kontexten:
-     * - Listen-Darstellungen: Effiziente Masse-Konvertierung
-     * - Detail-Ansichten: Vollständige Kontext-Informationen
-     * - Export-Funktionen: Flache Struktur für CSV/Excel
-     * - API-Responses: Optimiert für Frontend-Consumption
-     *
      * @param grade Grade-Entität mit vollständigen ClassSession-Beziehungen
      * @return GradeDTO mit aggregierten Kontext-Informationen
      * @throws IllegalArgumentException wenn grade null ist

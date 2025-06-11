@@ -17,30 +17,12 @@ import java.io.IOException;
 
 /**
  * JWT-Authentication-Filter für das Schulverwaltungssystem.
- *
- * Diese Klasse erweitert OncePerRequestFilter und wird bei jeder HTTP-Anfrage
- * ausgeführt, um JWT-Token zu validieren und den Sicherheitskontext zu setzen.
- * Der Filter ist ein zentraler Bestandteil der JWT-basierten Authentifizierung.
- *
- * Funktionsweise:
- * 1. Extraktion des JWT-Tokens aus dem Authorization-Header
- * 2. Validierung des Tokens und Extraktion des Benutzernamens
- * 3. Laden der Benutzerdetails aus der Datenbank
- * 4. Setzen des Authentication-Objekts im SecurityContext
- * 5. Weiterleitung der Anfrage an nachgelagerte Filter
- *
- * Besonderheiten:
- * - Bypass für öffentliche Endpunkte (Login, H2-Console)
- * - Detailliertes Logging für Debugging
- * - Sichere Token-Validierung
- * - Integration mit Spring Security Authentication
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see JwtUtil
  * @see UserDetailsService
  * @see OncePerRequestFilter
- * @since 2025-01-01
+ * @since 2025-03-12
  */
 @Component
 public class JwtFilter extends OncePerRequestFilter {

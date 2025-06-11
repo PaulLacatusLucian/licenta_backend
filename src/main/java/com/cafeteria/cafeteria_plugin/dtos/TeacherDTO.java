@@ -35,7 +35,7 @@ import lombok.Data;
  * @see com.cafeteria.cafeteria_plugin.models.Teacher
  * @see com.cafeteria.cafeteria_plugin.models.Class
  * @see TeacherBriefDTO
- * @since 2025-01-01
+ * @since 2025-03-13
  */
 @Data
 public class TeacherDTO {

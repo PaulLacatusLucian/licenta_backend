@@ -10,33 +10,12 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für elternspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Elternkonten bereit. Eltern sind zentrale Akteure
- * im Schulsystem und verwalten die Interessen ihrer Kinder durch
- * Self-Service-Portale und Kommunikationssysteme.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Elternkonten
- * - E-Mail-basierte Elternsuche (Mutter/Vater)
- * - Klassenbasierte Elterngruppen-Ermittlung
- * - Benutzername-basierte Authentifizierung
- * - Kommunikationslisten-Generierung
- * <p>
- * Besondere Merkmale:
- * - Dual-Email-System für beide Elternteile
- * - Komplexe Join-Queries über Schüler-Klassen-Beziehungen
- * - Eindeutigkeitsprüfungen für Kontaktdaten
- * - Effiziente Abfragen für Massenkommunikation
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Parent
- * @see Student
  * @see Class
- * @see User
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 public interface ParentRepository extends JpaRepository<Parent, Long> {
 

@@ -7,17 +7,6 @@ import lombok.*;
 
 /**
  * Modellklasse für Schüler im Schulverwaltungssystem.
- *
- * Diese Klasse erweitert die abstrakte User-Klasse und repräsentiert einen Schüler
- * mit seinen spezifischen Eigenschaften wie Klassenbeziehung, Elternverbindung
- * und persönlichen Informationen.
- *
- * Ein Schüler kann:
- * - Einer Schulklasse zugeordnet werden
- * - Mit einem Elternteil verknüpft werden
- * - Ein Profilbild haben
- * - Noten und Anwesenheitsdaten haben (über Beziehungen)
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see User

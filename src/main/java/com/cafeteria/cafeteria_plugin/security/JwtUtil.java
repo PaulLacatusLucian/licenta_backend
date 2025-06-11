@@ -10,27 +10,10 @@ import java.util.Date;
 
 /**
  * Utility-Klasse für die Verwaltung von JSON Web Tokens (JWT).
- *
- * Diese Klasse stellt alle notwendigen Funktionen für die JWT-basierte
- * Authentifizierung im Schulverwaltungssystem bereit. Sie ermöglicht
- * die sichere Generierung, Validierung und Extraktion von Benutzerinformationen
- * aus JWT-Tokens.
- *
- * Sicherheitsmerkmale:
- * - HMAC SHA-256 Signierung für Token-Integrität
- * - Konfigurierbarer Ablaufzeitpunkt (derzeit 1 Stunde)
- * - Eingebettete Benutzertyp-Informationen für Autorisierung
- * - Sichere Schlüsselgenerierung
- *
- * Token-Struktur:
- * - Subject: Benutzername
- * - Custom Claim: Benutzertyp (STUDENT, PARENT, TEACHER, CHEF, ADMIN)
- * - Standard Claims: Ausstellungszeit, Ablaufzeit
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see UserType
- * @since 2025-01-01
+ * @since 2025-03-12
  */
 @Component
 public class JwtUtil {

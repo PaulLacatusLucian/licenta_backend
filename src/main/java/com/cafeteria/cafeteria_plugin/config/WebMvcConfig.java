@@ -22,7 +22,7 @@ import java.io.File;
  * @author Paul Lacatus
  * @version 1.0
  * @see WebMvcConfigurer
- * @since 2025-01-01
+ * @since 2024-11-28
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {

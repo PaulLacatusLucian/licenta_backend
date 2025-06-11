@@ -16,21 +16,11 @@ import java.util.stream.Stream;
 
 /**
  * Zentraler Service für die Elternverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Verwaltung von Elternkonten und deren Daten
- * - Zuordnung von Schülern zu Eltern
- * - Abruf von Elterninformationen nach verschiedenen Kriterien
- * - Verwaltung von E-Mail-Adressen für Kommunikation
- *
- * Der Service stellt sicher, dass alle Elterndaten korrekt verwaltet
- * und die Beziehungen zu Schülern ordnungsgemäß gepflegt werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Parent
  * @see Student
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Service
 public class ParentService {

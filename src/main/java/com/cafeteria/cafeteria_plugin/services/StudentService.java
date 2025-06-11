@@ -20,23 +20,12 @@ import java.util.stream.Collectors;
 
 /**
  * Zentraler Service für die Schülerverwaltung im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Verwaltung von Schülerdaten und -konten
- * - Zuordnung von Schülern zu Klassen
- * - Verwaltung von Abwesenheiten und Noten
- * - Jahresversetzungen und Abschlussverarbeitung
- * - Abruf von Stundenplänen und Terminen
- *
- * Der Service stellt sicher, dass alle Schülerdaten korrekt verwaltet
- * und die schulischen Prozesse ordnungsgemäß abgewickelt werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Student
  * @see Class
  * @see Schedule
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Service
 public class StudentService {

@@ -4,16 +4,6 @@ import com.cafeteria.cafeteria_plugin.models.CatalogEntry;
 
 /**
  * Enumeration für Katalogeintragtypen im Bewertungssystem.
- * <p>
- * Diese Enumeration unterscheidet zwischen den zwei Haupttypen
- * von Einträgen, die im digitalen Klassenkatalog gespeichert werden.
- * Jeder Typ hat spezifische Eigenschaften und Validierungsregeln.
- * <p>
- * Verwendung:
- * - Bestimmt, welche Felder in CatalogEntry relevant sind
- * - Ermöglicht typspezifische Verarbeitung und Anzeige
- * - Grundlage für Berichte und Statistiken
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see CatalogEntry

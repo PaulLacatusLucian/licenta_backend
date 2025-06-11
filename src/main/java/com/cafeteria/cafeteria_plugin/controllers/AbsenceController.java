@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  * @see AbsenceService
  * @see Absence
  * @see AbsenceDTO
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @RestController
 @RequestMapping("/absences")

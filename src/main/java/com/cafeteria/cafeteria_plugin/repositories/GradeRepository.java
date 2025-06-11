@@ -8,32 +8,11 @@ import java.util.List;
 
 /**
  * Repository-Interface für notenspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Schülernoten bereit. Noten sind zentrale Bewertungselemente
- * im Schulsystem und werden mit Unterrichtsstunden und Schülern verknüpft.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Noten
- * - Schülerspezifische Notensuche
- * - Cascading-Delete-Operationen
- * - Duplikatsprüfungen für Geschäftslogik
- * - Effiziente Notenabfragen für Berichte
- * <p>
- * Besondere Merkmale:
- * - Sichere Löschoperationen mit Referenzbereinigung
- * - Optimierte Abfragen für Notenübersichten
- * - Existenzprüfungen ohne Vollständiges Laden
- * - Unterstützung für Batch-Operationen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Grade
- * @see Student
- * @see ClassSession
- * @see Teacher
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2024-12-18
  */
 @Repository
 public interface GradeRepository extends JpaRepository<Grade, Long> {

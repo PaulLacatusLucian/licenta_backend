@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Paul Lacatus
  * @version 1.0
  * @see StudentService
- * @since 2025-01-01
+ * @since 2025-01-15
  */
 @RestController
 @PreAuthorize("hasRole('ADMIN')")

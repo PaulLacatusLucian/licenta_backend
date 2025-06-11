@@ -7,31 +7,11 @@ import java.util.Optional;
 
 /**
  * Repository-Interface für menüartikelspezifische Datenbankoperationen.
- * <p>
- * Diese Schnittstelle erweitert JpaRepository und stellt spezialisierte
- * CRUD-Operationen für Cafeteria-Menüartikel bereit. Menüartikel repräsentieren
- * die verfügbaren Speisen und Getränke im Schulcafeteria-System.
- * <p>
- * Das Repository unterstützt:
- * - Standard CRUD-Operationen für Menüartikel
- * - Namensbasierte Artikelsuche
- * - Eindeutigkeitsprüfungen für Artikel
- * - Effiziente Abfragen für Menüverwaltung
- * - Bestandsverwaltung und Preisaktualisierungen
- * <p>
- * Besondere Merkmale:
- * - Eindeutige Artikelnamen pro Menü
- * - Optimierte Abfragen für häufige Zugriffe
- * - Unterstützung für Menü-Lifecycle-Management
- * - Integration mit Bestellsystem
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see MenuItem
- * @see OrderHistory
- * @see Chef
  * @see JpaRepository
- * @since 2025-01-01
+ * @since 2025-11-28
  */
 public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
 

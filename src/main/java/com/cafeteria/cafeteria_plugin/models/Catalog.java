@@ -10,28 +10,6 @@ import java.util.List;
 
 /**
  * Modellklasse für den Klassenkatalog im Schulverwaltungssystem.
- * <p>
- * Diese Klasse repräsentiert einen digitalen Katalog für eine Schulklasse,
- * der alle Noten und Abwesenheiten der Schüler in strukturierter Form sammelt.
- * Der Katalog dient als zentraler Speicher für Bewertungen und ermöglicht
- * eine übersichtliche Darstellung der Leistungen aller Klassenmitglieder.
- * <p>
- * Funktionalitäten:
- * - Sammlung aller Noten und Abwesenheiten einer Klasse
- * - Strukturierte Organisation nach Schülern und Fächern
- * - Historische Verfolgung der Leistungsentwicklung
- * - Grundlage für Zeugniserstellung und Berichte
- * - Integration mit Klassensitzungen und Bewertungssystem
- * <p>
- * Beziehungen:
- * - One-to-One mit einer Schulklasse
- * - One-to-Many mit Katalogeinträgen (Noten/Abwesenheiten)
- * <p>
- * Verwendung:
- * - Automatische Erstellung bei Klassenerstellung
- * - Kontinuierliche Aktualisierung durch Lehrer
- * - Basis für Eltern- und Schülerberichte
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see Class

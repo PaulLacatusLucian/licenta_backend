@@ -34,7 +34,7 @@ import lombok.Data;
  * @version 1.0
  * @see com.cafeteria.cafeteria_plugin.email.EmailService
  * @see com.cafeteria.cafeteria_plugin.controllers.ParentController
- * @since 2025-01-01
+ * @since 2025-04-22
  */
 @Data
 public class EmailMessageDTO {

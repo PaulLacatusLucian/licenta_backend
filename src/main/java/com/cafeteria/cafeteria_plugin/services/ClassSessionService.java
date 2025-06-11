@@ -10,20 +10,10 @@ import java.util.List;
 
 /**
  * Zentraler Service für die Verwaltung von Unterrichtsstunden im Schulverwaltungssystem.
- *
- * Diese Klasse ist verantwortlich für:
- * - Erstellung und Verwaltung von Unterrichtsstunden
- * - Abruf von Unterrichtsstunden nach verschiedenen Kriterien
- * - Verwaltung der zeitlichen Aspekte des Unterrichts
- * - Verknüpfung von Lehrern, Fächern und Zeiten
- *
- * Der Service stellt sicher, dass alle Unterrichtsstunden korrekt
- * erfasst und verwaltet werden.
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see ClassSession
- * @since 2025-01-01
+ * @since 2025-01-19
  */
 @Service
 public class ClassSessionService {

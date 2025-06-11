@@ -39,7 +39,7 @@ import java.util.Optional;
  * @see UserService
  * @see JwtUtil
  * @see PasswordEncoder
- * @since 2025-01-01
+ * @since 2024-11-28
  */
 @RestController
 @RequestMapping("/auth/")

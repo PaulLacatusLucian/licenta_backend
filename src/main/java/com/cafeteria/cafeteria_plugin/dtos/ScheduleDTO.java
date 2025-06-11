@@ -36,7 +36,7 @@ import java.util.List;
  * @see com.cafeteria.cafeteria_plugin.models.Schedule
  * @see TeacherDTO
  * @see com.cafeteria.cafeteria_plugin.models.Class
- * @since 2025-01-01
+ * @since 2025-03-24
  */
 @Data
 public class ScheduleDTO {

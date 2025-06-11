@@ -7,23 +7,6 @@ import java.util.List;
 
 /**
  * Modellklasse für Menüpunkte in der Schul-Cafeteria.
- * <p>
- * Diese Klasse repräsentiert ein einzelnes Produkt oder Gericht,
- * das in der Schul-Cafeteria angeboten wird. Sie umfasst alle
- * relevanten Informationen für Bestellung, Lagerverwaltung und
- * Allergenkennzeichnung.
- * <p>
- * Ein Menüpunkt enthält:
- * - Grundinformationen (Name, Beschreibung, Preis)
- * - Lagerverwaltung (verfügbare Menge)
- * - Visueller Inhalt (Produktbild)
- * - Gesundheitsinformationen (Allergene)
- * <p>
- * Verwendung:
- * - Anzeige im Cafeteria-Portal für Eltern und Schüler
- * - Bestellverwaltung und Lagerbestandskontrolle
- * - Allergenwarnungen und Diätinformationen
- *
  * @author Paul Lacatus
  * @version 1.0
  * @see OrderHistory
