@@ -69,24 +69,57 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    /**
-     * Sendet eine Nachricht von einem Elternteil an einen Lehrer über das Schulportal.
-     * @param parentEmail  E-Mail-Adresse des Elternteils (für Reply-To)
-     * @param teacherEmail E-Mail-Adresse des Lehrers (Empfänger)
-     * @param subject      Betreff der Nachricht
-     * @param content      Inhalt der Nachricht
-     * @throws MessagingException           Bei Fehlern in der E-Mail-Konfiguration
-     * @throws UnsupportedEncodingException Bei Problemen mit der Zeichenkodierung
-     */
-    public void sendMessageFromParent(String parentEmail, String teacherEmail, String subject, String content) throws MessagingException, UnsupportedEncodingException {
+    public void sendMessageFromParent(String parentEmail, String teacherEmail, String subject, String content)
+            throws MessagingException, UnsupportedEncodingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setTo(teacherEmail);
-        helper.setSubject(subject);
-        helper.setText(content, false);
+        helper.setSubject("[Elternnachricht] " + subject);
 
-        helper.setFrom("no-reply@school.edu", "Nachricht von Elternteil über das Schulportal");
+        String htmlContent = "<html><body style='font-family: Arial, sans-serif; color: #333;'>" +
+                "<div style='background-color: #f8f9fa; padding: 20px; border-radius: 10px;'>" +
+                "<h2 style='color: #69a79c; margin-bottom: 20px;'>Johann Ettinger Gymnasium - Elternnachricht</h2>" +
+                "<div style='background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);'>" +
+                "<p style='margin-bottom: 15px;'><strong>Sehr geehrte Lehrkraft,</strong></p>" +
+                "<p style='margin-bottom: 15px;'>Sie haben eine neue Nachricht von einem Elternteil über das Schulportal erhalten:</p>" +
+                "<hr style='border: 1px solid #e0e0e0; margin: 20px 0;'>" +
+                "<div style='background-color: #f7f7f7; padding: 15px; border-radius: 5px; margin: 20px 0;'>" +
+                "<p style='margin: 10px 0;'><strong>Betreff:</strong> " + subject + "</p>" +
+                "<p style='margin: 10px 0;'><strong>Von:</strong> " + parentEmail + "</p>" +
+                "</div>" +
+                "<div style='margin: 20px 0;'>" +
+                "<p style='margin-bottom: 10px;'><strong>Nachricht:</strong></p>" +
+                "<div style='background-color: #fafafa; padding: 15px; border-left: 4px solid #69a79c; border-radius: 4px;'>" +
+                "<p style='margin: 0; white-space: pre-wrap;'>" + content.replace("\n", "<br>") + "</p>" +
+                "</div>" +
+                "</div>" +
+                "<hr style='border: 1px solid #e0e0e0; margin: 20px 0;'>" +
+                "<p style='margin-top: 20px; color: #666; font-size: 14px;'>" +
+                "Bitte antworten Sie direkt auf diese E-Mail, um mit dem Elternteil in Kontakt zu treten." +
+                "</p>" +
+                "<p style='color: #999; font-size: 12px; margin-top: 10px;'>" +
+                "Diese Nachricht wurde automatisch über das Schulportal generiert. " +
+                "Bei technischen Problemen wenden Sie sich bitte an die IT-Abteilung." +
+                "</p>" +
+                "</div>" +
+                "<div style='text-align: center; margin-top: 20px; color: #999; font-size: 12px;'>" +
+                "<p>© " + java.time.Year.now().getValue() + " Johann Ettinger Gymnasium | Bulevardul Cloșca 72, Satu Mare</p>" +
+                "</div>" +
+                "</div>" +
+                "</body></html>";
+
+        String plainTextContent = "Sehr geehrte Lehrkraft,\n\n" +
+                "Sie haben eine neue Nachricht von einem Elternteil über das Schulportal erhalten:\n\n" +
+                "Betreff: " + subject + "\n" +
+                "Von: " + parentEmail + "\n\n" +
+                "Nachricht:\n" + content + "\n\n" +
+                "Bitte antworten Sie direkt auf diese E-Mail, um mit dem Elternteil in Kontakt zu treten.\n\n" +
+                "Mit freundlichen Grüßen,\n" +
+                "Johann Ettinger Gymnasium";
+
+        helper.setText(plainTextContent, htmlContent);
+        helper.setFrom("no-reply@lgerm-ettinger.ro", "Johann Ettinger Gymnasium - Schulportal");
         helper.setReplyTo(parentEmail);
 
         mailSender.send(message);
