@@ -91,4 +91,55 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    /**
+     * Sendet eine Kontaktformular-Nachricht an die Schule.
+     *
+     * Diese Methode verarbeitet Nachrichten vom öffentlichen Kontaktformular
+     * und leitet sie an die offizielle Schul-E-Mail-Adresse weiter.
+     * Die E-Mail enthält alle vom Benutzer eingegebenen Informationen
+     * und ermöglicht eine direkte Antwort an den Absender.
+     *
+     * @param senderName    Name des Absenders
+     * @param senderEmail   E-Mail-Adresse des Absenders
+     * @param subject       Betreff der Nachricht
+     * @param content       Inhalt der Nachricht
+     * @throws MessagingException           Bei Fehlern in der E-Mail-Konfiguration
+     * @throws UnsupportedEncodingException Bei Problemen mit der Zeichenkodierung
+     */
+    public void sendContactFormMessage(String senderName, String senderEmail, String subject, String content)
+            throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+        // Schul-E-Mail-Adresse als Empfänger
+        helper.setTo("ltg.johann.ettinger@gmail.com");
+
+        // Betreff mit Prefix für bessere Identifikation
+        helper.setSubject("[Kontaktformular] " + subject);
+
+        // HTML-formatierter E-Mail-Inhalt für bessere Lesbarkeit
+        String htmlContent = "<html><body>" +
+                "<h3>Neue Nachricht über das Kontaktformular</h3>" +
+                "<hr>" +
+                "<p><strong>Absender:</strong> " + senderName + "</p>" +
+                "<p><strong>E-Mail:</strong> " + senderEmail + "</p>" +
+                "<p><strong>Betreff:</strong> " + subject + "</p>" +
+                "<hr>" +
+                "<p><strong>Nachricht:</strong></p>" +
+                "<p>" + content.replace("\n", "<br>") + "</p>" +
+                "<hr>" +
+                "<p><small>Diese Nachricht wurde über das Kontaktformular der Schulwebsite gesendet.</small></p>" +
+                "</body></html>";
+
+        helper.setText(htmlContent, true);
+
+        // Absender-Konfiguration
+        helper.setFrom("no-reply@lgerm-ettinger.ro", "Johann Ettinger Gymnasium - Kontaktformular");
+
+        // Reply-To auf die E-Mail des Absenders setzen für direkte Antworten
+        helper.setReplyTo(senderEmail, senderName);
+
+        mailSender.send(message);
+    }
 }

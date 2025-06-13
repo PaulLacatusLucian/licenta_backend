@@ -1,7 +1,6 @@
 package com.cafeteria.cafeteria_plugin.services;
 
-import com.cafeteria.cafeteria_plugin.dtos.StudentDTO;
-import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
+import com.cafeteria.cafeteria_plugin.email.passwordReset.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.repositories.*;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;

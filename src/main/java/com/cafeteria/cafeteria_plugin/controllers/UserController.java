@@ -1,8 +1,8 @@
 package com.cafeteria.cafeteria_plugin.controllers;
 
 import com.cafeteria.cafeteria_plugin.email.EmailService;
-import com.cafeteria.cafeteria_plugin.email.PasswordResetService;
-import com.cafeteria.cafeteria_plugin.email.PasswordResetToken;
+import com.cafeteria.cafeteria_plugin.email.passwordReset.PasswordResetService;
+import com.cafeteria.cafeteria_plugin.email.passwordReset.PasswordResetToken;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.security.JwtUtil;

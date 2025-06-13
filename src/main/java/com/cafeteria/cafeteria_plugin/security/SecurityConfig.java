@@ -108,6 +108,7 @@ public class SecurityConfig {
 //
                         .requestMatchers(HttpMethod.GET, "/schedules/public/**").permitAll()
 
+                                .requestMatchers("/api/public/contact").permitAll()
 
                                 // Authentifizierungs-Endpunkte öffentlich zugänglich
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/auth/**")).permitAll()

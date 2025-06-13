@@ -1,4 +1,4 @@
-package com.cafeteria.cafeteria_plugin.email;
+package com.cafeteria.cafeteria_plugin.email.passwordReset;
 
 import com.cafeteria.cafeteria_plugin.models.User;
 import com.cafeteria.cafeteria_plugin.services.UserService;

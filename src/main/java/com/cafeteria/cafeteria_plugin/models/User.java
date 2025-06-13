@@ -1,6 +1,6 @@
 package com.cafeteria.cafeteria_plugin.models;
 
-import com.cafeteria.cafeteria_plugin.email.PasswordResetToken;
+import com.cafeteria.cafeteria_plugin.email.passwordReset.PasswordResetToken;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;

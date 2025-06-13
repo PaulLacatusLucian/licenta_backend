@@ -1,12 +1,11 @@
 package com.cafeteria.cafeteria_plugin.services;
 
-import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
+import com.cafeteria.cafeteria_plugin.email.passwordReset.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.*;
 import com.cafeteria.cafeteria_plugin.models.Class;
 import com.cafeteria.cafeteria_plugin.repositories.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

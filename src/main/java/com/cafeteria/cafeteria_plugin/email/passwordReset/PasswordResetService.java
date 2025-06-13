@@ -1,4 +1,4 @@
-package com.cafeteria.cafeteria_plugin.email;
+package com.cafeteria.cafeteria_plugin.email.passwordReset;
 
 import com.cafeteria.cafeteria_plugin.models.User;
 import org.springframework.beans.factory.annotation.Autowired;

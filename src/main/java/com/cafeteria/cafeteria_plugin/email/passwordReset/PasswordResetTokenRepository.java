@@ -1,4 +1,4 @@
-package com.cafeteria.cafeteria_plugin.email;
+package com.cafeteria.cafeteria_plugin.email.passwordReset;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

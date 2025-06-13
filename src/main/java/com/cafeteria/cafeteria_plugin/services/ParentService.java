@@ -1,6 +1,6 @@
 package com.cafeteria.cafeteria_plugin.services;
 
-import com.cafeteria.cafeteria_plugin.email.PasswordResetTokenRepository;
+import com.cafeteria.cafeteria_plugin.email.passwordReset.PasswordResetTokenRepository;
 import com.cafeteria.cafeteria_plugin.models.Parent;
 import com.cafeteria.cafeteria_plugin.models.Student;
 import com.cafeteria.cafeteria_plugin.repositories.ParentRepository;
