@@ -1,21 +1,20 @@
-:: Curățare și construire proiect Maven
-mvn clean package
-IF %ERRORLEVEL% NEQ 0 (
-    exit /b 1
-)
+#!/bin/bash
+set -e  # oprește scriptul dacă apare vreo eroare
 
-:: Crearea imaginii Docker
+# Curățare și construire proiect Maven (skip testele)
+mvn clean package -Dmaven.test.skip=true
+
+# Crearea imaginii Docker
 docker build -t cafeteria-plugin .
-IF %ERRORLEVEL% NEQ 0 (
-    exit /b 1
-)
 
-:: Pornirea containerului Docker
-docker run -d -p 8080:8080 --name cafeteria-container cafeteria-plugin
-IF %ERRORLEVEL% NEQ 0 (
-    exit /b 1
-)
+# Oprire și ștergere container vechi dacă există
+if [ $(docker ps -aq -f name=cafeteria-container) ]; then
+    docker rm -f cafeteria-container
+fi
 
-:: Confirmare rulare container
-docker ps | findstr cafeteria-container
+# Pornirea containerului Docker
+docker run -d -p 127.0.0.1:8080:8080 --name cafeteria-container cafeteria-plugin
+
+# Confirmare rulare container
+docker ps | grep cafeteria-container
 docker logs cafeteria-container
