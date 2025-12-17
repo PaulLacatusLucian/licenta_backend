@@ -1,5 +1,5 @@
 # Folosim imaginea oficială OpenJDK
-FROM openjdk:17-jdk
+FROM eclipse-temurin:17-jdk
 
 # Setăm directorul de lucru
 WORKDIR /app
